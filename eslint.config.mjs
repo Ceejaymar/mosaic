@@ -6,6 +6,7 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import prettier from 'eslint-config-prettier';
 import unusedImports from 'eslint-plugin-unused-imports';
 import importPlugin from 'eslint-plugin-import';
+import jest from 'eslint-plugin-jest';
 
 export default [
   js.configs.recommended,
@@ -18,6 +19,10 @@ export default [
         ecmaVersion: 'latest',
         sourceType: 'module',
         project: './tsconfig.json'
+      },
+      globals: {
+        React: 'readonly',
+        require: 'readonly'
       }
     },
     plugins: {
@@ -28,20 +33,37 @@ export default [
       import: importPlugin
     },
     rules: {
-      // React
       'react/react-in-jsx-scope': 'off',
       'react/prop-types': 'off',
-
-      // Hooks
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
-
-      // TS
       '@typescript-eslint/no-unused-vars': 'warn',
-
-      // Imports
       'unused-imports/no-unused-imports': 'warn',
       'import/order': ['warn', { 'newlines-between': 'always' }]
+    }
+  },
+  {
+    files: ['**/__tests__/**/*.[jt]s?(x)', '**/?(*.)+(spec|test).[jt]s?(x)'],
+    plugins: {
+      jest
+    },
+    languageOptions: {
+      globals: {
+        describe: 'readonly',
+        it: 'readonly',
+        test: 'readonly',
+        expect: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        jest: 'readonly'
+      }
+    },
+    rules: {
+      'jest/no-disabled-tests': 'warn',
+      'jest/no-focused-tests': 'error',
+      'jest/no-identical-title': 'error',
+      'jest/prefer-to-have-length': 'warn',
+      'jest/valid-expect': 'error'
     }
   },
 
