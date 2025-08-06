@@ -20,7 +20,7 @@ jobs:
       - name: Check for EAS_GITHUB token
         run: |
           if [ -z "${{ secrets.EAS_GITHUB }}" ]; then
-            echo "You must provide an EAS_TOKEN secret linked to this project's Expo account in this repo's secrets. Learn more: https://docs.expo.dev/eas-update/github-actions"
+            echo "You must provide an EAS_GITHUB secret linked to this project's Expo account in this repo's secrets. Learn more: https://docs.expo.dev/eas-update/github-actions"
             exit 1
           fi
 
