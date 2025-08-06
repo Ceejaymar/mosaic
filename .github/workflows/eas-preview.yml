@@ -1,0 +1,47 @@
+name: Update EAS preview
+on:
+  workflow_run:
+    workflows: ['Run tests']
+    types:
+      - completed
+
+jobs:
+  update_preview:
+    name: EAS Update
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Check for EAS_GITHUB token
+        run: |
+          if [ -z "${{ secrets.EAS_GITHUB }}" ]; then
+            echo "You must provide an EXPO_TOKEN secret linked to this project's Expo account in this repo's secrets. Learn more: https://docs.expo.dev/eas-update/github-actions"
+            exit 1
+          fi
+
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+
+      - name: 📱 Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EAS_GITHUB }}
+
+      - name: 📦 Install dependencies
+        run: yarn install
+
+      - name: 👀 Create preview
+        uses: expo/expo-github-action/preview@v8
+        with:
+          command: eas update --auto
