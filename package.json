@@ -8,6 +8,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "test": "jest --watchAll",
+    "test:ci": "jest",
     "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
     "format": "prettier . --write",
     "prepare": "husky install",

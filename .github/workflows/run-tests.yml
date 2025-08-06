@@ -23,4 +23,4 @@ jobs:
       - name: 💄 Check formatting
         run: yarn format:check
       - name: 🧪 Run tests
-        run: yarn test --ci
+        run: yarn test:ci --ci
