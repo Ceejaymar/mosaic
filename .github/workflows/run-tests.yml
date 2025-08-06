@@ -1,9 +1,8 @@
 name: Run tests
 on:
   push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+    branches: ['**']
+
 jobs:
   test:
     name: Lint, Format, Test
@@ -16,7 +15,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: 📦 Install Depenencies
+      - name: 📦 Install Dependencies
         run: yarn install --immutable
       - name: 🧹 Lint code
         run: yarn lint
