@@ -11,7 +11,7 @@
     "test:ci": "jest",
     "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
     "format": "prettier . --write",
-    "prepare": "husky install",
+    "postinstall": "husky",
     "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix",
     "format:check": "prettier . --check"
   },
