@@ -9,9 +9,13 @@ export async function saveSecureItem<T>(key: string, value: T) {
   }
 }
 
-export async function getSecureItem(key: string) {
+export async function getSecureItem<T>(key: string): Promise<T | null> {
   try {
-    return await SecureStore.getItemAsync(key);
+    const item = await SecureStore.getItemAsync(key);
+    if (item === null) {
+      return null;
+    }
+    return JSON.parse(item) as T;
   } catch (e) {
     console.error(`SecureStore: error reading ${key}`, e);
     return null;
