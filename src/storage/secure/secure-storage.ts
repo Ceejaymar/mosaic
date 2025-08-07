@@ -5,7 +5,7 @@ export async function saveSecureItem<T>(key: string, value: T) {
     await SecureStore.setItemAsync(key, JSON.stringify(value));
   } catch (e) {
     console.error(`SecureStore: error saving ${key}`, e);
-    throw new Error('Secure save   failed ');
+    throw new Error('Secure save failed');
   }
 }
 
