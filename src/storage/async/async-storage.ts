@@ -29,7 +29,7 @@ export async function saveData<T>(key: string, value: T) {
 export async function getData(key: string) {
   try {
     const value = await AsyncStorage.getItem(key);
-    if (value) {
+    if (value !== null) {
       return JSON.parse(value);
     }
   } catch (e) {
