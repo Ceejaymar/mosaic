@@ -6,7 +6,7 @@ export async function keyExists(key: string) {
     return value !== null;
   } catch (e) {
     if (e instanceof Error) {
-      throw new Error(e.message);
+      throw e;
     } else {
       throw new Error('Failed to confirm key existence');
     }
