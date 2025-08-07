@@ -22,6 +22,9 @@
     "*.{js,ts,tsx}": [
       "yarn lint --fix",
       "yarn format"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "yarn format"
     ]
   },
   "jest": {
