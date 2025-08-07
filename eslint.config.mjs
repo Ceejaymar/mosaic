@@ -22,6 +22,7 @@ export default [
       },
       globals: {
         React: 'readonly',
+        console: 'readonly',
         require: 'readonly'
       }
     },
