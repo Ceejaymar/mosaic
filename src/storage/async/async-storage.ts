@@ -34,7 +34,7 @@ export async function getData(key: string) {
     }
   } catch (e) {
     if (e instanceof Error) {
-      throw new Error(e.message);
+      throw e;
     } else {
       throw new Error('Error retrieving data');
     }
