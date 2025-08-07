@@ -46,7 +46,7 @@ export async function removeItem(key: string) {
     await AsyncStorage.removeItem(key);
   } catch (e) {
     if (e instanceof Error) {
-      throw new Error(e.message);
+      throw e;
     } else {
       throw new Error('Error deleting data');
     }
