@@ -19,7 +19,7 @@ export async function saveData<T>(key: string, value: T) {
     await AsyncStorage.setItem(key, jsonValue);
   } catch (e) {
     if (e instanceof Error) {
-      throw new Error(e.message);
+      throw e;
     } else {
       throw new Error('Error saving data');
     }
