@@ -5,7 +5,11 @@ export async function keyExists(key: string) {
     const value = await AsyncStorage.getItem(key);
     return value !== null;
   } catch (e) {
-    throw new Error('Failed to check key existence');
+    if (e instanceof Error) {
+      throw new Error(e.message);
+    } else {
+      throw new Error('Failed to confirm key existence');
+    }
   }
 }
 
