@@ -151,7 +151,7 @@ Mosaic is designed for everyone:
 
 ## 📬 Contact
 
-Carlos — [LinkedIn](https://linkedin.com/in/linkedin_username)
+Carlos — [LinkedIn](https://www.linkedin.com/in/carmart/)
 
 <!-- Project Link: [https://github.com/your_username/your_repo](https://github.com/your_username/your_repo) -->
 
