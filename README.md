@@ -19,26 +19,22 @@
   <p align="center">
     A privacy-first mood tracking app that helps you visualize your emotions and breathe easier.
     <br />
-    <a href="#about-the-project"><strong>Explore the docs »</strong></a>
+    <!-- <a href="#about-the-project"><strong>Explore the docs »</strong></a>
     <br />
     <br />
     <a href="#usage">View Demo</a>
     ·
     <a href="https://github.com/your_username/your_repo/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
     ·
-    <a href="https://github.com/your_username/your_repo/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
+    <a href="https://github.com/your_username/your_repo/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a> -->
   </p>
 </div>
-
-<!-- --- -->
 
 ## 📌 About Mosaic
 
 <!-- ![Product Screenshot][product-screenshot] -->
 
 Mosaic is a **local-first** React Native app that helps you track your moods through color-coded entries, visualize them in a beautiful GitHub-style calendar, and practice guided breathing exercises — all while keeping your data private and secure.
-
-<!-- --- -->
 
 ## ✨ Features
 
@@ -49,8 +45,6 @@ Mosaic is a **local-first** React Native app that helps you track your moods thr
 - ☁️ **Optional Cloud Sync** — Secure sync with Supabase (user opt-in only).
 - 🔒 **Privacy-Focused** — Minimal permissions, encrypted sensitive data.
 - ♿ **Accessibility-First** — Designed from the ground up for inclusivity.
-
-<!-- --- -->
 
 ## 🛠️ Built With
 
@@ -65,40 +59,6 @@ Mosaic is a **local-first** React Native app that helps you track your moods thr
 - [Jest](https://jestjs.io/) + [React Native Testing Library](https://callstack.github.io/react-native-testing-library/)
 <!-- - [Maestro](https://maestro.mobile.dev/) for E2E testing -->
 
-<!-- --- -->
-
-<!-- ## 🚀 Getting Started
-
-Follow these steps to set up Mosaic locally.
-
-### Prerequisites
-
-- [Node.js](https://nodejs.org/) (>= 18.x)
-- [Yarn](https://yarnpkg.com/)
-- [Expo CLI](https://docs.expo.dev/get-started/installation/)
-
-```bash
-npm install --global yarn expo-cli
-``` -->
-
-<!-- ### Installation
-
-1. Clone the repo:
-   ```bash
-   git clone https://github.com/your_username/your_repo.git
-   ```
-2. Install dependencies:
-   ```bash
-   yarn install
-   ```
-3. Start the development server:
-   ```bash
-   yarn start
-   ```
-4. Scan the QR code with Expo Go on your device.
-
---- -->
-
 ## 📲 Usage
 
 Mosaic is simple by design:
@@ -112,8 +72,6 @@ Mosaic is simple by design:
 
 > _Coming soon_: Journaling, AI-powered mood insights, CSV export, and reminders.
 
----
-
 ## 🗺️ Roadmap
 
 - [ ] AI-generated mood trend analysis
@@ -124,15 +82,11 @@ Mosaic is simple by design:
 
 See the [open issues](https://github.com/your_username/your_repo/issues) for a full list of proposed features and known issues.
 
----
-
 ## 🔐 Security & Privacy
 
 - All sensitive data is stored securely using **SecureStore**.
 - No data is shared unless you explicitly opt-in to cloud sync.
 - Offline functionality is fully supported.
-
----
 
 ## ♿ Accessibility Commitment
 
@@ -143,19 +97,11 @@ Mosaic is designed for everyone:
 - High contrast options
 - Descriptive labels for all interactive elements
 
-<!-- --- -->
-
-<!-- ## 🤝 Contributing -->
-
-<!-- --- -->
-
 ## 📬 Contact
 
 Carlos — [LinkedIn](https://www.linkedin.com/in/carmart/)
 
 <!-- Project Link: [https://github.com/your_username/your_repo](https://github.com/your_username/your_repo) -->
-
-<!-- --- -->
 
 [forks-shield]: https://img.shields.io/github/forks/your_username/your_repo.svg?style=for-the-badge
 [forks-url]: https://github.com/your_username/your_repo/network/members
