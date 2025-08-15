@@ -10,7 +10,7 @@
 
 <br />
 <div align="center">
-  <a href="https://github.com/your_username/your_repo">
+  <a href="https://github.com/Ceejaymar/mosaic">
     <!-- Replace with your logo path -->
     <img src="images/logo.png" alt="Mosaic Logo" width="100" height="100">
   </a>
@@ -79,8 +79,6 @@ Mosaic is simple by design:
 - [ ] CSV/JSON data export
 - [ ] Push notifications for reminders
 - [ ] Dark mode + high-contrast mode
-
-See the [open issues](https://github.com/your_username/your_repo/issues) for a full list of proposed features and known issues.
 
 ## 🔐 Security & Privacy
 
