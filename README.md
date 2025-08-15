@@ -50,7 +50,7 @@ Mosaic is a **local-first** React Native app that helps you track your moods thr
 
 - [Expo](https://expo.dev/) + [TypeScript](https://www.typescriptlang.org/)
 - [Expo Router](https://expo.github.io/router/)
-  - [NativeWind](https://www.nativewind.dev/) + NativeWind UI
+- [NativeWind](https://www.nativewind.dev/)
     <!-- - [Moti](https://moti.fyi/) animations -->
     <!-- - [Zustand](https://zustand-demo.pmnd.rs/) for state management -->
 - [AsyncStorage](https://react-native-async-storage.github.io/async-storage/) + [WatermelonDB](https://nozbe.github.io/WatermelonDB/)
