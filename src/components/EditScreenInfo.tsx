@@ -13,8 +13,9 @@ export default function EditScreenInfo({ path }: { path: string }) {
       <View style={styles.getStartedContainer}>
         <Text
           style={styles.getStartedText}
-          lightColor="rgba(0,0,0,0.8)"
-          darkColor="rgba(255,255,255,0.8)"
+          // lightColor="rgba(0,0,0,0.8)"
+          // darkColor="rgba(255,255,255,0.8)"
+          className="text-xl text-blue-500 bg-blue-500"
         >
           Yooooooo yerrrrr Open up the code for this screen:
         </Text>

@@ -67,6 +67,25 @@ export default [
       'jest/valid-expect': 'error'
     }
   },
+  {
+    files: ['babel.config.{js,cjs}', 'metro.config.{js,cjs}', 'tailwind.config.{js,cjs}'],
+    languageOptions: {
+      sourceType: 'script',
+      globals: {
+        module: 'readonly',
+        require: 'readonly',
+        __dirname: 'readonly'
+      }
+    },
+    rules: {
+      'no-undef': 'off'
+    }
+  },
+
+  {
+    files: ['**/*.d.ts'],
+    rules: { 'no-undef': 'off' }
+  },
 
   prettier
 ];
