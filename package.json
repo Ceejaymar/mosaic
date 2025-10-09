@@ -16,7 +16,7 @@
     "format:check": "prettier . --check"
   },
   "simple-git-hooks": {
-    "pre-commit": "lint-staged"
+    "pre-commit": "yarn lint-staged"
   },
   "lint-staged": {
     "*.{js,ts,tsx}": [
