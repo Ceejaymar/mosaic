@@ -1,7 +1,6 @@
-import React from 'react';
 import { Tabs } from 'expo-router';
 import { DrawerToggleButton } from '@react-navigation/drawer';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 export default function _layout() {
   return (
