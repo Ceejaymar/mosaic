@@ -18,7 +18,7 @@ jobs:
           node-version: 20
       - name: 📦 Install Dependencies
         run: yarn install --immutable
-      - name: 🧹 Lint code & 💄 Format
+      - name: 🧹💄 Lint & Format code
         run: yarn lint-format
       - name: 🧪 Run tests
         run: yarn test:ci --ci
