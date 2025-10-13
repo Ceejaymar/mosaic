@@ -1,4 +1,4 @@
-import { saveData, getData, keyExists } from './async-storage';
+import { getData, keyExists, saveData } from './async-storage';
 
 const prefix = 'settings:';
 
