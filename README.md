@@ -1,21 +1,20 @@
 <!-- PROJECT SHIELDS -->
 <!-- Replace `your_username` and `your_repo` with your GitHub username/repo -->
 
-[![GitHub Actions][actions-shield]][actions-url]
-[![Prettier][prettier-shield]][prettier-url]
+<!-- [![GitHub Actions][actions-shield]][actions-url] -->
+<!-- [![Prettier][prettier-shield]][prettier-url] -->
+[![React Native][react-native-shield]][react-native-url]
+[![Expo][expo-shield]][expo-url]
 [![Platform][platform-shield]][platform-url]
 [![TypeScript][typescript-shield]][typescript-url]
-[![Expo][expo-shield]][expo-url]
-[![React Native][react-native-shield]][react-native-url]
 
 <br />
 <div align="center">
   <a href="https://github.com/Ceejaymar/mosaic">
-    <!-- Replace with your logo path -->
-    <img src="images/logo.png" alt="Mosaic Logo" width="100" height="100">
+    <img src="https://los-project-images.s3.us-east-1.amazonaws.com/mosaic/mosaic-logo.webp" alt="Mosaic Logo" width="100" height="100">
   </a>
 
-  <h3 align="center">Mosaic</h3>
+  <h2 align="center">Mosaic</h2>
   <p align="center">
     A privacy-first mood tracking app that helps you visualize your emotions and breathe easier.
     <br />
@@ -53,7 +52,8 @@ Mosaic is a **local-first** React Native app that helps you track your moods thr
 - [NativeWind](https://www.nativewind.dev/)
     <!-- - [Moti](https://moti.fyi/) animations -->
     <!-- - [Zustand](https://zustand-demo.pmnd.rs/) for state management -->
-- [AsyncStorage](https://react-native-async-storage.github.io/async-storage/) + [WatermelonDB](https://nozbe.github.io/WatermelonDB/)
+- [AsyncStorage](https://react-native-async-storage.github.io/async-storage/) 
+<!-- + [WatermelonDB](https://nozbe.github.io/WatermelonDB/) -->
   <!-- - [Supabase](https://supabase.com/) for optional cloud sync -->
   <!-- - [RevenueCat](https://www.revenuecat.com/) for monetization -->
 - [Jest](https://jestjs.io/) + [React Native Testing Library](https://callstack.github.io/react-native-testing-library/)
@@ -70,15 +70,15 @@ Mosaic is simple by design:
 
 <!-- ![Usage GIF][usage-gif] -->
 
-> _Coming soon_: Journaling, AI-powered mood insights, CSV export, and reminders.
+<!-- > _Coming soon_: Journaling, AI-powered mood insights, CSV export, and reminders. -->
 
 ## 🗺️ Roadmap
 
-- [ ] AI-generated mood trend analysis
-- [ ] Journaling with daily notes
-- [ ] CSV/JSON data export
-- [ ] Push notifications for reminders
 - [ ] Dark mode + high-contrast mode
+- [ ] Push notifications for reminders
+- [ ] Journaling with daily notes
+- [ ] AI-generated mood trend analysis
+- [ ] CSV/JSON data export
 
 ## 🔐 Security & Privacy
 
@@ -88,12 +88,12 @@ Mosaic is simple by design:
 
 ## ♿ Accessibility Commitment
 
-Mosaic is designed for everyone:
+<!-- Mosaic is designed for everyone:
 
 - Full support for screen readers
 - Large touch targets
 - High contrast options
-- Descriptive labels for all interactive elements
+- Descriptive labels for all interactive elements -->
 
 ## 📬 Contact
 
