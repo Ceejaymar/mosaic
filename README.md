@@ -16,7 +16,7 @@
 
   <h2 align="center">Mosaic</h2>
   <p align="center">
-    A privacy-first mood tracking app that helps you visualize your emotions and breathe easier.
+    An easy-to-use mood tracking app that helps you visualize your emotions and breathe easier.
     <br />
     <!-- <a href="#about-the-project"><strong>Explore the docs »</strong></a>
     <br />
@@ -86,7 +86,7 @@ Mosaic is simple by design:
 - No data is shared unless you explicitly opt-in to cloud sync.
 - Offline functionality is fully supported.
 
-## ♿ Accessibility Commitment
+<!-- ## ♿ Accessibility Commitment -->
 
 <!-- Mosaic is designed for everyone:
 
