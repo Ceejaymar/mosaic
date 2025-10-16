@@ -1,4 +1,9 @@
-import { DrawerContentScrollView, DrawerItem, DrawerItemList } from '@react-navigation/drawer';
+import {
+  type DrawerContentComponentProps,
+  DrawerContentScrollView,
+  DrawerItem,
+  DrawerItemList,
+} from '@react-navigation/drawer';
 import { usePathname, useRouter } from 'expo-router';
 import { Drawer } from 'expo-router/drawer';
 import { Image, Text, View } from 'react-native';
@@ -6,7 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const LOGO_IMAGE = 'https://los-project-images.s3.us-east-1.amazonaws.com/mosaic/mosaic-logo.webp';
 
-function CustomDrawerContent(props: any) {
+function CustomDrawerContent(props: DrawerContentComponentProps) {
   const router = useRouter();
   const { bottom } = useSafeAreaInsets();
   const links = [
