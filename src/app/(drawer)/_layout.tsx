@@ -14,18 +14,20 @@ const LOGO_IMAGE = 'https://los-project-images.s3.us-east-1.amazonaws.com/mosaic
 function CustomDrawerContent(props: DrawerContentComponentProps) {
   const router = useRouter();
   const { bottom } = useSafeAreaInsets();
+  const pathName = usePathname();
+
   const links = [
     { id: 1, name: 'account' },
     { id: 2, name: 'settings' },
     { id: 3, name: 'help' },
   ];
-  const pathName = usePathname();
 
   return (
     <View style={{ flex: 1 }}>
       <DrawerContentScrollView>
         <Image source={{ uri: LOGO_IMAGE }} />
         <DrawerItemList {...props} />
+
         {links.map((link) => {
           const isActive = pathName === `/app/${link.id}`;
           return (
