@@ -2,7 +2,7 @@
   "expo": {
     "name": "mosaic",
     "slug": "mosaic",
-    "description": "A minimal mood and breathing tracker.",
+    "description": "A minimal emotion tracking app.",
     "owner": "marceedigital",
     "version": "1.0.0",
     "orientation": "portrait",
