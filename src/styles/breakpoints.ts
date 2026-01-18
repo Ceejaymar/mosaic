@@ -1,4 +1,4 @@
-export const breakpoints: Record<string, number> = {
+export const breakpoints = {
   xs: 0,
   sm: 480,
   md: 768,
