@@ -1,2 +1,2 @@
-export * from './async';
-export * from './secure';
+export * from './secure-storage';
+export * from './storage';

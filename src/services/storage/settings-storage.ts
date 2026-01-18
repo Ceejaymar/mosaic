@@ -2,7 +2,6 @@ import { getData, keyExists, removeData, saveData } from './mmkv-storage';
 
 const prefix = 'settings:';
 
-// Always pass an object as the value
 export function saveSetting<T>(name: string, value: T) {
   return saveData(`${prefix}${name}`, value);
 }

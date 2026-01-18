@@ -7,8 +7,7 @@ export function keyExists(key: string) {
 }
 export function saveData<T>(key: string, value: T): void {
   try {
-    const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
-    storage.set(key, stringValue);
+    storage.set(key, JSON.stringify(value));
   } catch (e) {
     throw new Error(`Failed to save data: ${e instanceof Error ? e.message : 'Unknown error'}`);
   }
@@ -17,7 +16,7 @@ export function saveData<T>(key: string, value: T): void {
 export function getData<T>(key: string): T | null {
   const value = storage.getString(key);
 
-  if (!value) {
+  if (value === undefined) {
     return null;
   }
 
