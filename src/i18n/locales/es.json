@@ -1,0 +1,25 @@
+{
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "loading": "Cargando..."
+  },
+  "onboarding": {
+    "welcome": "¡Bienvenido a Mosaic, {{name}}!",
+    "description": "Tu espacio creativo está listo.",
+    "get_started": "Comenzar"
+  },
+  "dashboard": {
+    "projects_count_zero": "Sin proyectos aún",
+    "projects_count_one": "Tienes un proyecto",
+    "projects_count_other": "Tienes {{count}} proyectos"
+  },
+  "settings": {
+    "theme": {
+      "title": "Apariencia",
+      "dark_mode": "Modo Oscuro",
+      "light_mode": "Modo Claro"
+    },
+    "language": "Idioma"
+  }
+}

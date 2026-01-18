@@ -1,0 +1,25 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading..."
+  },
+  "onboarding": {
+    "welcome": "Welcome to Mosaic, {{name}}!",
+    "description": "Your creative space is ready.",
+    "get_started": "Get Started"
+  },
+  "dashboard": {
+    "projects_count_zero": "No projects yet",
+    "projects_count_one": "You have one project",
+    "projects_count_other": "You have {{count}} projects"
+  },
+  "settings": {
+    "theme": {
+      "title": "Appearance",
+      "dark_mode": "Dark Mode",
+      "light_mode": "Light Mode"
+    },
+    "language": "Language"
+  }
+}
