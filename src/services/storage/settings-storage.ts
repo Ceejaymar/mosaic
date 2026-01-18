@@ -1,7 +1,8 @@
-import { getData, keyExists, saveData } from './async-storage';
+import { getData, keyExists, removeData, saveData } from './mmkv-storage';
 
 const prefix = 'settings:';
 
+// Always pass an object as the value
 export function saveSetting<T>(name: string, value: T) {
   return saveData(`${prefix}${name}`, value);
 }
@@ -12,4 +13,8 @@ export function getSetting(name: string) {
 
 export function settingExists(name: string) {
   return keyExists(`${prefix}${name}`);
+}
+
+export function removeSetting(name: string) {
+  return removeData(`${prefix}${name}`);
 }

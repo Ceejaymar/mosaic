@@ -1,2 +1,2 @@
-export * from './async-storage';
+export * from './mmkv-storage';
 export * from './settings-storage';
