@@ -43,11 +43,12 @@ export function setJSON<T>(key: string, value: T): void {
 export function getJSON<T>(key: string): T | null {
   const value = storage.getString(key);
 
-  if (value === undefined || value === null) return null;
+  if (value === undefined) return null;
 
   try {
     return JSON.parse(value) as T;
   } catch {
+    console.warn(`Removing invalid JSON data: ${key}`);
     storage.remove(key);
     return null;
   }
