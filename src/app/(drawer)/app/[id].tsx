@@ -1,5 +1,6 @@
 import { useLocalSearchParams } from 'expo-router';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
 export default function page() {
   const { id } = useLocalSearchParams();
@@ -10,6 +11,6 @@ export default function page() {
   );
 }
 
-const styles = StyleSheet.create({
-  text: { color: '#dde3fe' },
-});
+const styles = StyleSheet.create((theme) => ({
+  text: { color: theme.colors.typography },
+}));

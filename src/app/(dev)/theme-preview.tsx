@@ -11,9 +11,9 @@ export default function ThemePreview() {
   );
 }
 
-const styles = StyleSheet.create((theme) => ({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'red',
   },
-}));
+});

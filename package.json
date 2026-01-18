@@ -1,18 +1,21 @@
 {
   "name": "mosaic",
-  "main": "expo-router/entry",
+  "main": "index.ts",
   "version": "1.0.0",
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "web": "expo start --web",
     "test": "jest --watchAll",
     "test:ci": "jest",
     "lint": "exec biome lint --changed",
     "format": "exec biome format --write .",
     "lint-format": "exec biome check --write",
-    "prepare": "simple-git-hooks"
+    "prepare": "simple-git-hooks",
+    "build:dev": "eas build --platform ios --profile development",
+    "build:preview": "eas build --platform ios --profile preview",
+    "build:prod": "eas build --platform ios --profile production"
   },
   "simple-git-hooks": {
     "pre-commit": "yarn lint-staged"
