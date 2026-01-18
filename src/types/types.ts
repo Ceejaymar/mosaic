@@ -9,3 +9,5 @@ export type Actions = {
   setTheme: (theme: Theme) => void;
   setHasOnboarded: (hasOnboarded: boolean) => void;
 };
+
+export type Language = 'en' | 'es';

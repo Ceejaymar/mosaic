@@ -1,11 +1,19 @@
+import { getLocales } from 'expo-localization';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
+
 import { mmkvAdapter } from '@/src/services/storage/mmkv';
-import type { Actions, State, Theme } from '@/src/types/types';
+import type { Actions, Language, State, Theme } from '@/src/types/types';
+import i18n from '../i18n';
 
 export const useAppStore = create<State & Actions>()(
   persist(
     (set) => ({
+      language: getLocales()[0]?.languageCode ?? 'en',
+      setLanguage: (language: Language) => {
+        i18n.changeLanguage(language);
+        set({ language: language as Language });
+      },
       theme: 'light',
       setTheme: (theme: Theme) => set({ theme }),
 
