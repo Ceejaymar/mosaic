@@ -21,9 +21,4 @@ const styles = StyleSheet.create((theme) => ({
     fontWeight: 'bold',
     color: theme.colors.typography,
   },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: '80%',
-  },
 }));
