@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { Text, View } from '@/src/components/Themed';
 
@@ -10,7 +10,7 @@ export default function TabOneScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,
     alignItems: 'center',
@@ -19,10 +19,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: 'bold',
+    color: theme.colors.typography,
   },
   separator: {
     marginVertical: 30,
     height: 1,
     width: '80%',
   },
-});
+}));

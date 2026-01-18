@@ -4,6 +4,7 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
+import { SystemBars } from 'react-native-edge-to-edge';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useColorScheme } from '@/src/components/useColorScheme';
@@ -49,12 +50,15 @@ function RootLayoutNav() {
   const colorScheme = useColorScheme();
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <GestureHandlerRootView>
-        <Stack>
-          <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
-        </Stack>
-      </GestureHandlerRootView>
-    </ThemeProvider>
+    <>
+      <SystemBars style="auto" />
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <Stack>
+            <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
+          </Stack>
+        </GestureHandlerRootView>
+      </ThemeProvider>
+    </>
   );
 }
