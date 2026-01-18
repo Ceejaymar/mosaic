@@ -15,10 +15,8 @@ export const mmkvAdapter = {
 export function contains(key: string) {
   try {
     return storage.contains(key);
-  } catch (e) {
-    throw new Error(
-      `Failed to check key existence: ${e instanceof Error ? e.message : 'Unknown error'}`,
-    );
+  } catch {
+    return false;
   }
 }
 
@@ -30,24 +28,28 @@ export function remove(key: string): void {
   }
 }
 
+export function clearAllData(): void {
+  storage.clearAll();
+}
+
 export function setJSON<T>(key: string, value: T): void {
-  storage.set(key, JSON.stringify(value));
+  try {
+    storage.set(key, JSON.stringify(value));
+  } catch {
+    throw new Error(`Failed to set data: ${key}`);
+  }
 }
 
 export function getJSON<T>(key: string): T | null {
   const value = storage.getString(key);
+
   if (value === undefined) {
     return null;
   }
-  return JSON.parse(value) as T;
-}
 
-export function clearAllData(): void {
   try {
-    storage.clearAll();
-  } catch (e) {
-    throw new Error(
-      `Failed to clear all data: ${e instanceof Error ? e.message : 'Unknown error'}`,
-    );
+    return JSON.parse(value) as T;
+  } catch {
+    throw new Error(`Failed to get data: ${key}`);
   }
 }
