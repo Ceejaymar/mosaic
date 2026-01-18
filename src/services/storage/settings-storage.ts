@@ -1,4 +1,4 @@
-import { getData, keyExists, saveData } from './async-storage';
+import { getData, keyExists, removeData, saveData } from './mmkv-storage';
 
 const prefix = 'settings:';
 
@@ -12,4 +12,8 @@ export function getSetting(name: string) {
 
 export function settingExists(name: string) {
   return keyExists(`${prefix}${name}`);
+}
+
+export function removeSetting(name: string) {
+  return removeData(`${prefix}${name}`);
 }
