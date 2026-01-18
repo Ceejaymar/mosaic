@@ -1,6 +1,8 @@
 module.exports = (api) => {
   api.cache(true);
 
+  const isProd = process.env.NODE_ENV === 'production';
+
   return {
     presets: ['babel-preset-expo'],
     plugins: [
@@ -9,7 +11,7 @@ module.exports = (api) => {
         {
           root: 'src',
           autoProcessPaths: ['app'],
-          debug: true,
+          debug: !isProd,
         },
       ],
       'react-native-reanimated/plugin',
