@@ -32,7 +32,10 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
             <DrawerItem
               key={link.id}
               label={link.name}
-              onPress={() => router.push(`/app/${link.id}`)}
+              onPress={() => {
+                router.push(`/app/${link.id}`);
+                props.navigation.closeDrawer();
+              }}
               focused={isActive}
               activeTintColor="#f2a310"
               inactiveTintColor="#333"
@@ -68,14 +71,14 @@ export default function Layout() {
           title: 'Support',
         }}
       />
-      <Drawer.Screen
+      {/* <Drawer.Screen
         name="app"
         options={{
           drawerItemStyle: {
             display: 'none',
           },
         }}
-      />
+      /> */}
     </Drawer>
   );
 }
