@@ -3,7 +3,13 @@ import { createMMKV } from 'react-native-mmkv';
 const storage = createMMKV();
 
 export function keyExists(key: string) {
-  return storage.contains(key);
+  try {
+    return storage.contains(key);
+  } catch (e) {
+    throw new Error(
+      `Failed to check key existence: ${e instanceof Error ? e.message : 'Unknown error'}`,
+    );
+  }
 }
 export function saveData<T>(key: string, value: T): void {
   try {
