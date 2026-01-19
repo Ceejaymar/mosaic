@@ -1,13 +1,16 @@
-import { and, desc, eq } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 import { uuid } from '@/src/lib/uuid';
 import { db } from '../client';
 import { moodEntries } from '../schema';
 
 export type MoodEntry = typeof moodEntries.$inferSelect;
 export type NewMoodEntry = typeof moodEntries.$inferInsert;
-
 function makeDateKey(iso: string) {
-  return iso.slice(0, 10);
+  const d = new Date(iso);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
 }
 
 export async function insertTestMoodEntry(overrides?: Partial<NewMoodEntry>) {
