@@ -43,7 +43,6 @@ export default function DebugDbScreen() {
     try {
       await insertTestMoodEntry();
       await fetchRows();
-      setStatus('success');
     } catch (e) {
       console.error(e);
       setStatus('error');
@@ -73,7 +72,6 @@ export default function DebugDbScreen() {
       }
 
       await fetchRows();
-      setStatus('success');
     } catch (e) {
       console.error(e);
       setStatus('error');
@@ -91,7 +89,6 @@ export default function DebugDbScreen() {
             try {
               setStatus('loading');
               await deleteMoodEntry(id);
-              // Optimistic update
               setRows((prev) => prev.filter((r) => r.id !== id));
               setStatus('success');
             } catch (e) {

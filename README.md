@@ -52,7 +52,7 @@ Mosaic is a **local-first** React Native app that helps you track your moods thr
     <!-- - [Moti](https://moti.fyi/) animations -->
 - [Zustand](https://zustand.docs.pmnd.rs/getting-started/introduction)
 - [MMKV](https://github.com/mrousavy/react-native-mmkv)
-- [ExpoSQLite](https://nozbe.github.io/WatermelonDB/) + [Drizzle](https://www.typescriptlang.org/)
+- [ExpoSQLite](https://docs.expo.dev/versions/latest/sdk/sqlite/) + [Drizzle](https://orm.drizzle.team/)
   <!-- - [Supabase](https://supabase.com/) for optional cloud sync -->
   <!-- - [RevenueCat](https://www.revenuecat.com/) for monetization -->
 - [Jest](https://jestjs.io/) + [React Native Testing Library](https://callstack.github.io/react-native-testing-library/)

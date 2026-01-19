@@ -14,8 +14,8 @@ module.exports = (api) => {
           debug: !isProd,
         },
       ],
-      'react-native-reanimated/plugin',
       ['inline-import', { extensions: ['.sql'] }],
+      'react-native-reanimated/plugin',
     ],
   };
 };

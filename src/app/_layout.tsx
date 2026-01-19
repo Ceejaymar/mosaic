@@ -4,7 +4,7 @@ import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { SystemBars } from 'react-native-edge-to-edge';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
@@ -36,10 +36,7 @@ export default function RootLayout() {
     if (migrationError) throw migrationError;
   }, [fontError, migrationError]);
 
-  const isAppReady = useMemo(
-    () => fontsLoaded && migrationSuccess,
-    [fontsLoaded, migrationSuccess],
-  );
+  const isAppReady = fontsLoaded && migrationSuccess;
 
   useEffect(() => {
     if (isAppReady) {

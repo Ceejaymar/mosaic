@@ -18,7 +18,7 @@ export async function insertTestMoodEntry(overrides?: Partial<NewMoodEntry>) {
     dateKey: makeDateKey(now),
     primaryMood: 'happy',
     note: 'This is a test note',
-    occurredAt: now.slice(0, 19).replace('T', ' '),
+    occurredAt: now,
     createdAt: now,
     updatedAt: now,
     ...overrides,
