@@ -1,0 +1,1 @@
+ALTER TABLE `mood_entries` RENAME COLUMN "date" TO "date_key";
