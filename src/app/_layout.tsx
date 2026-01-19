@@ -1,18 +1,18 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { SystemBars } from 'react-native-edge-to-edge';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import migrations from '@/drizzle/migrations';
 import { useColorScheme } from '@/src/components/useColorScheme';
+import { db } from '@/src/db/client';
 
-export {
-  // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
-} from 'expo-router';
+export { ErrorBoundary } from 'expo-router';
 
 export const unstable_settings = {
   // Ensure that reloading on `/modal` keeps a back button present.
@@ -23,25 +23,31 @@ export const unstable_settings = {
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const [loaded, error] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     ...FontAwesome.font,
   });
 
+  const { success: migrationSuccess, error: migrationError } = useMigrations(db, migrations);
+
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
-    if (error) throw error;
-  }, [error]);
+    if (fontError) throw fontError;
+    if (migrationError) throw migrationError;
+  }, [fontError, migrationError]);
+
+  const isAppReady = useMemo(
+    () => fontsLoaded && migrationSuccess,
+    [fontsLoaded, migrationSuccess],
+  );
 
   useEffect(() => {
-    if (loaded) {
+    if (isAppReady) {
       SplashScreen.hideAsync();
     }
-  }, [loaded]);
+  }, [isAppReady]);
 
-  if (!loaded) {
-    return null;
-  }
+  if (!isAppReady) return null;
 
   return <RootLayoutNav />;
 }
