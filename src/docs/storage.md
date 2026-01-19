@@ -153,7 +153,7 @@ Notes:
 - Settings:
   - `settings:<name>`
 - SecureStore:
-  - `secure:<name>` (recommended prefix; enforce later)
+  - `secure:<feature>:<name>` (recommended prefix; enforce later)
 
 ---
 
