@@ -1,6 +1,8 @@
 import { memo } from 'react';
 import { Text, View } from 'react-native';
 import Animated, { type SharedValue, useAnimatedStyle } from 'react-native-reanimated';
+import { StyleSheet } from 'react-native-unistyles';
+
 import { WHEEL } from '../constants';
 import { clamp, gaussian01, smoothStep } from '../layout/wheel-math';
 import type { NodeLayout } from '../types';
@@ -99,29 +101,30 @@ export const EmotionNode = memo(function EmotionNode(props: {
 
   return (
     <Animated.View style={style} pointerEvents="none">
-      <View
-        style={{
-          flex: 1,
-          borderRadius: 999,
-          backgroundColor: node.color,
-          borderWidth: 2,
-          borderColor: 'rgba(0,0,0,0.20)',
-          alignItems: 'center',
-          justifyContent: 'center',
-          paddingHorizontal: 10,
-        }}
-      >
+      <View style={[styles.nodeContainer, { backgroundColor: node.color }]}>
         <Text
           numberOfLines={2}
-          style={{
-            fontSize: node.level === 0 ? 16 : node.level === 1 ? 13 : 11,
-            color: 'rgba(0,0,0,0.88)',
-            textAlign: 'center',
-          }}
+          style={[styles.label, { fontSize: node.level === 0 ? 16 : node.level === 1 ? 13 : 11 }]}
         >
           {node.label}
         </Text>
       </View>
     </Animated.View>
   );
+});
+
+const styles = StyleSheet.create({
+  nodeContainer: {
+    flex: 1,
+    borderRadius: 999,
+    borderWidth: 2,
+    borderColor: 'rgba(0,0,0,0.20)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+  },
+  label: {
+    color: 'rgba(0,0,0,0.88)',
+    textAlign: 'center',
+  },
 });

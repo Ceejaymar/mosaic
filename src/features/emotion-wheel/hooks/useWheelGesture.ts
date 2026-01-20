@@ -68,7 +68,7 @@ export function useWheelGesture(args: { nodes: NodeLayout[]; centerX: number; ce
     // Optional: require tap to be “close enough” to a node
     const n = nodes[bestI];
     const size = n.level === 0 ? WHEEL.sizeL0 : n.level === 1 ? WHEEL.sizeL1 : WHEEL.sizeL2;
-    const hit = (size * 0.62) ** 2; // radius-ish
+    const hit = (size * WHEEL.hitTestRadius) ** 2; // radius-ish
 
     if (bestD <= hit) {
       focusIndex(bestI);

@@ -61,8 +61,8 @@
 //   },
 // ];
 
-import type { FeelingsContent } from '../features/emotion-wheel/types';
-import { GROUP_COLORS } from '../styles/feelings-colors';
+import { GROUP_COLORS } from '../../../styles/feelings-colors';
+import type { FeelingsContent } from '../types';
 
 export const FEELINGS_CONTENT: FeelingsContent = {
   version: 1,

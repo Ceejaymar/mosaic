@@ -65,6 +65,8 @@ export const WHEEL = {
   // Remove jitter for tight packing
   positionJitterPx: 0,
 
+  hitTestRadius: 0.62,
+
   /**
    * ✅ Distinct solid group colors (one per root group).
    * Tune later; these are intentionally bold.

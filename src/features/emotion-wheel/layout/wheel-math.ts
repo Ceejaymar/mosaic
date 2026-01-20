@@ -11,7 +11,7 @@ export function smoothStep(t: number) {
 // Smooth “bell curve” falloff (nice for focus field)
 export function gaussian01(x: number) {
   'worklet';
-  // x is 0..1, output ~1 at 0, ~0 at 1
+  // x is 0..1, output ~1 at 0, falls off towards 1"
   const a = 2.2;
   return Math.exp(-(x * x) * a);
 }
