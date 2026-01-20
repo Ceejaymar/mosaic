@@ -1,5 +1,5 @@
 import { WHEEL } from '../constants';
-import type { EmotionNode, NodeLayout } from '../types';
+import type { NodeLayout, WheelTreeNode } from '../types';
 import { jitterSigned } from './wheel-math';
 
 // Axial hex coords
@@ -18,35 +18,24 @@ function hexToPixel(q: number, r: number, step: number) {
   return { x, y };
 }
 
-function flattenWithColors(roots: EmotionNode[]) {
-  const level0: EmotionNode[] = [];
-  const level1: EmotionNode[] = [];
-  const level2: EmotionNode[] = [];
+function flattenTree(roots: WheelTreeNode[]) {
+  const level0: WheelTreeNode[] = [];
+  const level1: WheelTreeNode[] = [];
+  const level2: WheelTreeNode[] = [];
 
-  const colorById = new Map<string, string>();
-
-  roots.forEach((root, i) => {
-    const groupColor = WHEEL.groupPalette[i % WHEEL.groupPalette.length];
-
-    colorById.set(root.id, groupColor);
-    level0.push(root);
-
-    for (const n1 of root.children ?? []) {
-      colorById.set(n1.id, groupColor);
-      level1.push(n1);
-
-      for (const n2 of n1.children ?? []) {
-        colorById.set(n2.id, groupColor);
-        level2.push(n2);
-      }
+  for (const r of roots) {
+    level0.push(r);
+    for (const c1 of r.children) {
+      level1.push(c1);
+      for (const c2 of c1.children) level2.push(c2);
     }
-  });
+  }
 
-  return { level0, level1, level2, colorById };
+  return { level0, level1, level2 };
 }
 
 export function buildWheelLayout(
-  roots: EmotionNode[],
+  roots: WheelTreeNode[],
   opts: { cx: number; cy: number },
 ): NodeLayout[] {
   const { cx, cy } = opts;
@@ -76,9 +65,9 @@ export function buildWheelLayout(
   const band1 = cells.filter((c) => c.d > WHEEL.level0Max && c.d <= WHEEL.level1Max);
   const band2 = cells.filter((c) => c.d > WHEEL.level1Max);
 
-  const { level0, level1, level2, colorById } = flattenWithColors(roots);
+  const { level0, level1, level2 } = flattenTree(roots);
 
-  function place(nodes: EmotionNode[], band: Hex[], bandScale: number): NodeLayout[] {
+  function place(nodes: WheelTreeNode[], band: Hex[], bandScale: number): NodeLayout[] {
     const out: NodeLayout[] = [];
     const count = Math.min(nodes.length, band.length);
 
@@ -90,15 +79,16 @@ export function buildWheelLayout(
       const p = hexToPixel(c.q, c.r, step);
 
       const j = WHEEL.positionJitterPx;
-      const jx = jitterSigned(n.id + ':x') * j;
-      const jy = jitterSigned(n.id + ':y') * j;
+      const jx = jitterSigned(`${n.id}:x`) * j;
+      const jy = jitterSigned(`${n.id}:y`) * j;
 
       out.push({
         id: n.id,
         label: n.label,
         level: n.level,
+        groupId: n.groupId,
         parentId: n.parentId ?? null,
-        color: colorById.get(n.id) ?? WHEEL.groupPalette[0],
+        color: n.color,
         x0: cx + p.x + jx,
         y0: cy + p.y + jy,
       });

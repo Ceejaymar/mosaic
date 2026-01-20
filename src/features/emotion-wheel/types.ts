@@ -1,24 +1,4 @@
 export type NodeId = string;
-
-export type EmotionNode = {
-  id: NodeId;
-  label: string;
-  level: 0 | 1 | 2;
-  color?: string;
-  parentId?: NodeId | null;
-  children?: EmotionNode[];
-};
-
-export type NodeLayout = {
-  id: NodeId;
-  label: string;
-  level: 0 | 1 | 2;
-  color: string;
-  parentId: NodeId | null;
-  x0: number;
-  y0: number;
-};
-
 export type FeelingLevel = 0 | 1 | 2;
 
 export type FeelingGroupId =
@@ -31,12 +11,11 @@ export type FeelingGroupId =
   | 'fear';
 
 export type FeelingNode = {
-  id: string;
+  id: NodeId;
   label: string;
   level: FeelingLevel;
   groupId: FeelingGroupId;
-  parentId?: string | null;
-
+  parentId: NodeId | null;
   description: string;
   synonyms: string[];
 };
@@ -52,4 +31,25 @@ export type FeelingsContent = {
   version: number;
   groups: FeelingGroup[];
   nodes: FeelingNode[];
+};
+
+export type WheelTreeNode = {
+  id: NodeId;
+  label: string;
+  level: FeelingLevel;
+  groupId: FeelingGroupId;
+  parentId: NodeId | null;
+  color: string;
+  children: WheelTreeNode[];
+};
+
+export type NodeLayout = {
+  id: NodeId;
+  label: string;
+  level: FeelingLevel;
+  groupId: FeelingGroupId;
+  parentId: NodeId | null;
+  color: string;
+  x0: number;
+  y0: number;
 };

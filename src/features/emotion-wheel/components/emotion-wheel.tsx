@@ -2,8 +2,8 @@ import { useMemo } from 'react';
 import { useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
-
-import { buildWheelNodes } from '../data/wheel-nodes';
+import { FEELINGS_CONTENT } from '../constants/feelings.content';
+import { buildWheelTree } from '../data/build-wheel-tree';
 import { useWheelGesture } from '../hooks/useWheelGesture';
 import { buildWheelLayout } from '../layout/build-wheel-layout';
 import { EmotionNode } from './emotion-node';
@@ -13,7 +13,7 @@ export function EmotionWheel() {
   const centerX = width / 2;
   const centerY = height / 2;
 
-  const roots = useMemo(() => buildWheelNodes(), []);
+  const roots = useMemo(() => buildWheelTree(FEELINGS_CONTENT), []);
   const nodes = useMemo(
     () => buildWheelLayout(roots, { cx: centerX, cy: centerY }),
     [roots, centerX, centerY],
@@ -21,7 +21,7 @@ export function EmotionWheel() {
 
   const g = useWheelGesture({ nodes, centerX, centerY });
 
-  // ✅ This is the missing link: actually apply pan translation visually
+  // Single moving field
   const fieldStyle = useAnimatedStyle(() => {
     return {
       transform: [{ translateX: g.fieldTx.value }, { translateY: g.fieldTy.value }],
@@ -32,7 +32,6 @@ export function EmotionWheel() {
     .maxDistance(10)
     .onEnd((e, success) => {
       if (!success) return;
-      // Focus nearest node to tap point (screen coords)
       g.focusNearestToPoint(e.x, e.y);
     });
 
@@ -41,7 +40,6 @@ export function EmotionWheel() {
   return (
     <GestureDetector gesture={composed}>
       <View style={{ flex: 1 }}>
-        {/* Single moving field */}
         <Animated.View style={[{ flex: 1 }, fieldStyle]} pointerEvents="box-none">
           {nodes.map((node, index) => (
             <EmotionNode
@@ -50,8 +48,6 @@ export function EmotionWheel() {
               index={index}
               centerX={centerX}
               centerY={centerY}
-              // ✅ IMPORTANT: fieldTx/fieldTy no longer needed in node render transforms
-              // We still pass them for bx/by distance math (finger + focus)
               fieldTx={g.fieldTx}
               fieldTy={g.fieldTy}
               touchX={g.touchX}
