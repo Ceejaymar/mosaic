@@ -4,9 +4,9 @@ export const WHEEL = {
   sizeL2: 78,
 
   focusRadius: 210,
-  focusMaxBoost: 0.28,
-  focusNeighborBoost: 0.12,
-  focusLift: -12,
+  focusMaxBoost: 0.35, // Increased slightly for "pop"
+  focusNeighborBoost: 0.1,
+  focusLift: -8,
 
   fingerInfluenceRadius: 170,
   fingerMaxOffset: 6,
@@ -23,41 +23,27 @@ export const WHEEL = {
 
   selectionHysteresisPx: 14,
 
-  // ✅ row sizing (if you want UNIFORM nodes after core, set decay=1 and min=start)
-  rowSizeStart: 90, // try 88–96
-  rowSizeDecay: 1, // ✅ uniform
-  rowSizeMin: 90, // ✅ uniform
+  // Row sizing: Uniform nodes after core
+  rowSizeStart: 90,
+  rowSizeDecay: 1,
+  rowSizeMin: 90,
 
-  nodeGapPx: 16,
+  nodeGapPx: 12, // Gap between bubbles
 
-  // how far each row moves outward (tune later; keep 0.88–1.0)
+  // New: This multiplier ensures the static layout creates
+  // enough "empty space" for bubbles to scale up to 1.4x
+  layoutSafetyFactor: 1.25,
+
   rowRadialStepFactor: 0.92,
-
-  // ✅ now wedgePaddingRad will actually show up
-  wedgePaddingRad: 0.05,
+  wedgePaddingRad: 0.06, // Increased slightly for clearer wedge separation
   wedgeEdgeInsetRad: 0.02,
 
   ring0Radius: 165,
   ring1Radius: 300,
 
   rowStart: 2,
-
   positionJitterPx: 0,
-
   hitTestRadius: 0.62,
-
   centerFocusHysteresisRatio: 0.92,
-
   zoomScale: 1,
-
-  groupPalette: [
-    '#FF4D4D',
-    '#FF8A3D',
-    '#FFC533',
-    '#7CDE5A',
-    '#38D6C4',
-    '#3DA2FF',
-    '#7B61FF',
-    '#FF58C8',
-  ],
 } as const;

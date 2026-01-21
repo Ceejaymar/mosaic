@@ -61,7 +61,7 @@
 //   },
 // ];
 
-import { GROUP_COLORS } from '../../../styles/feelings-colors';
+import { GROUP_COLORS } from '../feelings-colors';
 import type { FeelingsContent } from '../types';
 
 export const FEELINGS_CONTENT: FeelingsContent = {
