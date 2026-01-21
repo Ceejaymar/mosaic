@@ -39,6 +39,7 @@ function flattenAfterCore(root: WheelTreeNode) {
   for (const c1 of root.children) level1.push(c1);
   for (const c1 of root.children) for (const c2 of c1.children) level2.push(c2);
 
+  // ✅ treat 2nd + 3rd levels as one list after core (your stated intent)
   return { core, after: [...level1, ...level2] };
 }
 
@@ -46,7 +47,7 @@ function sizeForRow(rowIndex: number) {
   if (rowIndex <= 0) return WHEEL.sizeL0;
 
   const start = WHEEL.rowSizeStart ?? WHEEL.sizeL1;
-  const decay = WHEEL.rowSizeDecay ?? 0.9;
+  const decay = WHEEL.rowSizeDecay ?? 1; // ✅ if you want uniform, set decay=1 in constants
   const min = WHEEL.rowSizeMin ?? 56;
 
   const s = start * decay ** (rowIndex - 1);
@@ -72,6 +73,12 @@ function packRows234(args: {
   let prevD = sizeForRow(1) + (WHEEL.nodeGapPx ?? 14);
   let prevR = baseRadius - prevD;
 
+  // ✅ use real wedge bounds + configurable inset
+  const edgeInset = WHEEL.wedgeEdgeInsetRad ?? 0;
+  const wedgeA0 = wedge.a0 + edgeInset;
+  const wedgeA1 = wedge.a1 - edgeInset;
+  const wedgeUsableSpan = Math.max(0, wedgeA1 - wedgeA0);
+
   while (cursor < nodes.length) {
     const rowIndex = 1 + row;
     const size = sizeForRow(rowIndex);
@@ -84,33 +91,31 @@ function packRows234(args: {
     const slice = nodes.slice(cursor, cursor + take);
     cursor += take;
 
-    // radius for this row
+    // radius for this row (prevent row-on-row collisions)
     let r = Math.max(baseRadius + row * step, prevR + step);
 
-    // compute minimum angle spacing to keep neighbors from overlapping
-    const usable = wedge.span * 0.86;
-
+    // compute minimum angle spacing to keep neighbors from overlapping at radius r
+    // chord >= D  =>  stepAngle >= 2 * asin(D/(2r))
     let stepAngle = take <= 1 ? 0 : 2 * Math.asin(Math.min(0.999, D / (2 * r)));
     let needed = (take - 1) * stepAngle;
 
-    // push outward until row fits inside wedge
+    // push outward until row fits inside the ACTUAL usable wedge span
     let guard = 0;
-    while (take > 1 && needed > usable && guard < 250) {
+    while (take > 1 && needed > wedgeUsableSpan && guard < 250) {
       r += step;
       stepAngle = 2 * Math.asin(Math.min(0.999, D / (2 * r)));
       needed = (take - 1) * stepAngle;
       guard++;
     }
 
-    // ✅ NO STAGGER: perfectly centered rows
-    const aStart = wedge.am - needed / 2;
+    // ✅ center this row inside [wedgeA0..wedgeA1]
+    // this is the key change that makes wedgePaddingRad visible
+    const slack = Math.max(0, wedgeUsableSpan - needed);
+    const aStart = wedgeA0 + slack / 2;
 
     for (let i = 0; i < slice.length; i++) {
       const n = slice[i];
-      let a = aStart + i * stepAngle;
-
-      if (a < wedge.a0) a = wedge.a0;
-      if (a > wedge.a1) a = wedge.a1;
+      const a = take <= 1 ? (wedgeA0 + wedgeA1) / 2 : aStart + i * stepAngle;
 
       const p = polarToXY(r, a);
 

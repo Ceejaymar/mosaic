@@ -23,24 +23,30 @@ export const WHEEL = {
 
   selectionHysteresisPx: 14,
 
-  // row sizing (replaces size-by-level visually)
-  rowSizeStart: 96,
-  rowSizeDecay: 0.9,
-  rowSizeMin: 56,
+  // ✅ row sizing (if you want UNIFORM nodes after core, set decay=1 and min=start)
+  rowSizeStart: 90, // try 88–96
+  rowSizeDecay: 1, // ✅ uniform
+  rowSizeMin: 90, // ✅ uniform
 
   nodeGapPx: 16,
-  rowRadialStepFactor: 0.9,
 
-  wedgePaddingRad: 0.1,
+  // how far each row moves outward (tune later; keep 0.88–1.0)
+  rowRadialStepFactor: 0.92,
+
+  // ✅ now wedgePaddingRad will actually show up
+  wedgePaddingRad: 0.05,
+  wedgeEdgeInsetRad: 0.02,
 
   ring0Radius: 165,
-  ring1Radius: 330,
+  ring1Radius: 300,
 
   rowStart: 2,
 
   positionJitterPx: 0,
 
   hitTestRadius: 0.62,
+
+  centerFocusHysteresisRatio: 0.92,
 
   zoomScale: 1,
 

@@ -29,7 +29,7 @@ export const EmotionNode = memo(function EmotionNode(props: {
   touchX: SharedValue<number>;
   touchY: SharedValue<number>;
   isTouching: SharedValue<number>;
-  selectedIndex: SharedValue<number>;
+  focusedIndex: SharedValue<number>;
 }) {
   const {
     node,
@@ -41,7 +41,7 @@ export const EmotionNode = memo(function EmotionNode(props: {
     touchX,
     touchY,
     isTouching,
-    selectedIndex,
+    focusedIndex,
   } = props;
 
   const size = node.size;
@@ -51,6 +51,7 @@ export const EmotionNode = memo(function EmotionNode(props: {
     const bx = fieldTx.value + node.x0;
     const by = fieldTy.value + node.y0;
 
+    // Focus field relative to screen center
     const cdx = bx - centerX;
     const cdy = by - centerY;
     const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
@@ -62,6 +63,7 @@ export const EmotionNode = memo(function EmotionNode(props: {
     const neighbor = gaussian01(clamp(cDist / (WHEEL.focusRadius * 1.55), 0, 1));
     const neighborScale = 1 + neighbor * WHEEL.focusNeighborBoost;
 
+    // Finger magnet (subtle)
     const fdx = touchX.value - bx;
     const fdy = touchY.value - by;
     const fDist = Math.sqrt(fdx * fdx + fdy * fdy);
@@ -82,12 +84,13 @@ export const EmotionNode = memo(function EmotionNode(props: {
 
     const fingerScale = 1 + fingerEase * WHEEL.fingerScaleBoost;
 
-    const isSelected = selectedIndex.value === index ? 1 : 0;
-    const selectedScale = 1 + isSelected * 0.1;
+    // ✅ focused = nearest to center (drives the “big” bubble)
+    const isFocused = focusedIndex.value === index ? 1 : 0;
+    const focusedScale = 1 + isFocused * 0.14;
 
     const lift = focus * WHEEL.focusLift;
 
-    const scale = focusScale * neighborScale * fingerScale * selectedScale;
+    const scale = focusScale * neighborScale * fingerScale * focusedScale;
 
     return {
       position: 'absolute',
@@ -96,7 +99,7 @@ export const EmotionNode = memo(function EmotionNode(props: {
       width: size,
       height: size,
       transform: [{ translateX: ox }, { translateY: oy + lift }, { scale }],
-      zIndex: Math.round(focus * 2000 + isSelected * 3000 + fingerEase * 500),
+      zIndex: Math.round(focus * 2000 + isFocused * 4000 + fingerEase * 500),
     };
   });
 

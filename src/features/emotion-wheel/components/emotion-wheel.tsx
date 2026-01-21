@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+
 import { WHEEL } from '../constants';
 import { FEELINGS_CONTENT } from '../constants/feelings.content';
 import { buildWheelTree } from '../data/build-wheel-tree';
@@ -45,6 +46,7 @@ export function EmotionWheel() {
     .maxDistance(10)
     .onEnd((e, success) => {
       if (!success) return;
+      // ✅ focus whatever bubble you actually tapped
       g.focusNearestToPoint(e.x, e.y);
     });
 
@@ -66,7 +68,7 @@ export function EmotionWheel() {
               touchX={g.touchX}
               touchY={g.touchY}
               isTouching={g.isTouching}
-              selectedIndex={g.selectedIndex}
+              focusedIndex={g.focusedIndex}
             />
           ))}
         </Animated.View>

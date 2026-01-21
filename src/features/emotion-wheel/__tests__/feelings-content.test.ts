@@ -1,4 +1,4 @@
-import { FEELINGS_CONTENT } from '../constants/feelings';
+import { FEELINGS_CONTENT } from '../constants/feelings.content';
 import { validateFeelingsContent } from '../utils/validate-feelings';
 
 describe('Emotion Wheel – FEELINGS_CONTENT integrity', () => {

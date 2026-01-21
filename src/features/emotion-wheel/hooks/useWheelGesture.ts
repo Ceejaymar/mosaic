@@ -7,6 +7,7 @@ import type { NodeLayout } from '../types';
 export function useWheelGesture(args: { nodes: NodeLayout[]; centerX: number; centerY: number }) {
   const { nodes, centerX, centerY } = args;
 
+  // NOTE: later when you add pinch zoom, replace this with a zoom shared value.
   const S = WHEEL.zoomScale ?? 1;
 
   const fieldTx = useSharedValue(0);
@@ -19,28 +20,11 @@ export function useWheelGesture(args: { nodes: NodeLayout[]; centerX: number; ce
   const smoothX = useSharedValue(centerX);
   const smoothY = useSharedValue(centerY);
 
-  const selectedIndex = useSharedValue(-1);
+  // ✅ Focused = nearest to screen center (starts empty)
+  const focusedIndex = useSharedValue(-1);
 
   const lastTx = useSharedValue(0);
   const lastTy = useSharedValue(0);
-
-  const focusIndex = (index: number) => {
-    'worklet';
-    if (index < 0 || index >= nodes.length) return;
-
-    selectedIndex.value = index;
-
-    const target = nodes[index];
-
-    const wx = fieldTx.value + target.x0;
-    const wy = fieldTy.value + target.y0;
-
-    const deltaX = centerX - wx;
-    const deltaY = centerY - wy;
-
-    fieldTx.value = withSpring(fieldTx.value + deltaX, WHEEL.snapSpring);
-    fieldTy.value = withSpring(fieldTy.value + deltaY, WHEEL.snapSpring);
-  };
 
   const findNearestIndexToPoint = (x: number, y: number) => {
     'worklet';
@@ -49,9 +33,12 @@ export function useWheelGesture(args: { nodes: NodeLayout[]; centerX: number; ce
 
     for (let i = 0; i < nodes.length; i++) {
       const p = nodes[i];
+
+      // world position
       const wx = fieldTx.value + p.x0;
       const wy = fieldTy.value + p.y0;
 
+      // world -> screen around center pivot
       const bx = centerX + (wx - centerX) * S;
       const by = centerY + (wy - centerY) * S;
 
@@ -67,12 +54,69 @@ export function useWheelGesture(args: { nodes: NodeLayout[]; centerX: number; ce
     return { bestI, bestD };
   };
 
+  const focusIndex = (index: number) => {
+    'worklet';
+    if (index < 0 || index >= nodes.length) return;
+
+    focusedIndex.value = index;
+
+    const target = nodes[index];
+
+    // world position of target
+    const wx = fieldTx.value + target.x0;
+    const wy = fieldTy.value + target.y0;
+
+    // We want the target world position to land on screen center
+    const deltaX = centerX - wx;
+    const deltaY = centerY - wy;
+
+    fieldTx.value = withSpring(fieldTx.value + deltaX, WHEEL.snapSpring);
+    fieldTy.value = withSpring(fieldTy.value + deltaY, WHEEL.snapSpring);
+  };
+
+  const updateCenterFocus = () => {
+    'worklet';
+    const { bestI, bestD } = findNearestIndexToPoint(centerX, centerY);
+
+    if (focusedIndex.value === -1) {
+      focusedIndex.value = bestI;
+      runOnJS(hapticSelection)();
+      return;
+    }
+
+    const prev = focusedIndex.value;
+    if (bestI === prev) return;
+
+    // Ratio hysteresis to avoid flicker
+    const prevNode = nodes[prev];
+
+    const pwx = fieldTx.value + prevNode.x0;
+    const pwy = fieldTy.value + prevNode.y0;
+
+    const pbx = centerX + (pwx - centerX) * S;
+    const pby = centerY + (pwy - centerY) * S;
+
+    const pdx = centerX - pbx;
+    const pdy = centerY - pby;
+    const prevD = pdx * pdx + pdy * pdy;
+
+    const ratio = 0.92; // tune 0.88–0.95 (higher = stickier)
+    if (bestD < prevD * ratio) {
+      focusedIndex.value = bestI;
+      runOnJS(hapticSelection)();
+    }
+  };
+
+  // ✅ Tap-to-focus (hit-test bubble under tap)
   const focusNearestToPoint = (x: number, y: number) => {
     'worklet';
     const { bestI, bestD } = findNearestIndexToPoint(x, y);
 
     const n = nodes[bestI];
-    const size = n.size;
+    const size =
+      n.size ?? (n.level === 0 ? WHEEL.sizeL0 : n.level === 1 ? WHEEL.sizeL1 : WHEEL.sizeL2);
+
+    // hit radius should scale with zoom because bestD is screen-space
     const hit = (size * S * WHEEL.hitTestRadius) ** 2;
 
     if (bestD <= hit) {
@@ -92,6 +136,8 @@ export function useWheelGesture(args: { nodes: NodeLayout[]; centerX: number; ce
 
       lastTx.value = e.translationX ?? 0;
       lastTy.value = e.translationY ?? 0;
+
+      updateCenterFocus();
     })
     .onUpdate((e) => {
       const a = WHEEL.touchSmoothingAlpha;
@@ -110,35 +156,12 @@ export function useWheelGesture(args: { nodes: NodeLayout[]; centerX: number; ce
       fieldTx.value += dx / S;
       fieldTy.value += dy / S;
 
-      const { bestI, bestD } = findNearestIndexToPoint(touchX.value, touchY.value);
-
-      const prev = selectedIndex.value;
-      if (prev === -1) {
-        selectedIndex.value = bestI;
-        runOnJS(hapticSelection)();
-      } else if (bestI !== prev) {
-        const prevNode = nodes[prev];
-
-        const pwx = fieldTx.value + prevNode.x0;
-        const pwy = fieldTy.value + prevNode.y0;
-
-        const pbx = centerX + (pwx - centerX) * S;
-        const pby = centerY + (pwy - centerY) * S;
-
-        const pdx = touchX.value - pbx;
-        const pdy = touchY.value - pby;
-        const prevD = pdx * pdx + pdy * pdy;
-
-        const ratio = 0.88;
-        if (bestD < prevD * ratio) {
-          selectedIndex.value = bestI;
-          runOnJS(hapticSelection)();
-        }
-      }
+      updateCenterFocus();
     })
     .onEnd(() => {
-      const { bestI } = findNearestIndexToPoint(centerX, centerY);
-      focusIndex(bestI);
+      if (focusedIndex.value !== -1) {
+        focusIndex(focusedIndex.value);
+      }
       isTouching.value = withTiming(0, { duration: 160 });
     })
     .onFinalize(() => {
@@ -152,7 +175,7 @@ export function useWheelGesture(args: { nodes: NodeLayout[]; centerX: number; ce
     touchX,
     touchY,
     isTouching,
-    selectedIndex,
+    focusedIndex,
     focusIndex,
     focusNearestToPoint,
   };
