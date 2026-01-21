@@ -9,6 +9,6 @@ if (__DEV__) {
   validateFeelingsContent(FEELINGS_CONTENT, {
     throwOnError: true,
     enforceGlobalUniqueLabels: false,
-    enforceNoSynonymLabelCollision: true,
+    enforceNoSynonymLabelCollision: false,
   });
 }

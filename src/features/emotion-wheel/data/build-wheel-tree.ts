@@ -1,5 +1,3 @@
-// src/features/emotion-wheel/data/build-wheel-tree.ts
-
 import type { FeelingsContent, WheelTreeNode } from '../types';
 
 function byLabel(a: { label: string }, b: { label: string }) {

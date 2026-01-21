@@ -1,37 +1,139 @@
 import { WHEEL } from '../constants';
-import type { NodeLayout, WheelTreeNode } from '../types';
-import { jitterSigned } from './wheel-math';
+import type { FeelingGroupId, NodeLayout, WheelTreeNode } from '../types';
 
-// Axial hex coords
-type Hex = { q: number; r: number; d: number };
+const TAU = Math.PI * 2;
 
-// hex distance from origin
-function hexDist(q: number, r: number) {
-  const s = -q - r;
-  return (Math.abs(q) + Math.abs(r) + Math.abs(s)) / 2;
+type Wedge = {
+  groupId: FeelingGroupId;
+  a0: number;
+  a1: number;
+  am: number;
+  span: number;
+};
+
+function polarToXY(r: number, a: number) {
+  return { x: r * Math.cos(a), y: r * Math.sin(a) };
 }
 
-// axial -> pixel (pointy-top hex)
-function hexToPixel(q: number, r: number, step: number) {
-  const x = step * (Math.sqrt(3) * q + (Math.sqrt(3) / 2) * r);
-  const y = step * (1.5 * r);
-  return { x, y };
+function buildWedges(groupIds: FeelingGroupId[], paddingRad: number): Map<FeelingGroupId, Wedge> {
+  const n = groupIds.length;
+  const slice = TAU / n;
+  const map = new Map<FeelingGroupId, Wedge>();
+
+  for (let i = 0; i < n; i++) {
+    const mid = -Math.PI / 2 + i * slice;
+    const a0 = mid - slice / 2 + paddingRad;
+    const a1 = mid + slice / 2 - paddingRad;
+    map.set(groupIds[i], { groupId: groupIds[i], a0, a1, am: mid, span: a1 - a0 });
+  }
+
+  return map;
 }
 
-function flattenTree(roots: WheelTreeNode[]) {
-  const level0: WheelTreeNode[] = [];
+function flattenAfterCore(root: WheelTreeNode) {
+  const core = root;
+
   const level1: WheelTreeNode[] = [];
   const level2: WheelTreeNode[] = [];
 
-  for (const r of roots) {
-    level0.push(r);
-    for (const c1 of r.children) {
-      level1.push(c1);
-      for (const c2 of c1.children) level2.push(c2);
+  for (const c1 of root.children) level1.push(c1);
+  for (const c1 of root.children) for (const c2 of c1.children) level2.push(c2);
+
+  return { core, after: [...level1, ...level2] };
+}
+
+function sizeForRow(rowIndex: number) {
+  if (rowIndex <= 0) return WHEEL.sizeL0;
+
+  const start = WHEEL.rowSizeStart ?? WHEEL.sizeL1;
+  const decay = WHEEL.rowSizeDecay ?? 0.9;
+  const min = WHEEL.rowSizeMin ?? 56;
+
+  const s = start * decay ** (rowIndex - 1);
+  return Math.max(min, Math.round(s));
+}
+
+function packRows234(args: {
+  nodes: WheelTreeNode[];
+  wedge: Wedge;
+  baseRadius: number;
+  cx: number;
+  cy: number;
+  startCount: number;
+}): NodeLayout[] {
+  const { nodes, wedge, baseRadius, cx, cy, startCount } = args;
+  if (!nodes.length) return [];
+
+  const out: NodeLayout[] = [];
+
+  let cursor = 0;
+  let row = 0;
+
+  let prevD = sizeForRow(1) + (WHEEL.nodeGapPx ?? 14);
+  let prevR = baseRadius - prevD;
+
+  while (cursor < nodes.length) {
+    const rowIndex = 1 + row;
+    const size = sizeForRow(rowIndex);
+    const D = size + (WHEEL.nodeGapPx ?? 14);
+
+    const step = ((prevD + D) / 2) * (WHEEL.rowRadialStepFactor ?? 0.9);
+
+    const want = startCount + row; // 2,3,4,5...
+    const take = Math.min(want, nodes.length - cursor);
+    const slice = nodes.slice(cursor, cursor + take);
+    cursor += take;
+
+    // radius for this row
+    let r = Math.max(baseRadius + row * step, prevR + step);
+
+    // compute minimum angle spacing to keep neighbors from overlapping
+    const usable = wedge.span * 0.86;
+
+    let stepAngle = take <= 1 ? 0 : 2 * Math.asin(Math.min(0.999, D / (2 * r)));
+    let needed = (take - 1) * stepAngle;
+
+    // push outward until row fits inside wedge
+    let guard = 0;
+    while (take > 1 && needed > usable && guard < 250) {
+      r += step;
+      stepAngle = 2 * Math.asin(Math.min(0.999, D / (2 * r)));
+      needed = (take - 1) * stepAngle;
+      guard++;
     }
+
+    // ✅ NO STAGGER: perfectly centered rows
+    const aStart = wedge.am - needed / 2;
+
+    for (let i = 0; i < slice.length; i++) {
+      const n = slice[i];
+      let a = aStart + i * stepAngle;
+
+      if (a < wedge.a0) a = wedge.a0;
+      if (a > wedge.a1) a = wedge.a1;
+
+      const p = polarToXY(r, a);
+
+      out.push({
+        id: n.id,
+        label: n.label,
+        level: n.level,
+        groupId: n.groupId,
+        parentId: n.parentId,
+        color: n.color,
+        x0: cx + p.x,
+        y0: cy + p.y,
+        rowIndex,
+        size,
+      });
+    }
+
+    prevD = D;
+    prevR = r;
+    row += 1;
   }
 
-  return { level0, level1, level2 };
+  return out;
 }
 
 export function buildWheelLayout(
@@ -40,66 +142,48 @@ export function buildWheelLayout(
 ): NodeLayout[] {
   const { cx, cy } = opts;
 
-  /**
-   * ✅ Tighter grid:
-   * Base step derived from SMALLER nodes, not the biggest ones.
-   * Then bandScale gives the center a bit more room.
-   */
-  const baseStep = (WHEEL.sizeL2 + WHEEL.gap) * WHEEL.packingTightness;
+  const groupIds = roots.map((r) => r.groupId);
+  const wedges = buildWedges(groupIds, WHEEL.wedgePaddingRad);
 
-  // Generate hex cells inside radius
-  const cells: Hex[] = [];
-  const R = WHEEL.hexRadius;
+  const out: NodeLayout[] = [];
 
-  for (let q = -R; q <= R; q++) {
-    for (let r = -R; r <= R; r++) {
-      const d = hexDist(q, r);
-      if (d <= R) cells.push({ q, r, d });
-    }
-  }
+  for (const root of roots) {
+    const wedge = wedges.get(root.groupId);
+    if (!wedge) continue;
 
-  // Center outward
-  cells.sort((a, b) => a.d - b.d);
+    const { core, after } = flattenAfterCore(root);
 
-  const band0 = cells.filter((c) => c.d <= WHEEL.level0Max);
-  const band1 = cells.filter((c) => c.d > WHEEL.level0Max && c.d <= WHEEL.level1Max);
-  const band2 = cells.filter((c) => c.d > WHEEL.level1Max);
-
-  const { level0, level1, level2 } = flattenTree(roots);
-
-  function place(nodes: WheelTreeNode[], band: Hex[], bandScale: number): NodeLayout[] {
-    const out: NodeLayout[] = [];
-    const count = Math.min(nodes.length, band.length);
-
-    const step = baseStep * bandScale;
-
-    for (let i = 0; i < count; i++) {
-      const n = nodes[i];
-      const c = band[i];
-      const p = hexToPixel(c.q, c.r, step);
-
-      const j = WHEEL.positionJitterPx;
-      const jx = jitterSigned(`${n.id}:x`) * j;
-      const jy = jitterSigned(`${n.id}:y`) * j;
+    // core
+    {
+      const size = sizeForRow(0);
+      const p = polarToXY(WHEEL.ring0Radius, wedge.am);
 
       out.push({
-        id: n.id,
-        label: n.label,
-        level: n.level,
-        groupId: n.groupId,
-        parentId: n.parentId ?? null,
-        color: n.color,
-        x0: cx + p.x + jx,
-        y0: cy + p.y + jy,
+        id: core.id,
+        label: core.label,
+        level: core.level,
+        groupId: core.groupId,
+        parentId: core.parentId,
+        color: core.color,
+        x0: cx + p.x,
+        y0: cy + p.y,
+        rowIndex: 0,
+        size,
       });
     }
 
-    return out;
+    // after-core rows
+    out.push(
+      ...packRows234({
+        nodes: after,
+        wedge,
+        baseRadius: WHEEL.ring1Radius,
+        cx,
+        cy,
+        startCount: WHEEL.rowStart ?? 2,
+      }),
+    );
   }
 
-  return [
-    ...place(level0, band0, WHEEL.bandScale0),
-    ...place(level1, band1, WHEEL.bandScale1),
-    ...place(level2, band2, WHEEL.bandScale2),
-  ];
+  return out;
 }

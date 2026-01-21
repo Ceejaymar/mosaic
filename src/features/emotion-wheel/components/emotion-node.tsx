@@ -7,10 +7,16 @@ import { WHEEL } from '../constants';
 import { clamp, gaussian01, smoothStep } from '../layout/wheel-math';
 import type { NodeLayout } from '../types';
 
-function sizeForLevel(level: 0 | 1 | 2) {
-  if (level === 0) return WHEEL.sizeL0;
-  if (level === 1) return WHEEL.sizeL1;
-  return WHEEL.sizeL2;
+function fontForRow(rowIndex: number) {
+  if (rowIndex === 0) return 16;
+  if (rowIndex === 1) return 13;
+  if (rowIndex === 2) return 12;
+  return 11;
+}
+
+function linesForRow(rowIndex: number) {
+  if (rowIndex >= 3) return 1;
+  return 2;
 }
 
 export const EmotionNode = memo(function EmotionNode(props: {
@@ -38,17 +44,13 @@ export const EmotionNode = memo(function EmotionNode(props: {
     selectedIndex,
   } = props;
 
-  const size = sizeForLevel(node.level);
+  const size = node.size;
   const r = size / 2;
 
   const style = useAnimatedStyle(() => {
-    // Node position in SCREEN coords (field translation affects it)
-    // Even though the container translates visually, we still use fieldTx/fieldTy here
-    // so the math matches what the user sees.
     const bx = fieldTx.value + node.x0;
     const by = fieldTy.value + node.y0;
 
-    // Focus field relative to screen center
     const cdx = bx - centerX;
     const cdy = by - centerY;
     const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
@@ -60,7 +62,6 @@ export const EmotionNode = memo(function EmotionNode(props: {
     const neighbor = gaussian01(clamp(cDist / (WHEEL.focusRadius * 1.55), 0, 1));
     const neighborScale = 1 + neighbor * WHEEL.focusNeighborBoost;
 
-    // Finger magnet (subtle)
     const fdx = touchX.value - bx;
     const fdy = touchY.value - by;
     const fDist = Math.sqrt(fdx * fdx + fdy * fdy);
@@ -90,7 +91,7 @@ export const EmotionNode = memo(function EmotionNode(props: {
 
     return {
       position: 'absolute',
-      left: node.x0 - r, // NOTE: this is inside the translated container
+      left: node.x0 - r,
       top: node.y0 - r,
       width: size,
       height: size,
@@ -103,8 +104,8 @@ export const EmotionNode = memo(function EmotionNode(props: {
     <Animated.View style={style} pointerEvents="none">
       <View style={[styles.nodeContainer, { backgroundColor: node.color }]}>
         <Text
-          numberOfLines={2}
-          style={[styles.label, { fontSize: node.level === 0 ? 16 : node.level === 1 ? 13 : 11 }]}
+          numberOfLines={linesForRow(node.rowIndex)}
+          style={[styles.label, { fontSize: fontForRow(node.rowIndex) }]}
         >
           {node.label}
         </Text>

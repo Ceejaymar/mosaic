@@ -46,10 +46,15 @@ export type WheelTreeNode = {
 export type NodeLayout = {
   id: NodeId;
   label: string;
-  level: FeelingLevel;
+  level: FeelingLevel; // semantic only
   groupId: FeelingGroupId;
   parentId: NodeId | null;
   color: string;
+
   x0: number;
   y0: number;
+
+  // visual sizing by row
+  rowIndex: number; // 0 = core, 1 = first row after core...
+  size: number; // diameter
 };

@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import { WHEEL } from '../constants';
 import { FEELINGS_CONTENT } from '../constants/feelings.content';
 import { buildWheelTree } from '../data/build-wheel-tree';
 import { useWheelGesture } from '../hooks/useWheelGesture';
@@ -21,10 +22,22 @@ export function EmotionWheel() {
 
   const g = useWheelGesture({ nodes, centerX, centerY });
 
-  // Single moving field
   const fieldStyle = useAnimatedStyle(() => {
+    const S = WHEEL.zoomScale ?? 1;
+
     return {
-      transform: [{ translateX: g.fieldTx.value }, { translateY: g.fieldTy.value }],
+      transform: [
+        { translateX: centerX },
+        { translateY: centerY },
+
+        { translateX: g.fieldTx.value },
+        { translateY: g.fieldTy.value },
+
+        { scale: S },
+
+        { translateX: -centerX },
+        { translateY: -centerY },
+      ],
     };
   });
 
