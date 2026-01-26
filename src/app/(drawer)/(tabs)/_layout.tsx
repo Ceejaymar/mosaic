@@ -10,6 +10,7 @@ export default function _layout() {
         tabBarLabelPosition: 'below-icon',
         tabBarLabelStyle: { fontSize: 12 },
         tabBarActiveTintColor: '#f2b949',
+        animation: 'shift',
       }}
     >
       <Tabs.Screen

@@ -14,13 +14,11 @@ export default function Calendar() {
   );
 }
 
-const styles = StyleSheet.create((theme) => ({
+const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-
     justifyContent: 'center',
-    // justifyContent: 'space-between',
     gap: 0,
   },
-}));
+});

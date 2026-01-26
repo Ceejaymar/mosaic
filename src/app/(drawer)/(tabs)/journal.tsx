@@ -5,7 +5,7 @@ import { Text } from '@/src/components/Themed';
 export default function Journal() {
   return (
     <View style={styles.container}>
-      <Text>Journal</Text>
+      <Text style={styles.title}>Journal</Text>
     </View>
   );
 }
