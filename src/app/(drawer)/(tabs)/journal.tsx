@@ -1,16 +1,11 @@
-import { useTranslation } from 'react-i18next';
+import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
+import { Text } from '@/src/components/Themed';
 
-import Calendar from '@/src/components/calendar';
-import { Text, View } from '@/src/components/Themed';
-
-export default function TabOneScreen() {
-  const { t } = useTranslation();
-
+export default function Journal() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>How are you feeling {t('dashboard.time_of_day.morning')}?</Text>
-      <Calendar />
+      <Text style={styles.title}>Journal</Text>
     </View>
   );
 }
