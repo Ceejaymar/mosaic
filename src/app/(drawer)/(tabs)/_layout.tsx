@@ -9,20 +9,56 @@ export default function _layout() {
         headerLeft: () => <DrawerToggleButton />,
         tabBarLabelPosition: 'below-icon',
         tabBarLabelStyle: { fontSize: 12 },
+        tabBarActiveTintColor: '#f2b949',
+        animation: 'shift',
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color, size }) => <Ionicons name="home" color={color} size={size} />,
+          title: 'Check in',
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? 'add-circle' : 'add-circle-outline'}
+              color={color}
+              size={size}
+            />
+          ),
         }}
       />
       <Tabs.Screen
-        name="analytics"
+        name="journal"
         options={{
-          title: 'Analytics',
-          tabBarIcon: ({ color, size }) => <Ionicons name="bar-chart" color={color} size={size} />,
+          title: 'Journal',
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'book' : 'book-outline'} color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="reflections"
+        options={{
+          title: 'Reflections',
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? 'bar-chart' : 'bar-chart-outline'}
+              color={color}
+              size={size}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="wheel"
+        options={{
+          title: 'emotions',
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? 'pie-chart' : 'pie-chart-outline'}
+              color={color}
+              size={size}
+            />
+          ),
         }}
       />
     </Tabs>
