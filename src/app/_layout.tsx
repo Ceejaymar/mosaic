@@ -8,8 +8,8 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { SystemBars } from 'react-native-edge-to-edge';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-
 import migrations from '@/drizzle/migrations';
+import '@/src/i18n/index';
 import { useColorScheme } from '@/src/components/useColorScheme';
 import { db } from '@/src/db/client';
 
@@ -26,6 +26,7 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    Fraunces: require('../assets/fonts/Fraunces-VariableFont.ttf'),
     ...FontAwesome.font,
   });
 

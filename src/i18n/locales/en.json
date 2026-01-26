@@ -10,6 +10,12 @@
     "get_started": "Get Started"
   },
   "dashboard": {
+    "time_of_day": {
+      "morning": "this morning",
+      "afternoon": "this afternoon",
+      "evening": "this evening",
+      "night": "tonight"
+    },
     "projects_count_zero": "No projects yet",
     "projects_count_one": "You have one project",
     "projects_count_other": "You have {{count}} projects"

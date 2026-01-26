@@ -6,11 +6,18 @@ import en from '@/src/i18n/locales/en.json';
 import es from '@/src/i18n/locales/es.json';
 import { mmkvAdapter } from '@/src/services/storage/mmkv';
 
-const deviceLanguage = getLocales()[0]?.languageCode ?? 'en';
-const savedLanguage = mmkvAdapter.getItem('language');
+const normalizeLang = (lng?: string | null) => {
+  if (!lng) return undefined;
+  return lng.split('-')[0]; // "en-US" -> "en"
+};
+
+const deviceLanguage = normalizeLang(getLocales()[0]?.languageCode) ?? 'en';
+const savedLanguage = normalizeLang(mmkvAdapter.getItem('language'));
 const initialLanguage = savedLanguage ?? deviceLanguage;
 
+// if (!i18n.isInitialized) {
 i18n.use(initReactI18next).init({
+  initImmediate: false,
   resources: {
     en: {
       translation: en,
@@ -25,5 +32,6 @@ i18n.use(initReactI18next).init({
     escapeValue: false,
   },
 });
+// }
 
 export default i18n;
