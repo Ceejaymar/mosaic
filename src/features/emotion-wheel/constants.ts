@@ -1,46 +1,40 @@
 export const WHEEL = {
+  // Sizing
   sizeL0: 120,
   sizeL1: 96,
   sizeL2: 78,
 
-  focusRadius: 210,
-  focusMaxBoost: 0.35, // Increased slightly for "pop"
-  focusNeighborBoost: 0.1,
-  focusLift: -8,
+  // Physics & Focus
+  focusRadius: 180, // [CRITICAL] Used for scaling math
+  focusMaxBoost: 0.65, // [CRITICAL] How much it pops at center
+  selectionBoost: 0.05,
 
-  fingerInfluenceRadius: 170,
-  fingerMaxOffset: 6,
-  fingerStrength: 0.05,
-  fingerScaleBoost: 0.08,
-
+  // Touch handling
   touchSmoothingAlpha: 0.26,
 
+  // Physics
   snapSpring: {
-    damping: 26,
-    stiffness: 280,
-    mass: 0.95,
+    damping: 28,
+    stiffness: 180,
+    mass: 1,
   },
 
+  // Layout
   selectionHysteresisPx: 14,
-
-  // Row sizing: Uniform nodes after core
   rowSizeStart: 90,
   rowSizeDecay: 1,
   rowSizeMin: 90,
-
-  nodeGapPx: 12, // Gap between bubbles
-
-  // New: This multiplier ensures the static layout creates
-  // enough "empty space" for bubbles to scale up to 1.4x
-  layoutSafetyFactor: 1.25,
-
+  nodeGapPx: 12,
+  layoutSafetyFactor: 1.35, // Ensures bubbles don't overlap when scaled
   rowRadialStepFactor: 0.92,
-  wedgePaddingRad: 0.06, // Increased slightly for clearer wedge separation
+  wedgePaddingRad: 0.06,
   wedgeEdgeInsetRad: 0.02,
 
+  // Radii
   ring0Radius: 165,
   ring1Radius: 300,
 
+  // Misc
   rowStart: 2,
   positionJitterPx: 0,
   hitTestRadius: 0.62,

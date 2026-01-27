@@ -1,10 +1,9 @@
 import { memo } from 'react';
-import { Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import Animated, { type SharedValue, useAnimatedStyle } from 'react-native-reanimated';
-import { StyleSheet } from 'react-native-unistyles';
 
 import { WHEEL } from '../constants';
-import { clamp, gaussian01, smoothStep } from '../layout/wheel-math';
+import { clamp, gaussian01 } from '../layout/wheel-math';
 import type { NodeLayout } from '../types';
 
 export const EmotionNode = memo(function EmotionNode(props: {
@@ -14,81 +13,46 @@ export const EmotionNode = memo(function EmotionNode(props: {
   centerY: number;
   fieldTx: SharedValue<number>;
   fieldTy: SharedValue<number>;
-  touchX: SharedValue<number>;
-  touchY: SharedValue<number>;
-  isTouching: SharedValue<number>;
   focusedIndex: SharedValue<number>;
 }) {
-  const {
-    node,
-    index,
-    centerX,
-    centerY,
-    fieldTx,
-    fieldTy,
-    touchX,
-    touchY,
-    isTouching,
-    focusedIndex,
-  } = props;
+  const { node, index, centerX, centerY, fieldTx, fieldTy, focusedIndex } = props;
   const size = node.size;
   const r = size / 2;
 
+  // Static starting position
+  const baseLeft = node.x0 - r;
+  const baseTop = node.y0 - r;
+
   const style = useAnimatedStyle(() => {
-    // 1. ANCHOR POSITION (Static world coords + current pan)
-    const anchorX = fieldTx.value + node.x0;
-    const anchorY = fieldTy.value + node.y0;
+    // 1. Calculate World Position
+    const currentX = node.x0 + fieldTx.value;
+    const currentY = node.y0 + fieldTy.value;
 
-    // 2. VECTOR FROM SCREEN CENTER
-    const cdx = anchorX - centerX;
-    const cdy = anchorY - centerY;
-    const cDist = Math.sqrt(cdx * cdx + cdy * cdy);
+    // 2. Distance from Center
+    const dX = currentX - centerX;
+    const dY = currentY - centerY;
+    const distFromCenter = Math.sqrt(dX * dX + dY * dY);
 
-    // 3. FOCUS & SCALE
-    const focusT = clamp(cDist / WHEEL.focusRadius, 0, 1);
+    // 3. Scale Logic
+    // If WHEEL.focusRadius is undefined, this becomes NaN and view disappears!
+    const focusT = clamp(distFromCenter / (WHEEL.focusRadius || 180), 0, 1);
     const focus = gaussian01(focusT);
     const isFocused = focusedIndex.value === index ? 1 : 0;
 
-    const scale = (1 + focus * WHEEL.focusMaxBoost) * (1 + isFocused * 0.12);
+    const scale =
+      1 + focus * (WHEEL.focusMaxBoost || 0.5) + isFocused * (WHEEL.selectionBoost || 0.05);
 
-    // 4. RADIAL REPEL (Shake-free logic)
-    const deadZone = 15;
-    const repelFactor = smoothStep(clamp(cDist / deadZone, 0, 1));
-    const pushStrength = focus * 35 * repelFactor;
-
-    const unitX = cDist > 0.1 ? cdx / cDist : 0;
-    const unitY = cDist > 0.1 ? cdy / cDist : 0;
-
-    // 5. FINGER MAGNET
-    const fdx = touchX.value - anchorX;
-    const fdy = touchY.value - anchorY;
-    const fDist = Math.sqrt(fdx * fdx + fdy * fdy);
-    const fingerEase =
-      smoothStep(clamp(1 - fDist / WHEEL.fingerInfluenceRadius, 0, 1)) * isTouching.value;
-
-    const ox = clamp(
-      fdx * fingerEase * WHEEL.fingerStrength,
-      -WHEEL.fingerMaxOffset,
-      WHEEL.fingerMaxOffset,
-    );
-    const oy = clamp(
-      fdy * fingerEase * WHEEL.fingerStrength,
-      -WHEEL.fingerMaxOffset,
-      WHEEL.fingerMaxOffset,
-    );
+    // 4. Z-Index (Focused on top)
+    const zIndex = Math.round(focus * 100 + isFocused * 10);
 
     return {
       position: 'absolute',
-      left: node.x0 - r,
-      top: node.y0 - r,
+      left: baseLeft,
+      top: baseTop,
       width: size,
       height: size,
-      transform: [
-        { translateX: ox + unitX * pushStrength },
-        { translateY: oy + unitY * pushStrength + focus * WHEEL.focusLift },
-        { scale },
-      ],
-      zIndex: Math.round(focus * 2000 + isFocused * 5000),
+      zIndex,
+      transform: [{ translateX: fieldTx.value }, { translateY: fieldTy.value }, { scale }],
     };
   });
 
@@ -99,7 +63,7 @@ export const EmotionNode = memo(function EmotionNode(props: {
           numberOfLines={2}
           adjustsFontSizeToFit
           minimumFontScale={0.7}
-          style={[styles.label, { fontSize: node.rowIndex === 0 ? 16 : 13 }]}
+          style={[styles.label, { fontSize: node.rowIndex === 0 ? 17 : 14 }]}
         >
           {node.label}
         </Text>
@@ -112,20 +76,24 @@ const styles = StyleSheet.create({
   nodeContainer: {
     flex: 1,
     borderRadius: 999,
-    borderWidth: 1.5,
-    borderColor: 'rgba(0,0,0,0.1)',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.3)',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 10,
-    // Add a slight shadow for depth
+    paddingHorizontal: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
   },
   label: {
-    color: 'rgba(0,0,0,0.8)',
+    color: 'black',
     textAlign: 'center',
-    fontWeight: '600',
+    fontWeight: '700',
+    fontFamily: 'Fraunces',
+    textShadowColor: 'rgba(0,0,0,0.15)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
 });
