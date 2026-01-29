@@ -8,7 +8,7 @@ export type FeelingGroupId =
   | 'sad'
   | 'disgusted'
   | 'angry'
-  | 'fear';
+  | 'fearful';
 
 export type FeelingNode = {
   id: NodeId;
@@ -31,30 +31,4 @@ export type FeelingsContent = {
   version: number;
   groups: FeelingGroup[];
   nodes: FeelingNode[];
-};
-
-export type WheelTreeNode = {
-  id: NodeId;
-  label: string;
-  level: FeelingLevel;
-  groupId: FeelingGroupId;
-  parentId: NodeId | null;
-  color: string;
-  children: WheelTreeNode[];
-};
-
-export type NodeLayout = {
-  id: NodeId;
-  label: string;
-  level: FeelingLevel; // semantic only
-  groupId: FeelingGroupId;
-  parentId: NodeId | null;
-  color: string;
-
-  x0: number;
-  y0: number;
-
-  // visual sizing by row
-  rowIndex: number; // 0 = core, 1 = first row after core...
-  size: number; // diameter
 };
