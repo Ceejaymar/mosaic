@@ -49,7 +49,7 @@ export default function _layout() {
         }}
       />
       <Tabs.Screen
-        name="wheel"
+        name="emotion-accordion"
         options={{
           title: 'emotions',
           tabBarIcon: ({ color, size, focused }) => (
