@@ -14,6 +14,10 @@ export function Emotion({ label, baseColor, isSelected, onPress }: Props) {
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.7}
+      accessible
+      accessibilityRole="button"
+      accessibilityState={{ selected: isSelected }}
+      accessibilityLabel={label}
       style={[
         styles.container,
         {

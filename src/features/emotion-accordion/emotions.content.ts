@@ -1140,8 +1140,8 @@ export const FEELINGS_CONTENT: FeelingsContent = {
     // FEARFUL
     // =========================
     {
-      id: 'fear',
-      label: 'Fear',
+      id: 'fearful',
+      label: 'Fearful',
       level: 0,
       groupId: 'fearful',
       parentId: null,
@@ -1154,7 +1154,7 @@ export const FEELINGS_CONTENT: FeelingsContent = {
       label: 'Anxious',
       level: 1,
       groupId: 'fearful',
-      parentId: 'fear',
+      parentId: 'fearful',
       description: 'Worry plus body activation; anticipating problems.',
       synonyms: ['nervous', 'uneasy', 'on-edge'],
     },
@@ -1182,7 +1182,7 @@ export const FEELINGS_CONTENT: FeelingsContent = {
       label: 'Scared',
       level: 1,
       groupId: 'fearful',
-      parentId: 'fear',
+      parentId: 'fearful',
       description: 'Feeling threatened; wanting safety.',
       synonyms: ['afraid', 'spooked', 'alarmed'],
     },
