@@ -1,10 +1,12 @@
-import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
-import { Text } from '@/src/components/Themed';
+
+import NativeHeader from '@/src/components/native-header';
+import { Text, View } from '@/src/components/Themed';
 
 export default function Journal() {
   return (
     <View style={styles.container}>
+      <NativeHeader title="Journal" />
       <Text style={styles.title}>Journal</Text>
     </View>
   );
@@ -13,8 +15,6 @@ export default function Journal() {
 const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   title: {
     fontSize: 28,
