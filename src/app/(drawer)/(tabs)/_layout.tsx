@@ -1,19 +1,18 @@
 import { Icon, Label, NativeTabs } from 'expo-router/unstable-native-tabs';
-import { DynamicColorIOS } from 'react-native';
+import { DynamicColorIOS, Platform } from 'react-native';
 
 export default function _layout() {
+  const labelColor =
+    Platform.OS === 'ios' ? DynamicColorIOS({ dark: 'white', light: 'black' }) : 'black';
+  const tabTint =
+    Platform.OS === 'ios' ? DynamicColorIOS({ dark: '#f2b949', light: '#f2b949' }) : '#f2b949';
+
   return (
     <NativeTabs
       labelStyle={{
-        color: DynamicColorIOS({
-          dark: 'white',
-          light: 'black',
-        }),
+        color: labelColor,
       }}
-      tintColor={DynamicColorIOS({
-        dark: '#f2b949',
-        light: '#f2b949',
-      })}
+      tintColor={tabTint}
     >
       <NativeTabs.Trigger name="index">
         <Label>Check in</Label>
