@@ -7,7 +7,7 @@ import { EmotionSelector } from '@/src/features/emotion-accordion/components/emo
 export default function EmotionsScreen() {
   return (
     <View style={styles.container}>
-      <NativeHeader title="Emotions" />
+      <NativeHeader />
       <EmotionSelector />
     </View>
   );

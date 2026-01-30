@@ -10,11 +10,14 @@ type NativeHeader = {
 
 export default function NativeHeader({ title }: NativeHeader) {
   const HeaderContainer = Platform.OS === 'ios' ? BlurView : View;
-  const headerProps = Platform.OS === 'ios' ? { intensity: 80, tint: 'default' as BlurTint } : {};
+  const headerProps =
+    Platform.OS === 'ios'
+      ? { intensity: 80, tint: 'default' as BlurTint, pointerEvents: 'none' as const }
+      : {};
 
   return (
     <View style={styles.wrapper}>
-      <HeaderContainer style={styles.headerContainer} {...headerProps} />
+      <HeaderContainer style={StyleSheet.absoluteFill} {...headerProps} />
 
       <SafeAreaView edges={['top']}>
         <View style={styles.content}>
@@ -34,15 +37,6 @@ const styles = StyleSheet.create({
   wrapper: {
     zIndex: 100,
     backgroundColor: Platform.OS === 'android' ? '#fff' : 'transparent',
-    padding: 0,
-  },
-  headerContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 100,
-    backgroundColor: Platform.OS === 'android' ? '#fff' : 'transparent',
   },
   content: {
     flexDirection: 'row',
@@ -56,7 +50,6 @@ const styles = StyleSheet.create({
   },
   rightContainer: {
     width: 50,
-    backgroundColor: 'blue',
   },
   title: {
     fontSize: 17,

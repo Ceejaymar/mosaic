@@ -17,7 +17,7 @@ export default function _layout() {
     >
       <NativeTabs.Trigger name="index">
         <Label>Check in</Label>
-        <Icon sf={{ default: 'plus.circle', selected: 'plus.circle.fill' }} />{' '}
+        <Icon sf={{ default: 'plus.circle', selected: 'plus.circle.fill' }} />
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="journal">
@@ -31,7 +31,7 @@ export default function _layout() {
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="reflections">
-        <Label>Reflections</Label>{' '}
+        <Label>Reflections</Label>
         <Icon sf={{ default: 'chart.bar', selected: 'chart.bar.fill' }} />
       </NativeTabs.Trigger>
     </NativeTabs>

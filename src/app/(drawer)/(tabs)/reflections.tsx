@@ -6,7 +6,7 @@ import { Text, View } from '@/src/components/Themed';
 export default function Analytics() {
   return (
     <View style={styles.container}>
-      <NativeHeader title="Reflections" />
+      <NativeHeader />
       <Text style={styles.title}>Reflections</Text>
     </View>
   );

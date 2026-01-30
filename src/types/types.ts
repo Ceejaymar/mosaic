@@ -18,6 +18,4 @@ export type Language = 'en' | 'es';
 
 export interface AccessibilitySettings {
   disableLiquidGlass: boolean;
-  // reduceMotion: boolean;
-  // highContrast: boolean;
 }

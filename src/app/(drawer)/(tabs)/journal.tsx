@@ -6,7 +6,7 @@ import { Text, View } from '@/src/components/Themed';
 export default function Journal() {
   return (
     <View style={styles.container}>
-      <NativeHeader title="Journal" />
+      <NativeHeader />
       <Text style={styles.title}>Journal</Text>
     </View>
   );

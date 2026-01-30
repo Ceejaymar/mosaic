@@ -10,8 +10,21 @@ export default function TabOneScreen() {
 
   return (
     <View style={styles.container}>
-      <NativeHeader title={t('dashboard.time_of_day.morning')} />
+      <NativeHeader />
       <ScrollView>
+        <Text style={styles.title}>How are you feeling {t('dashboard.time_of_day.morning')}?</Text>
+        <Text style={styles.title}>How are you feeling {t('dashboard.time_of_day.morning')}?</Text>
+        <Text style={styles.title}>How are you feeling {t('dashboard.time_of_day.morning')}?</Text>
+        <Text style={styles.title}>How are you feeling {t('dashboard.time_of_day.morning')}?</Text>
+        <Text style={styles.title}>How are you feeling {t('dashboard.time_of_day.morning')}?</Text>
+        <Text style={styles.title}>How are you feeling {t('dashboard.time_of_day.morning')}?</Text>
+        <Text style={styles.title}>How are you feeling {t('dashboard.time_of_day.morning')}?</Text>
+        <Text style={styles.title}>How are you feeling {t('dashboard.time_of_day.morning')}?</Text>
+        <Text style={styles.title}>How are you feeling {t('dashboard.time_of_day.morning')}?</Text>
+        <Text style={styles.title}>How are you feeling {t('dashboard.time_of_day.morning')}?</Text>
+        <Text style={styles.title}>How are you feeling {t('dashboard.time_of_day.morning')}?</Text>
+        <Text style={styles.title}>How are you feeling {t('dashboard.time_of_day.morning')}?</Text>
+        <Text style={styles.title}>How are you feeling {t('dashboard.time_of_day.morning')}?</Text>
         <Text style={styles.title}>How are you feeling {t('dashboard.time_of_day.morning')}?</Text>
       </ScrollView>
     </View>
