@@ -1,13 +1,8 @@
 import { useMemo, useState } from 'react';
-import {
-  LayoutAnimation,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  UIManager,
-  View,
-} from 'react-native';
+import { LayoutAnimation, Platform, ScrollView, UIManager } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
+
+import { Text, View } from '@/src/components/Themed';
 import { FEELINGS_CONTENT } from '../emotions.content';
 import type { FeelingGroupId, FeelingNode } from '../types';
 import { AccordionGroup } from './accordion-group';
@@ -79,10 +74,9 @@ export function EmotionSelector() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
     paddingTop: 50,
   },
   scrollContent: {
@@ -92,7 +86,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '800',
-    color: '#1a1a1a',
+    color: theme.colors.typography,
     marginBottom: 20,
   },
-});
+}));

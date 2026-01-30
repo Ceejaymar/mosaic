@@ -1,10 +1,13 @@
-import { Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
+
+import NativeHeader from '@/src/components/native-header';
+import { Text, View } from '@/src/components/Themed';
 
 export default function Analytics() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>analytics</Text>
+      <NativeHeader />
+      <Text style={styles.title}>Reflections</Text>
     </View>
   );
 }
@@ -12,8 +15,6 @@ export default function Analytics() {
 const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   title: {
     fontSize: 20,

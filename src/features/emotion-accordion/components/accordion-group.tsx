@@ -1,4 +1,7 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { TouchableOpacity } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
+
+import { Text, View } from '@/src/components/Themed';
 import type { FeelingGroup, FeelingNode } from '../types';
 import { Emotion } from './emotion';
 
