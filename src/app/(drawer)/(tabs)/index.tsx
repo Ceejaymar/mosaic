@@ -25,7 +25,6 @@ export default function TabOneScreen() {
         <Text style={styles.title}>How are you feeling {t('dashboard.time_of_day.morning')}?</Text>
         <Text style={styles.title}>How are you feeling {t('dashboard.time_of_day.morning')}?</Text>
         <Text style={styles.title}>How are you feeling {t('dashboard.time_of_day.morning')}?</Text>
-        <Text style={styles.title}>How are you feeling {t('dashboard.time_of_day.morning')}?</Text>
       </ScrollView>
     </View>
   );
