@@ -1,38 +1,107 @@
-import { Icon, Label, NativeTabs } from 'expo-router/unstable-native-tabs';
-import { DynamicColorIOS, Platform } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { DrawerToggleButton } from '@react-navigation/drawer';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Tabs } from 'expo-router';
+import { Platform, View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
-export default function _layout() {
-  const labelColor =
-    Platform.OS === 'ios' ? DynamicColorIOS({ dark: 'white', light: 'black' }) : 'black';
-  const tabTint =
-    Platform.OS === 'ios' ? DynamicColorIOS({ dark: '#f2b949', light: '#f2b949' }) : '#f2b949';
+import { hapticLight } from '@/src/lib/haptics/haptics';
 
+export default function TabLayout() {
   return (
-    <NativeTabs
-      labelStyle={{
-        color: labelColor,
+    <Tabs
+      screenListeners={{
+        tabPress: () => {
+          hapticLight();
+        },
       }}
-      tintColor={tabTint}
+      screenOptions={{
+        headerShown: true,
+        headerLeft: () => <DrawerToggleButton tintColor="#000" />,
+        headerTransparent: true,
+        tabBarActiveTintColor: '#f2b949',
+        tabBarLabelStyle: { fontSize: 12 },
+        animation: 'shift',
+        headerBackground: () => (
+          <View style={StyleSheet.absoluteFill}>
+            <LinearGradient
+              colors={['rgba(255,255,255,0.9)', 'rgba(255,255,255,0.1)']}
+              locations={[0.1, 1]}
+              style={StyleSheet.absoluteFill}
+            />
+          </View>
+        ),
+
+        tabBarStyle: {
+          position: 'absolute',
+          borderTopWidth: 0,
+          elevation: 0,
+          height: Platform.OS === 'ios' ? 90 : 70,
+          backgroundColor: 'transparent',
+        },
+
+        tabBarBackground: () => (
+          <View style={StyleSheet.absoluteFill}>
+            <LinearGradient
+              colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.9)']}
+              locations={[0, 0.9]}
+              style={StyleSheet.absoluteFill}
+            />
+          </View>
+        ),
+      }}
     >
-      <NativeTabs.Trigger name="index">
-        <Label>Check in</Label>
-        <Icon sf={{ default: 'plus.circle', selected: 'plus.circle.fill' }} />
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="journal">
-        <Label>Journal</Label>
-        <Icon sf={{ default: 'book', selected: 'book.fill' }} />
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="emotion-accordion">
-        <Label>Emotions</Label>
-        <Icon sf={{ default: 'square.split.2x2', selected: 'square.split.2x2.fill' }} />
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="reflections">
-        <Label>Reflections</Label>
-        <Icon sf={{ default: 'chart.bar', selected: 'chart.bar.fill' }} />
-      </NativeTabs.Trigger>
-    </NativeTabs>
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: 'Check in',
+          headerTitleStyle: {
+            display: 'none',
+          },
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? 'add-circle' : 'add-circle-outline'}
+              color={color}
+              size={size}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="journal"
+        options={{
+          title: 'Journal',
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'book' : 'book-outline'} color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="emotion-accordion"
+        options={{
+          title: 'Emotions',
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? 'pie-chart' : 'pie-chart-outline'}
+              color={color}
+              size={size}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="reflections"
+        options={{
+          title: 'Reflections',
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? 'bar-chart' : 'bar-chart-outline'}
+              color={color}
+              size={size}
+            />
+          ),
+        }}
+      />
+    </Tabs>
   );
 }
