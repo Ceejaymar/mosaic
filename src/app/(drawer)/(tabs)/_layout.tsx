@@ -55,9 +55,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Check in',
-          headerTitleStyle: {
-            display: 'none',
-          },
+          headerTitle: '',
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
               name={focused ? 'add-circle' : 'add-circle-outline'}
@@ -71,6 +69,7 @@ export default function TabLayout() {
         name="journal"
         options={{
           title: 'Journal',
+          headerTitle: '',
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons name={focused ? 'book' : 'book-outline'} color={color} size={size} />
           ),
@@ -80,6 +79,7 @@ export default function TabLayout() {
         name="emotion-accordion"
         options={{
           title: 'Emotions',
+          headerTitle: '',
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
               name={focused ? 'pie-chart' : 'pie-chart-outline'}
@@ -93,6 +93,7 @@ export default function TabLayout() {
         name="reflections"
         options={{
           title: 'Reflections',
+          headerTitle: '',
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
               name={focused ? 'bar-chart' : 'bar-chart-outline'}
