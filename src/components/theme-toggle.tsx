@@ -55,8 +55,6 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.typography,
   },
   toggleContainer: {
-    fontSize: 12,
-    color: '#999',
     marginTop: 8,
     marginLeft: 4,
   },

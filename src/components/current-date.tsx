@@ -16,9 +16,4 @@ const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,
   },
-  // text: {
-  //   fontSize: 16,
-  //   fontWeight: 'bold',
-  //   color: '#808080',
-  // },
 }));

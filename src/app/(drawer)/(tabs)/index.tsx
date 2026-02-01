@@ -21,7 +21,7 @@ export default function TabOneScreen() {
           paddingBottom: TAB_BAR_HEIGHT,
         }}
       >
-        <ThemedText style={styles.title}>
+        <ThemedText variant="title" style={styles.title}>
           How are you feeling {t('dashboard.time_of_day.morning')}?
         </ThemedText>
         <View style={styles.currentDateContainer}>
@@ -40,23 +40,14 @@ const styles = StyleSheet.create((theme) => ({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
-  currentDateContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 32,
-  },
+  currentDateContainer: { justifyContent: 'center', alignItems: 'center', marginTop: 32 },
   mosaicContainer: {
-    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 32,
   },
   title: {
     fontSize: 36,
-    fontWeight: 'bold',
-    fontFamily: 'Fraunces',
-    color: theme.colors.typography,
     textAlign: 'center',
   },
 }));

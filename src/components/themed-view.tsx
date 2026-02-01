@@ -12,7 +12,6 @@ export function ThemedView({ variant = 'background', style, ...rest }: ThemedVie
 const styles = StyleSheet.create((theme) => ({
   background: {
     backgroundColor: theme.colors.background,
-    flex: 1,
   },
   surface: {
     // backgroundColor: theme.colors.surface, // ✅ For cards/modals

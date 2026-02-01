@@ -7,6 +7,15 @@ import { mmkvAdapter } from '@/src/services/storage/mmkv';
 import type { AccessibilitySettings, Actions, Language, State, Theme } from '@/src/types/types';
 import i18n from '../i18n';
 
+const applyTheme = (mode: Theme) => {
+  if (mode === 'system') {
+    UnistylesRuntime.setAdaptiveThemes(true);
+  } else {
+    UnistylesRuntime.setAdaptiveThemes(false);
+    UnistylesRuntime.setTheme(mode);
+  }
+};
+
 export const useAppStore = create<State & Actions>()(
   persist(
     (set, get) => ({
@@ -20,12 +29,7 @@ export const useAppStore = create<State & Actions>()(
       setTheme: (mode: Theme) => {
         set({ theme: mode });
 
-        if (mode === 'system') {
-          UnistylesRuntime.setAdaptiveThemes(true);
-        } else {
-          UnistylesRuntime.setAdaptiveThemes(false);
-          UnistylesRuntime.setTheme(mode);
-        }
+        applyTheme(mode);
       },
 
       hasOnboarded: false,
@@ -50,12 +54,7 @@ export const useAppStore = create<State & Actions>()(
       onRehydrateStorage: () => (state) => {
         if (!state) return;
 
-        if (state.theme === 'system') {
-          UnistylesRuntime.setAdaptiveThemes(true);
-        } else {
-          UnistylesRuntime.setAdaptiveThemes(false);
-          UnistylesRuntime.setTheme(state.theme);
-        }
+        applyTheme(state.theme);
       },
     },
   ),
