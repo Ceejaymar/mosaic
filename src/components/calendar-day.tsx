@@ -1,7 +1,7 @@
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
-import { Text } from './Themed';
+import { ThemedText } from './themed-text';
 
 type CalendarDay = {
   day: number;
@@ -10,7 +10,7 @@ type CalendarDay = {
 export default function CalendarDay({ day }: CalendarDay) {
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>{day}</Text>
+      <ThemedText style={styles.text}>{day}</ThemedText>
     </View>
   );
 }
