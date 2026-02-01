@@ -1,13 +1,13 @@
 import { StyleSheet } from 'react-native-unistyles';
 
-import { View } from '@/src/components/Themed';
+import { ThemedView } from '@/src/components/themed-view';
 import { EmotionSelector } from '@/src/features/emotion-accordion/components/emotion-selector';
 
 export default function EmotionsScreen() {
   return (
-    <View style={styles.container}>
+    <ThemedView variant="background" style={styles.container}>
       <EmotionSelector />
-    </View>
+    </ThemedView>
   );
 }
 

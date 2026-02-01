@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react';
 import { LayoutAnimation, Platform, ScrollView, UIManager } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
-import { Text, View } from '@/src/components/Themed';
+import { ThemedText } from '@/src/components/themed-text';
+import { ThemedView } from '@/src/components/themed-view';
 import { FEELINGS_CONTENT } from '../emotions.content';
 import type { FeelingGroupId, FeelingNode } from '../types';
 import { AccordionGroup } from './accordion-group';
@@ -52,9 +53,9 @@ export function EmotionSelector() {
   };
 
   return (
-    <View style={styles.container}>
+    <ThemedView variant="background" style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.title}>How are you feeling?</Text>
+        <ThemedText style={styles.title}>How are you feeling?</ThemedText>
 
         {FEELINGS_CONTENT.groups.map((group) => (
           <AccordionGroup
@@ -70,7 +71,7 @@ export function EmotionSelector() {
       </ScrollView>
 
       <SelectionModal selectedNode={selectedNode} />
-    </View>
+    </ThemedView>
   );
 }
 

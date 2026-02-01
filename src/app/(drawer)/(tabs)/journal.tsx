@@ -1,12 +1,13 @@
 import { StyleSheet } from 'react-native-unistyles';
 
-import { Text, View } from '@/src/components/Themed';
+import { ThemedText } from '@/src/components/themed-text';
+import { ThemedView } from '@/src/components/themed-view';
 
 export default function Journal() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Journal</Text>
-    </View>
+    <ThemedView variant="background" style={styles.container}>
+      <ThemedText style={styles.title}>Journal</ThemedText>
+    </ThemedView>
   );
 }
 

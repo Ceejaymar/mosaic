@@ -1,12 +1,13 @@
 import { StyleSheet } from 'react-native-unistyles';
 
-import { Text, View } from '@/src/components/Themed';
+import { ThemedText } from '@/src/components/themed-text';
+import { ThemedView } from '@/src/components/themed-view';
 
 export default function Analytics() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Reflections</Text>
-    </View>
+    <ThemedView variant="background" style={styles.container}>
+      <ThemedText style={styles.title}>Reflections</ThemedText>
+    </ThemedView>
   );
 }
 
