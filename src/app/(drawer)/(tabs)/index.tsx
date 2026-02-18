@@ -35,7 +35,7 @@ export default function TabOneScreen() {
   );
 }
 
-const styles = StyleSheet.create((theme) => ({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
@@ -49,4 +49,4 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: 36,
     textAlign: 'center',
   },
-}));
+});

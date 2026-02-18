@@ -12,8 +12,8 @@ export default function CurrentDate() {
   );
 }
 
-const styles = StyleSheet.create((theme) => ({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-}));
+});
