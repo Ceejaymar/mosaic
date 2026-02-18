@@ -9,9 +9,10 @@ import { useEffect } from 'react';
 import { SystemBars } from 'react-native-edge-to-edge';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import migrations from '@/drizzle/migrations';
-import '@/src/i18n/index';
-import { useColorScheme } from '@/src/components/useColorScheme';
+
 import { db } from '@/src/db/client';
+import '@/src/i18n/index';
+import { UnistylesRuntime, useUnistyles } from 'react-native-unistyles';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -52,12 +53,14 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
-  const colorScheme = useColorScheme();
+  const { rt } = useUnistyles();
+
+  const currentTheme = rt.themeName;
 
   return (
     <>
-      <SystemBars style="auto" />
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <SystemBars style={currentTheme === 'dark' ? 'light' : 'dark'} />
+      <ThemeProvider value={currentTheme === 'dark' ? DarkTheme : DefaultTheme}>
         <GestureHandlerRootView style={{ flex: 1 }}>
           <Stack>
             <Stack.Screen name="(drawer)" options={{ headerShown: false }} />

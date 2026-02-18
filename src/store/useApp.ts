@@ -1,10 +1,20 @@
 import { getLocales } from 'expo-localization';
+import { UnistylesRuntime } from 'react-native-unistyles';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
-
 import { mmkvAdapter } from '@/src/services/storage/mmkv';
+
 import type { AccessibilitySettings, Actions, Language, State, Theme } from '@/src/types/types';
 import i18n from '../i18n';
+
+const applyTheme = (mode: Theme) => {
+  if (mode === 'system') {
+    UnistylesRuntime.setAdaptiveThemes(true);
+  } else {
+    UnistylesRuntime.setAdaptiveThemes(false);
+    UnistylesRuntime.setTheme(mode);
+  }
+};
 
 export const useAppStore = create<State & Actions>()(
   persist(
@@ -15,8 +25,12 @@ export const useAppStore = create<State & Actions>()(
         set({ language });
       },
 
-      theme: 'light',
-      setTheme: (theme: Theme) => set({ theme }),
+      theme: 'system',
+      setTheme: (mode: Theme) => {
+        set({ theme: mode });
+
+        applyTheme(mode);
+      },
 
       hasOnboarded: false,
       setHasOnboarded: (hasOnboarded: boolean) => set({ hasOnboarded }),
@@ -36,6 +50,12 @@ export const useAppStore = create<State & Actions>()(
         language: state.language,
         accessibility: state.accessibility,
       }),
+
+      onRehydrateStorage: () => (state) => {
+        if (!state) return;
+
+        applyTheme(state.theme);
+      },
     },
   ),
 );

@@ -3,11 +3,12 @@ import { DrawerToggleButton } from '@react-navigation/drawer';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Tabs } from 'expo-router';
 import { Platform, View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
-
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { hapticLight } from '@/src/lib/haptics/haptics';
 
 export default function TabLayout() {
+  const { theme } = useUnistyles();
+
   return (
     <Tabs
       screenListeners={{
@@ -17,15 +18,16 @@ export default function TabLayout() {
       }}
       screenOptions={{
         headerShown: true,
-        headerLeft: () => <DrawerToggleButton tintColor="#000" />,
+        headerLeft: () => <DrawerToggleButton tintColor={theme.colors.typography} />,
         headerTransparent: true,
         tabBarActiveTintColor: '#f2b949',
         tabBarLabelStyle: { fontSize: 12 },
         animation: 'shift',
+
         headerBackground: () => (
           <View style={StyleSheet.absoluteFill}>
             <LinearGradient
-              colors={['rgba(255,255,255,0.9)', 'rgba(255,255,255,0.1)']}
+              colors={theme.colors.headerGradient as [string, string]}
               locations={[0.1, 1]}
               style={StyleSheet.absoluteFill}
             />
@@ -43,7 +45,7 @@ export default function TabLayout() {
         tabBarBackground: () => (
           <View style={StyleSheet.absoluteFill}>
             <LinearGradient
-              colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.9)']}
+              colors={theme.colors.tabBarGradient as [string, string]}
               locations={[0, 0.9]}
               style={StyleSheet.absoluteFill}
             />

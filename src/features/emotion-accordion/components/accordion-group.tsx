@@ -1,7 +1,7 @@
-import { TouchableOpacity } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
-import { Text, View } from '@/src/components/Themed';
+import { ThemedText } from '@/src/components/themed-text';
 import type { FeelingGroup, FeelingNode } from '../types';
 import { Emotion } from './emotion';
 
@@ -39,8 +39,8 @@ export function AccordionGroup({
           },
         ]}
       >
-        <Text style={styles.headerText}>{group.label}</Text>
-        <Text style={styles.chevron}>{isOpen ? '▲' : '▼'}</Text>
+        <ThemedText style={styles.headerText}>{group.label}</ThemedText>
+        <ThemedText style={styles.chevron}>{isOpen ? '▲' : '▼'}</ThemedText>
       </TouchableOpacity>
 
       {/* 2. The Dropdown List */}

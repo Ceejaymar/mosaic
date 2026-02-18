@@ -1,8 +1,11 @@
 import { useTranslation } from 'react-i18next';
+import { View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import { StyleSheet } from 'react-native-unistyles';
-
-import { Text, View } from '@/src/components/Themed';
+import CurrentDate from '@/src/components/current-date';
+import MosaicContainer from '@/src/components/mosaic-container';
+import { ThemedText } from '@/src/components/themed-text';
+import { ThemedView } from '@/src/components/themed-view';
 
 const HEADER_HEIGHT = 110;
 const TAB_BAR_HEIGHT = 100;
@@ -11,40 +14,39 @@ export default function TabOneScreen() {
   const { t } = useTranslation();
 
   return (
-    <View style={styles.container}>
+    <ThemedView style={styles.container}>
       <ScrollView
         contentContainerStyle={{
           paddingTop: HEADER_HEIGHT,
           paddingBottom: TAB_BAR_HEIGHT,
         }}
       >
-        <Text style={styles.title}>How are you feeling {t('dashboard.time_of_day.morning')}?</Text>
-        <Text style={styles.title}>How are you feeling {t('dashboard.time_of_day.morning')}?</Text>
-        <Text style={styles.title}>How are you feeling {t('dashboard.time_of_day.morning')}?</Text>
-        <Text style={styles.title}>How are you feeling {t('dashboard.time_of_day.morning')}?</Text>
-        <Text style={styles.title}>How are you feeling {t('dashboard.time_of_day.morning')}?</Text>
-        <Text style={styles.title}>How are you feeling {t('dashboard.time_of_day.morning')}?</Text>
-        <Text style={styles.title}>How are you feeling {t('dashboard.time_of_day.morning')}?</Text>
-        <Text style={styles.title}>How are you feeling {t('dashboard.time_of_day.morning')}?</Text>
-        <Text style={styles.title}>How are you feeling {t('dashboard.time_of_day.morning')}?</Text>
-        <Text style={styles.title}>How are you feeling {t('dashboard.time_of_day.morning')}?</Text>
-        <Text style={styles.title}>How are you feeling {t('dashboard.time_of_day.morning')}?</Text>
-        <Text style={styles.title}>How are you feeling {t('dashboard.time_of_day.morning')}?</Text>
-        <Text style={styles.title}>How are you feeling {t('dashboard.time_of_day.morning')}?</Text>
+        <ThemedText variant="title" style={styles.title}>
+          How are you feeling {t('dashboard.time_of_day.morning')}?
+        </ThemedText>
+        <View style={styles.currentDateContainer}>
+          <CurrentDate />
+        </View>
+        <View style={styles.mosaicContainer}>
+          <MosaicContainer></MosaicContainer>
+        </View>
       </ScrollView>
-    </View>
+    </ThemedView>
   );
 }
 
-const styles = StyleSheet.create((theme) => ({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  currentDateContainer: { justifyContent: 'center', alignItems: 'center', marginTop: 32 },
+  mosaicContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 32,
+  },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    fontFamily: 'Fraunces',
-    color: theme.colors.typography,
+    fontSize: 36,
     textAlign: 'center',
   },
-}));
+});
