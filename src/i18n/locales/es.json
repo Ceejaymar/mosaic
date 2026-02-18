@@ -10,6 +10,9 @@
     "get_started": "Comenzar"
   },
   "dashboard": {
+    "time_of_day": {
+      "morning": "esta mañana"
+    },
     "projects_count_zero": "Sin proyectos aún",
     "projects_count_one": "Tienes un proyecto",
     "projects_count_other": "Tienes {{count}} proyectos"
