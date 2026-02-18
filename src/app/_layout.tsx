@@ -53,9 +53,9 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
-  useUnistyles();
+  const { rt } = useUnistyles();
 
-  const currentTheme = UnistylesRuntime.themeName;
+  const currentTheme = rt.themeName;
 
   return (
     <>

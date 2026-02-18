@@ -38,7 +38,6 @@ export default function TabOneScreen() {
 const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
   },
   currentDateContainer: { justifyContent: 'center', alignItems: 'center', marginTop: 32 },
   mosaicContainer: {
