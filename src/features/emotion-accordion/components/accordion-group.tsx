@@ -96,7 +96,7 @@ const styles = StyleSheet.create((theme) => ({
   listContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 6,
     paddingVertical: 8,
     justifyContent: 'center',
   },

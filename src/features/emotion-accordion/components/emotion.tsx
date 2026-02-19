@@ -45,7 +45,7 @@ export function Emotion({ label, color, isSelected, onPress }: Props) {
 
 const styles = StyleSheet.create({
   container: {
-    width: '31.5%',
+    width: '32%',
     aspectRatio: 2.2,
     justifyContent: 'center',
     alignItems: 'center',
