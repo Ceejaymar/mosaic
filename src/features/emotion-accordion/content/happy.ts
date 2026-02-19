@@ -113,8 +113,8 @@ const rawHappyNodes: Omit<EmotionNode, 'colorIndex'>[] = [
     level: 2,
     groupId: 'happy',
     parentId: 'happy_accepted',
-    description: 'Belonging without needing to change yourself.',
-    synonyms: ['received', 'recognized'],
+    description: 'Having your feelings or perspective acknowledged as real.',
+    synonyms: ['acknowledged', 'heard', 'affirmed'],
   },
   {
     id: 'happy_accepted_approved',
