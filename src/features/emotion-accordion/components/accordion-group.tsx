@@ -46,7 +46,7 @@ export function AccordionGroup({
           colors={['rgba(255,255,255,0.10)', 'rgba(0,0,0,0.18)']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+          style={styles.gradientFill}
           pointerEvents="none"
         />
         <Text style={styles.headerText}>{group.label}</Text>
@@ -60,7 +60,7 @@ export function AccordionGroup({
       {isOpen && (
         <View style={styles.listContainer}>
           {childrenNodes.map((node) => {
-            const rawColor = groupPalette[node.colorIndex];
+            const rawColor = groupPalette?.[node.colorIndex] ?? group.color;
             return (
               <Emotion
                 key={node.id}
@@ -96,6 +96,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#fff',
     fontFamily: 'Fraunces',
+  },
+  gradientFill: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   listContainer: {
     flexDirection: 'row',

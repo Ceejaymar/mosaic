@@ -83,7 +83,7 @@ export function MosaicDisplay({ tiles, onPress }: Props) {
       )}
 
       {count === 2 && (
-        <View style={styles.row}>
+        <View style={[styles.row, styles.flex1]}>
           <Tile
             color={cappedTiles[0].color}
             label={cappedTiles[0].label}

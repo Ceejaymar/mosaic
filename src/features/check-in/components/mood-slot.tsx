@@ -38,7 +38,7 @@ export function MoodSlot({ slot, isCurrentSlot, moodColor, moodLabel, onPress }:
         isCurrentSlot && !isFilled && styles.currentTile,
       ]}
       accessibilityRole="button"
-      accessibilityLabel={`${getTimeSlotLabel(slot)}${isFilled ? `, ${moodLabel}` : ', tap to check in'}`}
+      accessibilityLabel={`${getTimeSlotLabel(slot)}${moodLabel ? `, ${moodLabel}` : ', tap to check in'}`}
     >
       {/* Top accent strip */}
       <View
@@ -72,9 +72,6 @@ export function MoodSlot({ slot, isCurrentSlot, moodColor, moodLabel, onPress }:
           )}
         </View>
       </View>
-
-      {/* Pulsing dot for current unfilled slot */}
-      {isCurrentSlot && !isFilled && <View style={styles.currentDot} />}
     </AnimatedPressable>
   );
 }
@@ -139,15 +136,6 @@ const styles = StyleSheet.create((theme) => {
       fontSize: 20,
       color: isDark ? '#3A3A3C' : '#D0D0D5',
       fontWeight: '300',
-    },
-    currentDot: {
-      position: 'absolute',
-      top: 12,
-      right: 12,
-      width: 6,
-      height: 6,
-      borderRadius: 3,
-      backgroundColor: '#E0C097',
     },
   };
 });

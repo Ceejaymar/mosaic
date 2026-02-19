@@ -16,7 +16,8 @@ export function SelectionModal({ selectedNode, onPress, style }: Props) {
 
   const groupPalette =
     EMOTION_PALETTES.default[selectedNode.groupId as keyof (typeof EMOTION_PALETTES)['default']];
-  const color = muteColor(groupPalette[selectedNode.colorIndex]);
+  const rawColor = groupPalette?.[selectedNode.colorIndex] ?? '#808080';
+  const color = muteColor(rawColor);
 
   return (
     <Pressable

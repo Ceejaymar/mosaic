@@ -51,21 +51,29 @@ export default function CheckInScreen() {
   const atLimit = todayEntries.length >= MAX_DAILY;
 
   const loadTodayEntries = useCallback(async () => {
-    const entries = await fetchMoodEntriesForDate(dateToKey());
-    setTodayEntries(entries);
+    try {
+      const entries = await fetchMoodEntriesForDate(dateToKey());
+      setTodayEntries(entries);
+    } catch (error) {
+      console.error("Failed to load today's entries", error);
+    }
   }, []);
 
   useEffect(() => {
     loadTodayEntries();
   }, [loadTodayEntries]);
 
-  const handleOpenSheet = () => {
+  const handleCloseSheet = useCallback(() => {
+    setSheetVisible(false);
+  }, []);
+
+  const handleOpenSheet = useCallback(() => {
     if (atLimit) return;
     hapticLight();
     setSheetVisible(true);
-  };
+  }, [atLimit]);
 
-  const handleSave = async (nodeId: string, note?: string) => {
+  const handleSave = useCallback(async (nodeId: string, note?: string) => {
     const now = new Date();
     const newEntry: MoodEntry = {
       id: uuid(),
@@ -103,7 +111,7 @@ export default function CheckInScreen() {
       setTodayEntries((prev) => prev.filter((e) => e.id !== newEntry.id));
       // TODO: surface an error toast/snackbar to the user
     }
-  };
+  }, []);
 
   // Build mosaic tiles in chronological order (oldest → newest = top-left → bottom-right)
   const mosaicTiles = useMemo<MosaicTileData[]>(() => {
@@ -195,11 +203,7 @@ export default function CheckInScreen() {
         </View>
       </ScrollView>
 
-      <CheckInSheet
-        visible={sheetVisible}
-        onClose={() => setSheetVisible(false)}
-        onSave={handleSave}
-      />
+      <CheckInSheet visible={sheetVisible} onClose={handleCloseSheet} onSave={handleSave} />
     </View>
   );
 }
