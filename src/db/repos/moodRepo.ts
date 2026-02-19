@@ -13,6 +13,15 @@ function makeDateKey(iso: string) {
   return `${yyyy}-${mm}-${dd}`;
 }
 
+export function dateToKey(date: Date = new Date()): string {
+  return makeDateKey(date.toISOString());
+}
+
+export async function insertMoodEntry(entry: NewMoodEntry): Promise<string> {
+  await db.insert(moodEntries).values(entry);
+  return entry.id;
+}
+
 export async function insertTestMoodEntry(overrides?: Partial<NewMoodEntry>) {
   const now = new Date().toISOString();
 
