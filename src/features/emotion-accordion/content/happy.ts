@@ -108,13 +108,13 @@ const rawHappyNodes: Omit<EmotionNode, 'colorIndex'>[] = [
     synonyms: ['welcomed', 'included', 'embraced'],
   },
   {
-    id: 'happy_accepted_accepted',
-    label: 'Accepted',
+    id: 'happy_accepted_validated',
+    label: 'Validated',
     level: 2,
     groupId: 'happy',
     parentId: 'happy_accepted',
     description: 'Belonging without needing to change yourself.',
-    synonyms: ['received', 'recognized', 'validated'],
+    synonyms: ['received', 'recognized'],
   },
   {
     id: 'happy_accepted_approved',
@@ -163,11 +163,11 @@ const rawHappyNodes: Omit<EmotionNode, 'colorIndex'>[] = [
   },
   {
     id: 'happy_intimate_playful',
-    label: 'Playful',
+    label: 'Spontaneous',
     level: 2,
     groupId: 'happy',
     parentId: 'happy_intimate',
-    description: 'Light, fun, and open to spontaneity.',
+    description: 'Light, fun, and open to new ideas.',
     synonyms: ['lighthearted', 'silly', 'goofy'],
   },
   {

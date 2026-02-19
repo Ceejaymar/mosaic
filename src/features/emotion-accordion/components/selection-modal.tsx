@@ -33,7 +33,7 @@ export function SelectionModal({ selectedNode }: Props) {
   );
 }
 
-const styles = StyleSheet.create((theme) => ({
+const styles = StyleSheet.create({
   wrapper: {
     position: 'absolute',
     display: 'flex',
@@ -79,4 +79,4 @@ const styles = StyleSheet.create((theme) => ({
     alignItems: 'center',
     justifyContent: 'center',
   },
-}));
+});

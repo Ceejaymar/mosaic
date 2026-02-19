@@ -61,7 +61,7 @@ export function EmotionSelector() {
             childrenNodes={nodesByGroup[group.id] || []}
             isOpen={activeGroupId === group.id}
             selectedNodeId={selectedNodeId}
-            onToggle={() => handleToggleGroup(group.id as EmotionGroupId)}
+            onToggle={() => handleToggleGroup(group.id)}
             onSelectNode={handleSelectNode}
           />
         ))}
