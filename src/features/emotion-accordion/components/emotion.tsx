@@ -1,15 +1,14 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
 type Props = {
   label: string;
-  baseColor: string;
+  color: string;
   isSelected: boolean;
   onPress: () => void;
 };
 
-export function Emotion({ label, baseColor, isSelected, onPress }: Props) {
-  const lightBg = `${baseColor}20`;
-
+export function Emotion({ label, color, isSelected, onPress }: Props) {
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -21,8 +20,8 @@ export function Emotion({ label, baseColor, isSelected, onPress }: Props) {
       style={[
         styles.container,
         {
-          backgroundColor: lightBg,
-          borderColor: isSelected ? baseColor : 'transparent',
+          backgroundColor: color,
+          borderColor: isSelected ? color : 'transparent',
         },
       ]}
     >
@@ -30,24 +29,19 @@ export function Emotion({ label, baseColor, isSelected, onPress }: Props) {
         style={[
           styles.text,
           {
-            color: isSelected ? baseColor : '#333',
+            color: isSelected ? color : '#fff',
             fontWeight: isSelected ? '700' : '400',
           },
         ]}
       >
         {label}
       </Text>
-
-      {/* {isSelected && <View style={[styles.dot, { backgroundColor: baseColor }]} />} */}
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     paddingVertical: 14,
     paddingHorizontal: 16,
     marginVertical: 4,
@@ -58,10 +52,8 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 16,
     textTransform: 'capitalize',
-  },
-  dot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    fontFamily: 'Fraunces',
+    fontWeight: 'bold',
+    // color: '#fff',
   },
 });
