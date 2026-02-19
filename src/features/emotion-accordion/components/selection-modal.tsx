@@ -36,7 +36,6 @@ export function SelectionModal({ selectedNode }: Props) {
 const styles = StyleSheet.create({
   wrapper: {
     position: 'absolute',
-    display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -72,7 +71,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
     textTransform: 'lowercase',
     minHeight: 34,
-    textAlignVertical: 'top',
   },
   arrowContainer: {
     borderRadius: 10,
