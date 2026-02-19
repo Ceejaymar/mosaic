@@ -34,7 +34,7 @@ export function MoodSlot({ slot, isCurrentSlot, moodColor, moodLabel, onPress }:
       style={[
         styles.tile,
         animatedStyle,
-        isFilled && { borderColor: (moodColor ?? '') + '50' },
+        isFilled && { borderColor: `${moodColor ?? ''}50` },
         isCurrentSlot && !isFilled && styles.currentTile,
       ]}
       accessibilityRole="button"

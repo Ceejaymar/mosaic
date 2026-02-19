@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, Text, View } from 'react-native';
+import { LayoutAnimation, Platform, Pressable, Text, UIManager, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
@@ -11,19 +11,21 @@ import {
   type MoodEntry,
 } from '@/src/db/repos/moodRepo';
 import { CheckInSheet } from '@/src/features/check-in/components/check-in-sheet';
-import { MoodSlot } from '@/src/features/check-in/components/mood-slot';
 import {
-  getCurrentTimeSlot,
-  getTimeSlotForOccurredAt,
-  SLOT_DEFAULT_HOURS,
-  TIME_SLOTS,
-  type TimeSlot,
-} from '@/src/features/check-in/utils/time-of-day';
+  MosaicDisplay,
+  type MosaicTileData,
+} from '@/src/features/check-in/components/mosaic-display';
+import { getCurrentTimeSlot } from '@/src/features/check-in/utils/time-of-day';
 import { EMOTIONS_CONTENT } from '@/src/features/emotion-accordion/content';
 import { EMOTION_PALETTES } from '@/src/features/emotion-accordion/palettes';
 import { hapticLight } from '@/src/lib/haptics/haptics';
 import { uuid } from '@/src/lib/uuid';
 
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
+const MAX_DAILY = 4;
 const TAB_BAR_HEIGHT = 90;
 
 function getMoodDisplayInfo(nodeId: string): { label: string; color: string } | null {
@@ -42,11 +44,11 @@ export default function CheckInScreen() {
   const { theme } = useUnistyles();
 
   const [sheetVisible, setSheetVisible] = useState(false);
-  const [activeSlot, setActiveSlot] = useState<TimeSlot | null>(null);
   const [todayEntries, setTodayEntries] = useState<MoodEntry[]>([]);
 
   const currentSlot = getCurrentTimeSlot();
   const isDark = theme.colors.background !== '#ffffff';
+  const atLimit = todayEntries.length >= MAX_DAILY;
 
   const loadTodayEntries = useCallback(async () => {
     const entries = await fetchMoodEntriesForDate(dateToKey());
@@ -57,54 +59,65 @@ export default function CheckInScreen() {
     loadTodayEntries();
   }, [loadTodayEntries]);
 
-  // Most recent entry per time slot
-  const slotEntries = useMemo(() => {
-    const map: Partial<Record<TimeSlot, MoodEntry>> = {};
-    for (const entry of todayEntries) {
-      const slot = getTimeSlotForOccurredAt(entry.occurredAt);
-      const existing = map[slot];
-      if (!existing || entry.occurredAt > existing.occurredAt) {
-        map[slot] = entry;
-      }
-    }
-    return map;
-  }, [todayEntries]);
-
-  const handleSlotPress = (slot: TimeSlot) => {
+  const handleOpenSheet = () => {
+    if (atLimit) return;
     hapticLight();
-    setActiveSlot(slot);
     setSheetVisible(true);
   };
 
   const handleSave = async (nodeId: string, note?: string) => {
-    if (!activeSlot) return;
-
     const now = new Date();
-    const isCurrentSlot = getCurrentTimeSlot() === activeSlot;
-
-    let occurredAt: string;
-    if (isCurrentSlot) {
-      occurredAt = now.toISOString();
-    } else {
-      const d = new Date();
-      d.setHours(SLOT_DEFAULT_HOURS[activeSlot], 0, 0, 0);
-      occurredAt = d.toISOString();
-    }
-
-    await insertMoodEntry({
+    const newEntry: MoodEntry = {
       id: uuid(),
       dateKey: dateToKey(now),
       primaryMood: nodeId,
       note: note ?? null,
-      occurredAt,
+      occurredAt: now.toISOString(),
       createdAt: now.toISOString(),
       updatedAt: now.toISOString(),
+    };
+
+    // Trigger layout animation synchronously before state update
+    LayoutAnimation.configureNext({
+      duration: 380,
+      create: {
+        type: LayoutAnimation.Types.spring,
+        property: LayoutAnimation.Properties.scaleXY,
+        springDamping: 0.75,
+      },
+      update: {
+        type: LayoutAnimation.Types.spring,
+        springDamping: 0.75,
+      },
     });
 
-    await loadTodayEntries();
+    // Optimistic update — entries stored newest-first
+    setTodayEntries((prev) => [newEntry, ...prev]);
     setSheetVisible(false);
-    setActiveSlot(null);
+
+    // Persist to DB
+    await insertMoodEntry(newEntry);
   };
+
+  // Build mosaic tiles in chronological order (oldest → newest = top-left → bottom-right)
+  const mosaicTiles = useMemo<MosaicTileData[]>(() => {
+    return todayEntries
+      .slice()
+      .reverse() // flip DESC → ASC
+      .slice(0, MAX_DAILY)
+      .flatMap((entry) => {
+        const display = getMoodDisplayInfo(entry.primaryMood);
+        if (!display) return [];
+        return [
+          {
+            id: entry.id,
+            color: display.color,
+            label: display.label,
+            occurredAt: entry.occurredAt,
+          },
+        ];
+      });
+  }, [todayEntries]);
 
   // Date label: "THURSDAY · FEBRUARY 19"
   const dateLabel = new Date()
@@ -136,54 +149,26 @@ export default function CheckInScreen() {
         {/* Date */}
         <Text style={[styles.dateLabel, { color: mutedText }]}>{dateLabel}</Text>
 
-        {/* 2×2 Mood Grid */}
-        <View style={styles.grid}>
-          <View style={styles.gridRow}>
-            {TIME_SLOTS.slice(0, 2).map((slot) => {
-              const entry = slotEntries[slot];
-              const display = entry ? getMoodDisplayInfo(entry.primaryMood) : null;
-              return (
-                <MoodSlot
-                  key={slot}
-                  slot={slot}
-                  isCurrentSlot={slot === currentSlot}
-                  moodColor={display?.color}
-                  moodLabel={display?.label}
-                  onPress={() => handleSlotPress(slot)}
-                />
-              );
-            })}
-          </View>
-          <View style={styles.gridRow}>
-            {TIME_SLOTS.slice(2).map((slot) => {
-              const entry = slotEntries[slot];
-              const display = entry ? getMoodDisplayInfo(entry.primaryMood) : null;
-              return (
-                <MoodSlot
-                  key={slot}
-                  slot={slot}
-                  isCurrentSlot={slot === currentSlot}
-                  moodColor={display?.color}
-                  moodLabel={display?.label}
-                  onPress={() => handleSlotPress(slot)}
-                />
-              );
-            })}
-          </View>
+        {/* Mosaic — splits as entries are added */}
+        <View style={styles.mosaicWrapper}>
+          <MosaicDisplay tiles={mosaicTiles} onPress={handleOpenSheet} />
         </View>
 
-        {/* Primary CTA */}
+        {/* CTA button */}
         <Pressable
-          onPress={() => handleSlotPress(currentSlot)}
+          onPress={handleOpenSheet}
+          disabled={atLimit}
           style={({ pressed }) => [
             styles.checkInBtn,
-            { backgroundColor: mosaicGold },
-            pressed && { opacity: 0.88, transform: [{ scale: 0.97 }] },
+            atLimit ? { backgroundColor: surfaceColor } : { backgroundColor: mosaicGold },
+            pressed && !atLimit && { opacity: 0.88, transform: [{ scale: 0.97 }] },
           ]}
           accessibilityRole="button"
-          accessibilityLabel="Check in now"
+          accessibilityLabel={atLimit ? 'Daily check-ins complete' : 'Check in now'}
         >
-          <Text style={styles.checkInBtnLabel}>+ Check in now</Text>
+          <Text style={[styles.checkInBtnLabel, { color: atLimit ? mutedText : '#050505' }]}>
+            {atLimit ? 'All caught up ✓' : '+ Check in'}
+          </Text>
         </Pressable>
 
         {/* Stats row */}
@@ -192,7 +177,9 @@ export default function CheckInScreen() {
             <Text style={[styles.statNum, { color: theme.colors.typography }]}>
               {todayEntries.length}
             </Text>
-            <Text style={[styles.statLbl, { color: mutedText }]}>logged today</Text>
+            <Text style={[styles.statLbl, { color: mutedText }]}>
+              {todayEntries.length === 1 ? 'check-in today' : 'check-ins today'}
+            </Text>
           </View>
           <View style={[styles.statDivider, { backgroundColor: dividerColor }]} />
           <View style={styles.statGroup}>
@@ -204,11 +191,7 @@ export default function CheckInScreen() {
 
       <CheckInSheet
         visible={sheetVisible}
-        slot={activeSlot ?? currentSlot}
-        onClose={() => {
-          setSheetVisible(false);
-          setActiveSlot(null);
-        }}
+        onClose={() => setSheetVisible(false)}
         onSave={handleSave}
       />
     </View>
@@ -232,15 +215,10 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: 12,
     fontWeight: '600',
     letterSpacing: 1.5,
-    marginBottom: 28,
+    marginBottom: 24,
   },
-  grid: {
-    gap: 4,
-    marginBottom: 28,
-  },
-  gridRow: {
-    flexDirection: 'row',
-    gap: 4,
+  mosaicWrapper: {
+    marginBottom: 24,
   },
   checkInBtn: {
     borderRadius: 100,
@@ -251,7 +229,6 @@ const styles = StyleSheet.create((theme) => ({
   checkInBtnLabel: {
     fontSize: 17,
     fontWeight: '600',
-    color: '#050505',
   },
   statsRow: {
     flexDirection: 'row',
