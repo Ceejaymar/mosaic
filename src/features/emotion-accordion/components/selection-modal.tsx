@@ -1,25 +1,33 @@
-import { StyleSheet, Text, View } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { Text, View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
-import { CORE_COLORS } from '../emotion-core-colors';
-import type { FeelingNode } from '../types';
+import { EMOTION_PALETTES } from '../palettes';
+import type { EmotionNode } from '../types';
 
 type Props = {
-  selectedNode: FeelingNode | null;
+  selectedNode: EmotionNode | null;
 };
 
 export function SelectionModal({ selectedNode }: Props) {
   if (!selectedNode) return null;
 
-  const color = CORE_COLORS[selectedNode.groupId];
+  const groupPalette =
+    EMOTION_PALETTES.default[selectedNode.groupId as keyof (typeof EMOTION_PALETTES)['default']];
+  const color = groupPalette[selectedNode.colorIndex];
 
   return (
     <View style={styles.wrapper}>
       <View style={styles.container}>
-        <Text style={styles.label}>Selected Emotion</Text>
         <Text style={[styles.value, { color }]}>{selectedNode.label}</Text>
+        <Text style={styles.synonyms}>{selectedNode.synonyms.join(' · ')}</Text>
+
         {selectedNode.description && (
           <Text style={styles.description}>{selectedNode.description}</Text>
         )}
+      </View>
+      <View style={styles.arrowContainer}>
+        <Ionicons name="arrow-forward" size={42} color={color} />
       </View>
     </View>
   );
@@ -28,40 +36,47 @@ export function SelectionModal({ selectedNode }: Props) {
 const styles = StyleSheet.create({
   wrapper: {
     position: 'absolute',
-    bottom: 30,
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+    bottom: 100,
     left: 20,
     right: 20,
-  },
-  container: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 24,
-    alignItems: 'center',
+    padding: 20,
+    backgroundColor: '#0e0e0e',
+    borderRadius: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,
-    shadowRadius: 20,
+    shadowRadius: 15,
     elevation: 10,
-    borderWidth: 1,
-    borderColor: '#eee',
   },
-  label: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#999',
-    textTransform: 'uppercase',
-    marginBottom: 6,
-    letterSpacing: 1,
+  container: {
+    flex: 1,
   },
   value: {
     fontSize: 28,
-    fontWeight: '800',
-    textAlign: 'center',
-    marginBottom: 8,
+    fontWeight: '700',
+  },
+  synonyms: {
+    fontSize: 11,
+    color: '#999',
+    textTransform: 'capitalize',
   },
   description: {
     fontSize: 14,
-    color: '#665',
-    textAlign: 'center',
+    color: '#ccc',
+    fontWeight: '600',
+    marginTop: 8,
+    textTransform: 'lowercase',
+    minHeight: 34,
+    textAlignVertical: 'top',
+  },
+  arrowContainer: {
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

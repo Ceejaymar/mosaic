@@ -1,15 +1,14 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
 type Props = {
   label: string;
-  baseColor: string;
+  color: string;
   isSelected: boolean;
   onPress: () => void;
 };
 
-export function Emotion({ label, baseColor, isSelected, onPress }: Props) {
-  const lightBg = `${baseColor}20`;
-
+export function Emotion({ label, color, isSelected, onPress }: Props) {
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -21,47 +20,45 @@ export function Emotion({ label, baseColor, isSelected, onPress }: Props) {
       style={[
         styles.container,
         {
-          backgroundColor: lightBg,
-          borderColor: isSelected ? baseColor : 'transparent',
+          backgroundColor: isSelected ? 'transparent' : color,
+          borderColor: isSelected ? color : 'transparent',
         },
       ]}
     >
       <Text
+        adjustsFontSizeToFit
+        numberOfLines={1}
+        minimumFontScale={0.7}
         style={[
           styles.text,
           {
-            color: isSelected ? baseColor : '#333',
-            fontWeight: isSelected ? '700' : '400',
+            color: isSelected ? color : '#fff',
+            fontWeight: isSelected ? '700' : '500',
           },
         ]}
       >
         {label}
       </Text>
-
-      {/* {isSelected && <View style={[styles.dot, { backgroundColor: baseColor }]} />} */}
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
+    width: '31.5%',
+    aspectRatio: 2.2,
+    justifyContent: 'center',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    marginVertical: 4,
-    marginHorizontal: 8,
+    paddingHorizontal: 4,
+    paddingBottom: 8,
     borderRadius: 8,
     borderWidth: 1.5,
   },
   text: {
     fontSize: 16,
     textTransform: 'capitalize',
-  },
-  dot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    includeFontPadding: false,
+    fontFamily: 'Fraunces',
+    // lineHeight: 18,
   },
 });

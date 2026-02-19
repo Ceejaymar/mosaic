@@ -2,12 +2,13 @@ import { TouchableOpacity, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { ThemedText } from '@/src/components/themed-text';
-import type { FeelingGroup, FeelingNode } from '../types';
+import { EMOTION_PALETTES } from '../palettes';
+import type { EmotionGroup, EmotionNode } from '../types';
 import { Emotion } from './emotion';
 
 type Props = {
-  group: FeelingGroup;
-  childrenNodes: FeelingNode[];
+  group: EmotionGroup;
+  childrenNodes: EmotionNode[];
   isOpen: boolean;
   selectedNodeId: string | null;
   onToggle: () => void;
@@ -22,11 +23,11 @@ export function AccordionGroup({
   onToggle,
   onSelectNode,
 }: Props) {
-  const isCoreSelected = selectedNodeId === group.id;
+  const groupPalette =
+    EMOTION_PALETTES.default[group.id as keyof (typeof EMOTION_PALETTES)['default']];
 
   return (
     <View style={styles.container}>
-      {/* 1. The Header (Core Emotion) */}
       <TouchableOpacity
         activeOpacity={0.9}
         onPress={onToggle}
@@ -34,8 +35,6 @@ export function AccordionGroup({
           styles.header,
           {
             backgroundColor: group.color,
-            borderWidth: isCoreSelected ? 4 : 0,
-            borderColor: 'rgba(255,255,255,0.8)',
           },
         ]}
       >
@@ -43,29 +42,32 @@ export function AccordionGroup({
         <ThemedText style={styles.chevron}>{isOpen ? '▲' : '▼'}</ThemedText>
       </TouchableOpacity>
 
-      {/* 2. The Dropdown List */}
       {isOpen && (
         <View style={styles.listContainer}>
-          {childrenNodes.map((node) => (
-            <Emotion
-              key={node.id}
-              label={node.label}
-              baseColor={group.color}
-              isSelected={selectedNodeId === node.id}
-              onPress={() => onSelectNode(node.id)}
-            />
-          ))}
+          {childrenNodes.map((node) => {
+            const color = groupPalette[node.colorIndex];
+
+            return (
+              <Emotion
+                key={node.id}
+                label={node.label}
+                color={color}
+                isSelected={selectedNodeId === node.id}
+                onPress={() => onSelectNode(node.id)}
+              />
+            );
+          })}
         </View>
       )}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create((theme) => ({
   container: {
     marginBottom: 12,
     borderRadius: 12,
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.background,
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -85,15 +87,17 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
     color: '#fff',
+    fontFamily: 'Fraunces',
   },
   chevron: {
     fontSize: 14,
     color: 'rgba(255,255,255,0.8)',
   },
   listContainer: {
-    display: 'flex',
     flexDirection: 'row',
     flexWrap: 'wrap',
+    gap: 8,
     paddingVertical: 8,
+    justifyContent: 'center',
   },
-});
+}));
