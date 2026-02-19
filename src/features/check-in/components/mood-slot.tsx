@@ -80,7 +80,7 @@ export function MoodSlot({ slot, isCurrentSlot, moodColor, moodLabel, onPress }:
 }
 
 const styles = StyleSheet.create((theme) => {
-  const isDark = theme.colors.background !== '#ffffff';
+  const isDark = theme.isDark;
   return {
     tile: {
       flex: 1,

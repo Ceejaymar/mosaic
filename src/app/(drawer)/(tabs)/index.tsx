@@ -47,7 +47,7 @@ export default function CheckInScreen() {
   const [todayEntries, setTodayEntries] = useState<MoodEntry[]>([]);
 
   const currentSlot = getCurrentTimeSlot();
-  const isDark = theme.colors.background !== '#ffffff';
+  const isDark = theme.isDark;
   const atLimit = todayEntries.length >= MAX_DAILY;
 
   const loadTodayEntries = useCallback(async () => {

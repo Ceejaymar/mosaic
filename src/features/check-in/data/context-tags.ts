@@ -26,7 +26,7 @@ export const LOCATION_TAGS = [
   'Home',
   'Work',
   'Outside',
-  'Commuting',
+  'In Transit',
   'Restaurant',
   'School',
   'Gym',

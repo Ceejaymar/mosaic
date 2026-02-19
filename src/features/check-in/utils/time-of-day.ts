@@ -2,20 +2,22 @@ export type TimeSlot = 'morning' | 'afternoon' | 'evening' | 'night';
 
 export const TIME_SLOTS: readonly TimeSlot[] = ['morning', 'afternoon', 'evening', 'night'];
 
-export function getCurrentTimeSlot(): TimeSlot {
-  const hour = new Date().getHours();
+function hourToTimeSlot(hour: number): TimeSlot {
   if (hour < 12) return 'morning';
   if (hour < 17) return 'afternoon';
   if (hour < 21) return 'evening';
   return 'night';
 }
 
+export function getCurrentTimeSlot(): TimeSlot {
+  return hourToTimeSlot(new Date().getHours());
+}
+
 export function getTimeSlotForOccurredAt(occurredAt: string): TimeSlot {
   const hour = new Date(occurredAt).getHours();
-  if (hour < 12) return 'morning';
-  if (hour < 17) return 'afternoon';
-  if (hour < 21) return 'evening';
-  return 'night';
+  // Guard against Invalid Date producing NaN
+  if (Number.isNaN(hour)) return getCurrentTimeSlot();
+  return hourToTimeSlot(hour);
 }
 
 export function getTimeSlotLabel(slot: TimeSlot): string {

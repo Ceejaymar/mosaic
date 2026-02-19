@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { LayoutAnimation, Platform, ScrollView, Text, UIManager } from 'react-native';
+import { LayoutAnimation, Platform, ScrollView, UIManager } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import { ThemedView } from '@/src/components/themed-view';
 import { EMOTIONS_CONTENT } from '../content';
@@ -37,7 +37,7 @@ export function EmotionSelector() {
       setActiveGroupId(null);
     } else {
       setActiveGroupId(groupId);
-      setSelectedNodeId(groupId);
+      setSelectedNodeId(null);
     }
   };
 
