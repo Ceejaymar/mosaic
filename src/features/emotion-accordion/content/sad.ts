@@ -7,7 +7,7 @@ export const sadGroup: EmotionGroup = {
   color: '#2979ff',
 };
 
-export const rawSadNodes: Omit<EmotionNode, 'colorIndex'>[] = [
+const rawSadNodes: Omit<EmotionNode, 'colorIndex'>[] = [
   {
     id: 'sad',
     label: 'Sad',

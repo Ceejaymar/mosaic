@@ -3,7 +3,7 @@ import { LayoutAnimation, Platform, ScrollView, UIManager } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { ThemedView } from '@/src/components/themed-view';
-import { FEELINGS_CONTENT } from '../content';
+import { EMOTIONS_CONTENT } from '../content';
 import type { EmotionGroupId, EmotionNode } from '../types';
 import { AccordionGroup } from './accordion-group';
 import { SelectionModal } from './selection-modal';
@@ -19,14 +19,14 @@ export function EmotionSelector() {
 
   // 1. Get Selected Node Object
   const selectedNode = useMemo(
-    () => FEELINGS_CONTENT.nodes.find((n) => n.id === selectedNodeId) ?? null,
+    () => EMOTIONS_CONTENT.nodes.find((n) => n.id === selectedNodeId) ?? null,
     [selectedNodeId],
   );
 
   // 2. Group Data
   const nodesByGroup = useMemo(() => {
     const map: Record<string, EmotionNode[]> = {};
-    FEELINGS_CONTENT.nodes.forEach((node) => {
+    EMOTIONS_CONTENT.nodes.forEach((node) => {
       // Filter out headers (Level 0), keep children
       if (node.level > 0) {
         if (!map[node.groupId]) map[node.groupId] = [];
@@ -54,7 +54,7 @@ export function EmotionSelector() {
   return (
     <ThemedView variant="background" style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {FEELINGS_CONTENT.groups.map((group) => (
+        {EMOTIONS_CONTENT.groups.map((group) => (
           <AccordionGroup
             key={group.id}
             group={group}

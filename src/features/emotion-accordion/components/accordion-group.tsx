@@ -94,9 +94,10 @@ const styles = StyleSheet.create((theme) => ({
     color: 'rgba(255,255,255,0.8)',
   },
   listContainer: {
-    display: 'flex',
     flexDirection: 'row',
     flexWrap: 'wrap',
+    gap: 8,
     paddingVertical: 8,
+    justifyContent: 'center',
   },
 }));

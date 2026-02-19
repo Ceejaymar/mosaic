@@ -7,7 +7,7 @@ export const angryGroup: EmotionGroup = {
   color: '#ff1744',
 };
 
-export const rawAngryNodes: Omit<EmotionNode, 'colorIndex'>[] = [
+const rawAngryNodes: Omit<EmotionNode, 'colorIndex'>[] = [
   {
     id: 'angry',
     label: 'Angry',
@@ -123,7 +123,7 @@ export const rawAngryNodes: Omit<EmotionNode, 'colorIndex'>[] = [
     groupId: 'angry',
     parentId: 'angry_mad',
     description: 'Explosive-feeling anger; hot and intense.',
-    synonyms: ['livid', 'irate', 'steam'],
+    synonyms: ['livid', 'irate', 'steaming'],
   },
   {
     id: 'angry_aggressive',

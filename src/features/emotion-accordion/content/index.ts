@@ -16,7 +16,7 @@ const ALL_MODULES = [
   { group: fearfulGroup, nodes: fearfulNodes },
 ];
 
-export const FEELINGS_CONTENT = {
+export const EMOTIONS_CONTENT = {
   version: 1,
   groups: ALL_MODULES.map((m) => m.group),
   nodes: ALL_MODULES.flatMap((m) => m.nodes),

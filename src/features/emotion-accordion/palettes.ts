@@ -126,7 +126,26 @@ export const EMOTION_PALETTES = {
       '#5c0104',
       '#560000',
     ],
+    fearful: [
+      '#ff9100',
+      '#fc8d00',
+      '#f98800',
+      '#f68400',
+      '#f28000',
+      '#ef7b00',
+      '#ec7700',
+      '#e97300',
+      '#e56f00',
+      '#e26a00',
+      '#df6600',
+      '#db6200',
+      '#d85e00',
+      '#d45900',
+      '#d15500',
+      '#ce5100',
+      '#ca4d00',
+      '#c74800',
+      '#c34400',
+    ],
   },
 };
-
-export type PaletteKey = keyof typeof EMOTION_PALETTES;

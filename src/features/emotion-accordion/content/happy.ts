@@ -7,7 +7,7 @@ export const happyGroup: EmotionGroup = {
   color: '#ffd300',
 };
 
-export const rawHappyNodes: Omit<EmotionNode, 'colorIndex'>[] = [
+const rawHappyNodes: Omit<EmotionNode, 'colorIndex'>[] = [
   {
     id: 'happy',
     label: 'Happy',

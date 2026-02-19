@@ -7,7 +7,7 @@ export const calmGroup: EmotionGroup = {
   color: '#4caf50',
 };
 
-export const rawCalmNodes: Omit<EmotionNode, 'colorIndex'>[] = [
+const rawCalmNodes: Omit<EmotionNode, 'colorIndex'>[] = [
   {
     id: 'calm',
     label: 'Calm',

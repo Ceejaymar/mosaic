@@ -45,7 +45,7 @@ const styles = StyleSheet.create((theme) => ({
     left: 20,
     right: 20,
     padding: 20,
-    backgroundColor: `${theme.colors.background}`,
+    backgroundColor: '#0e0e0e',
     borderRadius: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
@@ -59,7 +59,6 @@ const styles = StyleSheet.create((theme) => ({
   value: {
     fontSize: 28,
     fontWeight: '700',
-    textShadowColor: '#000000',
   },
   synonyms: {
     fontSize: 11,
@@ -68,7 +67,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   description: {
     fontSize: 14,
-    color: '#665',
+    color: '#ccc',
     fontWeight: '600',
     marginTop: 8,
     textTransform: 'lowercase',

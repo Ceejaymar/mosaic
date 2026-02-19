@@ -20,17 +20,20 @@ export function Emotion({ label, color, isSelected, onPress }: Props) {
       style={[
         styles.container,
         {
-          backgroundColor: color,
+          backgroundColor: isSelected ? 'transparent' : color,
           borderColor: isSelected ? color : 'transparent',
         },
       ]}
     >
       <Text
+        adjustsFontSizeToFit
+        numberOfLines={1}
+        minimumFontScale={0.7}
         style={[
           styles.text,
           {
             color: isSelected ? color : '#fff',
-            fontWeight: isSelected ? '700' : '400',
+            fontWeight: isSelected ? '700' : '500',
           },
         ]}
       >
@@ -42,18 +45,20 @@ export function Emotion({ label, color, isSelected, onPress }: Props) {
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    marginVertical: 4,
-    marginHorizontal: 8,
+    width: '31.5%',
+    aspectRatio: 2.2,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    paddingBottom: 8,
     borderRadius: 8,
     borderWidth: 1.5,
   },
   text: {
     fontSize: 16,
     textTransform: 'capitalize',
+    includeFontPadding: false,
     fontFamily: 'Fraunces',
-    fontWeight: 'bold',
-    // color: '#fff',
+    // lineHeight: 18,
   },
 });

@@ -1,6 +1,3 @@
-export type NodeId = string;
-export type FeelingLevel = 0 | 1 | 2;
-
 export type EmotionGroupId =
   | 'happy'
   | 'surprised'
@@ -14,7 +11,7 @@ export interface EmotionNode {
   id: string;
   label: string;
   level: number;
-  groupId: string;
+  groupId: EmotionGroupId;
   parentId: string | null;
   description: string;
   synonyms: string[];
@@ -22,7 +19,7 @@ export interface EmotionNode {
 }
 
 export interface EmotionGroup {
-  id: string;
+  id: EmotionGroupId;
   label: string;
   description: string;
   color: string;

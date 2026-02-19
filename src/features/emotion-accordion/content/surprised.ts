@@ -7,7 +7,7 @@ export const surprisedGroup: EmotionGroup = {
   color: '#00e5ff',
 };
 
-export const rawSurprisedNodes: Omit<EmotionNode, 'colorIndex'>[] = [
+const rawSurprisedNodes: Omit<EmotionNode, 'colorIndex'>[] = [
   {
     id: 'surprised',
     label: 'Surprised',

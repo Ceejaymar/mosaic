@@ -4,10 +4,10 @@ export const fearfulGroup: EmotionGroup = {
   id: 'fearful',
   label: 'Fearful',
   description: 'Threat, uncertainty, or vulnerability states.',
-  color: '#ff1744',
+  color: '#ff9100',
 };
 
-export const rawFearfulNodes: Omit<EmotionNode, 'colorIndex'>[] = [
+const rawFearfulNodes: Omit<EmotionNode, 'colorIndex'>[] = [
   {
     id: 'fearful',
     label: 'Fearful',
@@ -76,7 +76,7 @@ export const rawFearfulNodes: Omit<EmotionNode, 'colorIndex'>[] = [
     label: 'Insecure',
     level: 1,
     groupId: 'fearful',
-    parentId: 'fear',
+    parentId: 'fearful',
     description: 'Doubting yourself; feeling not enough.',
     synonyms: ['self-doubting', 'uncertain-of-self', 'shaky'],
   },
@@ -157,7 +157,7 @@ export const rawFearfulNodes: Omit<EmotionNode, 'colorIndex'>[] = [
     label: 'Humiliated',
     level: 1,
     groupId: 'fearful',
-    parentId: 'fear',
+    parentId: 'fearful',
     description: 'Feeling exposed, shamed, or lowered publicly.',
     synonyms: ['mortified', 'made-small', 'embarrassed-publicly'],
   },

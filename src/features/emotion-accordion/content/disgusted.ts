@@ -7,7 +7,7 @@ export const disgustedGroup: EmotionGroup = {
   color: '#aa00ff',
 };
 
-export const rawDisgustedNodes: Omit<EmotionNode, 'colorIndex'>[] = [
+const rawDisgustedNodes: Omit<EmotionNode, 'colorIndex'>[] = [
   {
     id: 'disgusted',
     label: 'Disgusted',
@@ -45,8 +45,8 @@ export const rawDisgustedNodes: Omit<EmotionNode, 'colorIndex'>[] = [
     synonyms: ['scornful', 'derisive', 'sneering'],
   },
   {
-    id: 'disgusted_disappointment',
-    label: 'Disappointment',
+    id: 'disgusted_disappointed',
+    label: 'Disappointed',
     level: 1,
     groupId: 'disgusted',
     parentId: 'disgusted',
@@ -54,20 +54,20 @@ export const rawDisgustedNodes: Omit<EmotionNode, 'colorIndex'>[] = [
     synonyms: ['put-off', 'repulsed', 'soured'],
   },
   {
-    id: 'disgusted_disappointment_repelled',
+    id: 'disgusted_disappointed_repelled',
     label: 'Repelled',
     level: 2,
     groupId: 'disgusted',
-    parentId: 'disgusted_disappointment',
+    parentId: 'disgusted_disappointed',
     description: 'Feeling pushed away; wanting to create distance.',
     synonyms: ['driven-away', 'pushed-back', 'averse-feeling'],
   },
   {
-    id: 'disgusted_disappointment_revolted',
+    id: 'disgusted_disappointed_revolted',
     label: 'Revolted',
     level: 2,
     groupId: 'disgusted',
-    parentId: 'disgusted_disappointment',
+    parentId: 'disgusted_disappointed',
     description: 'Strong disgust that feels intense or visceral.',
     synonyms: ['sickened', 'queasy', 'grossed-out'],
   },
