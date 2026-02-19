@@ -12,7 +12,6 @@ export function Emotion({ label, color, isSelected, onPress }: Props) {
   return (
     <Pressable
       onPress={onPress}
-      accessible
       accessibilityRole="button"
       accessibilityState={{ selected: isSelected }}
       accessibilityLabel={label}
@@ -30,8 +29,8 @@ export function Emotion({ label, color, isSelected, onPress }: Props) {
         style={[
           styles.text,
           {
-            color: isSelected ? color : '#fff',
-            fontWeight: isSelected ? '700' : '500',
+            color: isSelected ? color : '#050505',
+            fontWeight: isSelected ? '700' : '600',
           },
         ]}
       >
@@ -43,14 +42,14 @@ export function Emotion({ label, color, isSelected, onPress }: Props) {
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 16,
-    paddingVertical: 9,
+    width: '32%',
+    paddingVertical: 10,
     borderRadius: 100,
     borderWidth: 1.5,
-    alignSelf: 'flex-start',
+    alignItems: 'center',
   },
   text: {
-    fontSize: 14,
+    fontSize: 13,
     textTransform: 'capitalize',
     includeFontPadding: false,
     fontFamily: 'Fraunces',

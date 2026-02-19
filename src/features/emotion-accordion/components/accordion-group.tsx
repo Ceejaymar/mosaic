@@ -1,8 +1,10 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import { EMOTION_PALETTES } from '../palettes';
 import type { EmotionGroup, EmotionNode } from '../types';
+import { muteColor } from '../utils/color';
 import { Emotion } from './emotion';
 
 type Props = {
@@ -24,6 +26,7 @@ export function AccordionGroup({
 }: Props) {
   const groupPalette =
     EMOTION_PALETTES.default[group.id as keyof (typeof EMOTION_PALETTES)['default']];
+  const mutedGroupColor = muteColor(group.color);
 
   return (
     <View style={styles.container}>
@@ -31,13 +34,21 @@ export function AccordionGroup({
         onPress={onToggle}
         style={({ pressed }) => [
           styles.header,
-          { backgroundColor: group.color },
+          { backgroundColor: mutedGroupColor },
           pressed && { opacity: 0.88 },
         ]}
         accessibilityRole="button"
         accessibilityState={{ expanded: isOpen }}
         accessibilityLabel={group.label}
       >
+        {/* Noise/depth gradient overlay */}
+        <LinearGradient
+          colors={['rgba(255,255,255,0.10)', 'rgba(0,0,0,0.18)']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+          pointerEvents="none"
+        />
         <Text style={styles.headerText}>{group.label}</Text>
         <Ionicons
           name={isOpen ? 'chevron-up' : 'chevron-down'}
@@ -49,12 +60,12 @@ export function AccordionGroup({
       {isOpen && (
         <View style={styles.listContainer}>
           {childrenNodes.map((node) => {
-            const color = groupPalette[node.colorIndex];
+            const rawColor = groupPalette[node.colorIndex];
             return (
               <Emotion
                 key={node.id}
                 label={node.label}
-                color={color}
+                color={muteColor(rawColor)}
                 isSelected={selectedNodeId === node.id}
                 onPress={() => onSelectNode(node.id)}
               />
@@ -78,7 +89,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 16,
     paddingHorizontal: 20,
-    borderRadius: 16,
+    overflow: 'hidden',
   },
   headerText: {
     fontSize: 18,
@@ -89,7 +100,7 @@ const styles = StyleSheet.create({
   listContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 6,
     padding: 14,
     paddingTop: 12,
   },

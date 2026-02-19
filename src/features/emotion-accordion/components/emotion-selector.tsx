@@ -48,8 +48,6 @@ export function EmotionSelector() {
   return (
     <ThemedView variant="background" style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <Text style={styles.heading}>Emotions</Text>
-        <Text style={styles.subheading}>Explore and name what you're feeling</Text>
         {EMOTIONS_CONTENT.groups.map((group) => (
           <AccordionGroup
             key={group.id}
@@ -68,7 +66,7 @@ export function EmotionSelector() {
   );
 }
 
-const styles = StyleSheet.create((theme) => ({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: 100,
@@ -77,17 +75,4 @@ const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: 20,
     paddingBottom: 180,
   },
-  heading: {
-    fontSize: 34,
-    fontFamily: 'Fraunces',
-    fontWeight: '700',
-    color: theme.colors.typography,
-    letterSpacing: -0.5,
-    marginBottom: 4,
-  },
-  subheading: {
-    fontSize: 14,
-    color: '#8E8E93',
-    marginBottom: 24,
-  },
-}));
+});

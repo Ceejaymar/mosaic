@@ -96,7 +96,13 @@ export default function CheckInScreen() {
     setSheetVisible(false);
 
     // Persist to DB
-    await insertMoodEntry(newEntry);
+    try {
+      await insertMoodEntry(newEntry);
+    } catch (error) {
+      console.error('Failed to persist mood entry', error);
+      setTodayEntries((prev) => prev.filter((e) => e.id !== newEntry.id));
+      // TODO: surface an error toast/snackbar to the user
+    }
   };
 
   // Build mosaic tiles in chronological order (oldest → newest = top-left → bottom-right)

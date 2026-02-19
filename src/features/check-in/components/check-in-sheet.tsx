@@ -13,9 +13,11 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AccordionGroup } from '@/src/features/emotion-accordion/components/accordion-group';
+import { SelectionModal } from '@/src/features/emotion-accordion/components/selection-modal';
 import { EMOTIONS_CONTENT } from '@/src/features/emotion-accordion/content';
 import { EMOTION_PALETTES } from '@/src/features/emotion-accordion/palettes';
 import type { EmotionGroupId, EmotionNode } from '@/src/features/emotion-accordion/types';
+import { muteColor } from '@/src/features/emotion-accordion/utils/color';
 import { ACTIVITY_TAGS, LOCATION_TAGS, PEOPLE_TAGS } from '../data/context-tags';
 import { getCurrentTimeSlot, getTimeSlotLabel } from '../utils/time-of-day';
 
@@ -23,12 +25,12 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-// Sheet is always dark regardless of app theme
 const BG = '#111113';
 const SURFACE = '#1C1C1E';
 const STROKE = '#2C2C2E';
 const MUTED = '#8E8E93';
 const TEXT = '#F2F2F7';
+const GOLD = '#E0C097';
 
 type Step = 'emotion' | 'context';
 
@@ -152,7 +154,8 @@ export function CheckInSheet({ visible, onClose, onSave }: Props) {
   }, []);
 
   const selectedNode = useMemo(
-    () => (selectedNodeId ? EMOTIONS_CONTENT.nodes.find((n) => n.id === selectedNodeId) : null),
+    () =>
+      selectedNodeId ? (EMOTIONS_CONTENT.nodes.find((n) => n.id === selectedNodeId) ?? null) : null,
     [selectedNodeId],
   );
 
@@ -160,7 +163,8 @@ export function CheckInSheet({ visible, onClose, onSave }: Props) {
     if (!selectedNode) return null;
     const palette =
       EMOTION_PALETTES.default[selectedNode.groupId as keyof (typeof EMOTION_PALETTES)['default']];
-    return palette?.[selectedNode.colorIndex] ?? null;
+    const raw = palette?.[selectedNode.colorIndex] ?? null;
+    return raw ? muteColor(raw) : null;
   }, [selectedNode]);
 
   const resetState = () => {
@@ -179,7 +183,6 @@ export function CheckInSheet({ visible, onClose, onSave }: Props) {
       setActiveGroupId(null);
     } else {
       setActiveGroupId(groupId);
-      // Auto-select the root emotion for this group (level 0, id === groupId)
       setSelectedNodeId(groupId);
     }
   };
@@ -222,12 +225,16 @@ export function CheckInSheet({ visible, onClose, onSave }: Props) {
     });
   };
 
+  // Bottom offset for SelectionModal inside the sheet (no tab bar)
+  const selectionModalBottom = Math.max(insets.bottom, 16) + 8;
+
   return (
     <Modal
       visible={visible}
       animationType="slide"
       presentationStyle={Platform.OS === 'ios' ? 'pageSheet' : 'overFullScreen'}
       onRequestClose={handleClose}
+      onDismiss={resetState}
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -298,7 +305,7 @@ export function CheckInSheet({ visible, onClose, onSave }: Props) {
               contentContainerStyle={{
                 paddingHorizontal: 16,
                 paddingTop: 4,
-                paddingBottom: selectedNode ? 140 : 32,
+                paddingBottom: selectedNode ? 160 : 32,
               }}
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
@@ -316,72 +323,12 @@ export function CheckInSheet({ visible, onClose, onSave }: Props) {
               ))}
             </ScrollView>
 
-            {/* Sticky footer — visible when an emotion is selected */}
-            {selectedNode && (
-              <View
-                style={{
-                  position: 'absolute',
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  backgroundColor: BG,
-                  borderTopWidth: 1,
-                  borderTopColor: STROKE,
-                  paddingHorizontal: 20,
-                  paddingTop: 14,
-                  paddingBottom: Math.max(insets.bottom, 20),
-                }}
-              >
-                {/* Selected preview */}
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 8,
-                    marginBottom: 12,
-                  }}
-                >
-                  <View
-                    style={{
-                      width: 10,
-                      height: 10,
-                      borderRadius: 5,
-                      backgroundColor: selectedColor ?? MUTED,
-                    }}
-                  />
-                  <Text
-                    style={{
-                      fontSize: 15,
-                      color: TEXT,
-                      fontWeight: '600',
-                      fontFamily: 'Fraunces',
-                      textTransform: 'capitalize',
-                    }}
-                  >
-                    {selectedNode.label}
-                  </Text>
-                </View>
-
-                {/* Continue button */}
-                <Pressable
-                  onPress={handleContinue}
-                  style={({ pressed }) => ({
-                    paddingVertical: 16,
-                    borderRadius: 100,
-                    alignItems: 'center' as const,
-                    backgroundColor: selectedColor ?? STROKE,
-                    opacity: pressed ? 0.88 : 1,
-                    transform: pressed ? [{ scale: 0.98 }] : [{ scale: 1 }],
-                  })}
-                  accessibilityRole="button"
-                  accessibilityLabel="Continue"
-                >
-                  <Text style={{ fontSize: 17, fontWeight: '600', color: '#050505' }}>
-                    Continue →
-                  </Text>
-                </Pressable>
-              </View>
-            )}
+            {/* SelectionModal as the "Continue" trigger */}
+            <SelectionModal
+              selectedNode={selectedNode}
+              onPress={handleContinue}
+              style={{ bottom: selectionModalBottom }}
+            />
           </>
         ) : (
           <>
@@ -449,7 +396,6 @@ export function CheckInSheet({ visible, onClose, onSave }: Props) {
               </Pressable>
             </View>
 
-            {/* Context content */}
             <ScrollView
               style={{ flex: 1 }}
               contentContainerStyle={{
@@ -460,7 +406,54 @@ export function CheckInSheet({ visible, onClose, onSave }: Props) {
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
             >
+              {/* "I'm feeling" emotion tile */}
+              <View
+                style={{
+                  backgroundColor: selectedColor ?? STROKE,
+                  borderRadius: 20,
+                  paddingHorizontal: 20,
+                  paddingVertical: 20,
+                  marginBottom: 24,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 13,
+                    fontWeight: '600',
+                    color: 'rgba(5,5,5,0.55)',
+                    letterSpacing: 0.6,
+                    marginBottom: 4,
+                  }}
+                >
+                  I'm feeling
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 36,
+                    fontWeight: '700',
+                    fontFamily: 'Fraunces',
+                    color: '#050505',
+                    textTransform: 'capitalize',
+                    lineHeight: 40,
+                  }}
+                >
+                  {selectedNode?.label}
+                </Text>
+              </View>
+
               {/* Note input */}
+              <Text
+                style={{
+                  fontSize: 12,
+                  fontWeight: '600',
+                  color: MUTED,
+                  letterSpacing: 1.2,
+                  marginBottom: 8,
+                  textTransform: 'uppercase',
+                }}
+              >
+                What's on your mind?
+              </Text>
               <View
                 style={{
                   marginBottom: 28,
@@ -473,7 +466,7 @@ export function CheckInSheet({ visible, onClose, onSave }: Props) {
               >
                 <TextInput
                   style={{ fontSize: 15, color: TEXT, minHeight: 56 }}
-                  placeholder="What's on your mind? (optional)"
+                  placeholder="Add a note... (optional)"
                   placeholderTextColor={MUTED}
                   value={note}
                   onChangeText={setNote}
@@ -508,7 +501,7 @@ export function CheckInSheet({ visible, onClose, onSave }: Props) {
               />
             </ScrollView>
 
-            {/* Save button */}
+            {/* Save button — Mosaic Gold to match check-in page */}
             <View
               style={{
                 paddingHorizontal: 20,
@@ -524,7 +517,7 @@ export function CheckInSheet({ visible, onClose, onSave }: Props) {
                   paddingVertical: 16,
                   borderRadius: 100,
                   alignItems: 'center' as const,
-                  backgroundColor: selectedColor ?? STROKE,
+                  backgroundColor: GOLD,
                   opacity: pressed ? 0.88 : 1,
                   transform: pressed ? [{ scale: 0.98 }] : [{ scale: 1 }],
                 })}

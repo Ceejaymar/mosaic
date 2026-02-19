@@ -1,23 +1,31 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
-
 import { EMOTION_PALETTES } from '../palettes';
 import type { EmotionNode } from '../types';
+import { muteColor } from '../utils/color';
 
 type Props = {
   selectedNode: EmotionNode | null;
+  onPress?: () => void;
+  style?: object;
 };
 
-export function SelectionModal({ selectedNode }: Props) {
+export function SelectionModal({ selectedNode, onPress, style }: Props) {
   if (!selectedNode) return null;
 
   const groupPalette =
     EMOTION_PALETTES.default[selectedNode.groupId as keyof (typeof EMOTION_PALETTES)['default']];
-  const color = groupPalette[selectedNode.colorIndex];
+  const color = muteColor(groupPalette[selectedNode.colorIndex]);
 
   return (
-    <View style={styles.wrapper}>
+    <Pressable
+      onPress={onPress}
+      disabled={!onPress}
+      style={({ pressed }) => [styles.wrapper, style, pressed && !!onPress && { opacity: 0.82 }]}
+      accessibilityRole={onPress ? 'button' : 'none'}
+      accessibilityLabel={onPress ? `Continue with ${selectedNode.label}` : undefined}
+    >
       <View style={styles.container}>
         <Text style={[styles.value, { color }]}>{selectedNode.label}</Text>
         <Text style={styles.synonyms}>{selectedNode.synonyms.join(' · ')}</Text>
@@ -26,10 +34,10 @@ export function SelectionModal({ selectedNode }: Props) {
           <Text style={styles.description}>{selectedNode.description}</Text>
         )}
       </View>
-      <View style={styles.arrowContainer}>
-        <Ionicons name="arrow-forward" size={42} color={color} />
+      <View style={[styles.arrowContainer, onPress && { backgroundColor: `${color}22` }]}>
+        <Ionicons name="arrow-forward" size={onPress ? 28 : 42} color={color} />
       </View>
-    </View>
+    </Pressable>
   );
 }
 
@@ -58,6 +66,7 @@ const styles = StyleSheet.create({
   value: {
     fontSize: 28,
     fontWeight: '700',
+    fontFamily: 'Fraunces',
   },
   synonyms: {
     fontSize: 11,
@@ -73,7 +82,9 @@ const styles = StyleSheet.create({
     minHeight: 34,
   },
   arrowContainer: {
-    borderRadius: 10,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
   },
