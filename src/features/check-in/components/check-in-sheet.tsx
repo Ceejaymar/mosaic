@@ -43,8 +43,6 @@ export const CheckInSheet = memo(function CheckInSheet({ visible, onClose, onSav
 
   const selectedColor = useMemo(() => getEmotionColor(selectedNode), [selectedNode]);
 
-  const selectionModalBottom = Math.max(insets.bottom, 16) + 8;
-
   const bannerBg = selectedColor ?? theme.colors.divider;
   const bannerTextColor = isLightColor(bannerBg) ? theme.colors.onAccent : '#ffffff';
 
@@ -85,7 +83,6 @@ export const CheckInSheet = memo(function CheckInSheet({ visible, onClose, onSav
               onSelectionPress={() => {
                 if (form.selectedNodeId) form.setStep('context');
               }}
-              selectionModalStyle={{ bottom: selectionModalBottom }}
               scrollPaddingBottom={form.selectedNodeId ? 160 : 32}
             />
           </>
