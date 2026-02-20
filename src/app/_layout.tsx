@@ -64,6 +64,10 @@ function RootLayoutNav() {
         <GestureHandlerRootView style={{ flex: 1 }}>
           <Stack>
             <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="check-in/[id]"
+              options={{ headerShown: false, gestureEnabled: true, animation: 'slide_from_right' }}
+            />
           </Stack>
         </GestureHandlerRootView>
       </ThemeProvider>

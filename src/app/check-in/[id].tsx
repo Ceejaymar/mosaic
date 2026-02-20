@@ -1,6 +1,4 @@
-import { useNavigation } from '@react-navigation/native';
-import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
@@ -9,17 +7,6 @@ export default function EditCheckInScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const navigation = useNavigation();
-
-  // Disable drawer swipe while on this screen so left-edge swipe navigates back
-  useFocusEffect(
-    useCallback(() => {
-      // Inside tabs, getParent() reaches the drawer navigator
-      const drawerNav = navigation.getParent();
-      drawerNav?.setOptions({ swipeEnabled: false });
-      return () => drawerNav?.setOptions({ swipeEnabled: true });
-    }, [navigation]),
-  );
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 16, paddingBottom: insets.bottom }]}>
@@ -41,7 +28,7 @@ export default function EditCheckInScreen() {
 
 const styles = StyleSheet.create((theme) => ({
   container: { flex: 1, backgroundColor: theme.colors.background, paddingHorizontal: 24 },
-  backBtn: { marginBottom: 24 },
+  backBtn: { marginBottom: 24, paddingVertical: 8 },
   backText: { fontSize: 15, fontWeight: '500', color: theme.colors.mosaicGold },
   title: {
     fontSize: 32,

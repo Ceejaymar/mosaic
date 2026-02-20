@@ -118,9 +118,6 @@ export default function TabLayout() {
             ),
           }}
         />
-
-        {/* Hidden routes */}
-        <Tabs.Screen name="check-in/[id]" options={{ href: null, headerShown: false }} />
       </Tabs>
 
       {/* FAB — rendered as a sibling so it sits above all tab content in z-order */}
