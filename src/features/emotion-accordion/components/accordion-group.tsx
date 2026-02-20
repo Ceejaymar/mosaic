@@ -1,9 +1,10 @@
-import { TouchableOpacity, View } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Pressable, Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
-
-import { ThemedText } from '@/src/components/themed-text';
 import { EMOTION_PALETTES } from '../palettes';
 import type { EmotionGroup, EmotionNode } from '../types';
+import { muteColor } from '../utils/color';
 import { Emotion } from './emotion';
 
 type Props = {
@@ -25,33 +26,46 @@ export function AccordionGroup({
 }: Props) {
   const groupPalette =
     EMOTION_PALETTES.default[group.id as keyof (typeof EMOTION_PALETTES)['default']];
+  const mutedGroupColor = muteColor(group.color);
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        activeOpacity={0.9}
+      <Pressable
         onPress={onToggle}
-        style={[
+        style={({ pressed }) => [
           styles.header,
-          {
-            backgroundColor: group.color,
-          },
+          { backgroundColor: mutedGroupColor },
+          pressed && { opacity: 0.88 },
         ]}
+        accessibilityRole="button"
+        accessibilityState={{ expanded: isOpen }}
+        accessibilityLabel={group.label}
       >
-        <ThemedText style={styles.headerText}>{group.label}</ThemedText>
-        <ThemedText style={styles.chevron}>{isOpen ? '▲' : '▼'}</ThemedText>
-      </TouchableOpacity>
+        {/* Noise/depth gradient overlay */}
+        <LinearGradient
+          colors={['rgba(255,255,255,0.10)', 'rgba(0,0,0,0.18)']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.gradientFill}
+          pointerEvents="none"
+        />
+        <Text style={styles.headerText}>{group.label}</Text>
+        <Ionicons
+          name={isOpen ? 'chevron-up' : 'chevron-down'}
+          size={18}
+          color="rgba(255,255,255,0.85)"
+        />
+      </Pressable>
 
       {isOpen && (
         <View style={styles.listContainer}>
           {childrenNodes.map((node) => {
-            const color = groupPalette[node.colorIndex];
-
+            const rawColor = groupPalette?.[node.colorIndex] ?? group.color;
             return (
               <Emotion
                 key={node.id}
                 label={node.label}
-                color={color}
+                color={muteColor(rawColor)}
                 isSelected={selectedNodeId === node.id}
                 onPress={() => onSelectNode(node.id)}
               />
@@ -63,41 +77,38 @@ export function AccordionGroup({
   );
 }
 
-const styles = StyleSheet.create((theme) => ({
+const styles = StyleSheet.create({
   container: {
-    marginBottom: 12,
-    borderRadius: 12,
-    backgroundColor: theme.colors.background,
+    marginBottom: 8,
+    borderRadius: 16,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 18,
+    paddingVertical: 16,
     paddingHorizontal: 20,
-    borderRadius: 12,
+    overflow: 'hidden',
   },
   headerText: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700',
     color: '#fff',
     fontFamily: 'Fraunces',
   },
-  chevron: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.8)',
+  gradientFill: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   listContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
-    paddingVertical: 8,
-    justifyContent: 'center',
+    gap: 6,
+    padding: 14,
+    paddingTop: 12,
   },
-}));
+});

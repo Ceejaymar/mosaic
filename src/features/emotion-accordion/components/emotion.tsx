@@ -1,4 +1,4 @@
-import { Text, TouchableOpacity } from 'react-native';
+import { Pressable, Text } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 type Props = {
@@ -10,55 +10,48 @@ type Props = {
 
 export function Emotion({ label, color, isSelected, onPress }: Props) {
   return (
-    <TouchableOpacity
+    <Pressable
       onPress={onPress}
-      activeOpacity={0.7}
-      accessible
       accessibilityRole="button"
       accessibilityState={{ selected: isSelected }}
       accessibilityLabel={label}
-      style={[
+      style={({ pressed }) => [
         styles.container,
         {
           backgroundColor: isSelected ? 'transparent' : color,
           borderColor: isSelected ? color : 'transparent',
         },
+        pressed && { opacity: 0.75 },
       ]}
     >
       <Text
-        adjustsFontSizeToFit
         numberOfLines={1}
-        minimumFontScale={0.7}
         style={[
           styles.text,
           {
-            color: isSelected ? color : '#fff',
-            fontWeight: isSelected ? '700' : '500',
+            color: isSelected ? color : '#050505',
+            fontWeight: isSelected ? '700' : '600',
           },
         ]}
       >
         {label}
       </Text>
-    </TouchableOpacity>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    width: '31.5%',
-    aspectRatio: 2.2,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 4,
-    paddingBottom: 8,
-    borderRadius: 8,
+    width: '32%',
+    paddingVertical: 10,
+    borderRadius: 100,
     borderWidth: 1.5,
+    alignItems: 'center',
   },
   text: {
-    fontSize: 16,
+    fontSize: 13,
     textTransform: 'capitalize',
     includeFontPadding: false,
     fontFamily: 'Fraunces',
-    // lineHeight: 18,
   },
 });

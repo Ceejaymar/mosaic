@@ -1,4 +1,5 @@
 const lightTheme = {
+  isDark: false as const,
   colors: {
     background: '#ffffff',
     typography: '#000000',
@@ -9,6 +10,7 @@ const lightTheme = {
 };
 
 const darkTheme = {
+  isDark: true as const,
   colors: {
     background: '#000000',
     typography: '#ffffff',
