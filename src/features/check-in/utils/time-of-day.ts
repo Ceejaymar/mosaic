@@ -30,6 +30,16 @@ export function getTimeSlotLabel(slot: TimeSlot): string {
   return labels[slot];
 }
 
+export function getTimeSubtitle(): string {
+  const time = new Date().toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+  const slot = getTimeSlotLabel(getCurrentTimeSlot());
+  return `${time} · ${slot}`;
+}
+
 // Representative hour for each slot, used when backdating a check-in
 export const SLOT_DEFAULT_HOURS: Record<TimeSlot, number> = {
   morning: 9,

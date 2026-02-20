@@ -40,23 +40,18 @@ export function MoodSlot({ slot, isCurrentSlot, moodColor, moodLabel, onPress }:
       accessibilityRole="button"
       accessibilityLabel={`${getTimeSlotLabel(slot)}${moodLabel ? `, ${moodLabel}` : ', tap to check in'}`}
     >
-      {/* Top accent strip */}
       <View
         style={[
           styles.accentStrip,
-          {
-            backgroundColor: isFilled ? moodColor : isCurrentSlot ? '#E0C097' : 'transparent',
-          },
+          { backgroundColor: isFilled ? moodColor : isCurrentSlot ? '#E0C097' : 'transparent' },
         ]}
       />
 
       <View style={styles.content}>
-        {/* Slot label */}
         <Text style={[styles.slotLabel, isFilled && { color: moodColor }]}>
           {getTimeSlotLabel(slot).toUpperCase()}
         </Text>
 
-        {/* Status */}
         <View style={styles.statusArea}>
           {isFilled ? (
             <>
@@ -76,66 +71,32 @@ export function MoodSlot({ slot, isCurrentSlot, moodColor, moodLabel, onPress }:
   );
 }
 
-const styles = StyleSheet.create((theme) => {
-  const isDark = theme.isDark;
-  return {
-    tile: {
-      flex: 1,
-      minHeight: 150,
-      backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF',
-      borderRadius: 16,
-      borderWidth: 1,
-      borderColor: isDark ? '#2C2C2E' : '#E5E5EA',
-      overflow: 'hidden',
-      shadowColor: isDark ? 'transparent' : '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.05,
-      shadowRadius: 12,
-      elevation: isDark ? 0 : 2,
-    },
-    currentTile: {
-      borderColor: isDark ? '#3A3A3C' : '#D0D0D5',
-    },
-    accentStrip: {
-      height: 3,
-      width: '100%',
-    },
-    content: {
-      flex: 1,
-      padding: 16,
-      justifyContent: 'space-between',
-    },
-    slotLabel: {
-      fontSize: 11,
-      fontWeight: '600',
-      letterSpacing: 1.2,
-      color: '#8E8E93',
-    },
-    statusArea: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 7,
-    },
-    statusDot: {
-      width: 7,
-      height: 7,
-      borderRadius: 3.5,
-    },
-    moodLabel: {
-      fontSize: 16,
-      fontWeight: '600',
-      fontFamily: 'Fraunces',
-      flex: 1,
-    },
-    nowLabel: {
-      fontSize: 13,
-      color: '#E0C097',
-      fontWeight: '500',
-    },
-    emptyDash: {
-      fontSize: 20,
-      color: isDark ? '#3A3A3C' : '#D0D0D5',
-      fontWeight: '300',
-    },
-  };
-});
+const styles = StyleSheet.create((theme) => ({
+  tile: {
+    flex: 1,
+    minHeight: 150,
+    // Safely mixes background mapping depending on light/dark mode preference
+    backgroundColor: theme.isDark ? theme.colors.surface : theme.colors.background,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: theme.colors.divider,
+    overflow: 'hidden',
+    shadowColor: theme.isDark ? 'transparent' : '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: theme.isDark ? 0 : 2,
+  },
+  currentTile: {
+    // Uses textMuted for a slightly more prominent border than the standard divider
+    borderColor: theme.colors.textMuted,
+  },
+  accentStrip: { height: 3, width: '100%' },
+  content: { flex: 1, padding: 16, justifyContent: 'space-between' },
+  slotLabel: { fontSize: 11, fontWeight: '600', letterSpacing: 1.2, color: theme.colors.textMuted },
+  statusArea: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+  statusDot: { width: 7, height: 7, borderRadius: 3.5 },
+  moodLabel: { fontSize: 16, fontWeight: '600', fontFamily: 'Fraunces', flex: 1 },
+  nowLabel: { fontSize: 13, color: theme.colors.mosaicGold, fontWeight: '500' },
+  emptyDash: { fontSize: 20, color: theme.colors.divider, fontWeight: '300' },
+}));
