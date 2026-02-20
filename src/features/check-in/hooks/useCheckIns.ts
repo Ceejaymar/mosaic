@@ -50,5 +50,5 @@ export function useTodayCheckIns() {
     }
   }, []);
 
-  return { todayEntries, saveEntry };
+  return { todayEntries, saveEntry, refresh: loadTodayEntries };
 }

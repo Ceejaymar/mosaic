@@ -188,7 +188,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   row: { flexDirection: 'row', gap: GAP },
   flex1: { flex: 1 },
-  tile: { borderRadius: TILE_RADIUS, justifyContent: 'flex-end', padding: 14, overflow: 'hidden' },
+  tile: { borderRadius: TILE_RADIUS, justifyContent: 'flex-end', padding: 16, overflow: 'hidden' },
   scrim: {
     position: 'absolute',
     top: 0,

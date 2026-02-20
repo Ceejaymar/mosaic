@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { LayoutAnimation } from 'react-native';
+import type { Dispatch, SetStateAction } from 'react';
+import { useCallback, useState } from 'react';
 import type { EmotionGroupId } from '@/src/features/emotion-accordion/types';
+import { triggerSpringLayoutAnimation } from '@/src/utils/animations';
 
 export type Step = 'emotion' | 'context';
 
@@ -16,7 +17,7 @@ export function useCheckInForm(
   const [people, setPeople] = useState<Set<string>>(new Set());
   const [locations, setLocations] = useState<Set<string>>(new Set());
 
-  const resetState = () => {
+  const resetState = useCallback(() => {
     setStep('emotion');
     setActiveGroupId(null);
     setSelectedNodeId(null);
@@ -24,28 +25,31 @@ export function useCheckInForm(
     setActivities(new Set());
     setPeople(new Set());
     setLocations(new Set());
-  };
+  }, []);
 
-  const handleToggleGroup = (groupId: EmotionGroupId) => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    if (activeGroupId === groupId) {
-      setActiveGroupId(null);
-    } else {
-      setActiveGroupId(groupId);
-      setSelectedNodeId(groupId);
-    }
-  };
+  const handleToggleGroup = useCallback(
+    (groupId: EmotionGroupId) => {
+      triggerSpringLayoutAnimation();
+      if (activeGroupId === groupId) {
+        setActiveGroupId(null);
+      } else {
+        setActiveGroupId(groupId);
+        setSelectedNodeId(groupId);
+      }
+    },
+    [activeGroupId],
+  );
 
-  const toggleTag = (setter: React.Dispatch<React.SetStateAction<Set<string>>>, tag: string) => {
+  const toggleTag = useCallback((setter: Dispatch<SetStateAction<Set<string>>>, tag: string) => {
     setter((prev) => {
       const next = new Set(prev);
       if (next.has(tag)) next.delete(tag);
       else next.add(tag);
       return next;
     });
-  };
+  }, []);
 
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     if (!selectedNodeId) return;
     const lines: string[] = [];
     if (note.trim()) lines.push(note.trim());
@@ -55,12 +59,12 @@ export function useCheckInForm(
 
     onSaveCallback(selectedNodeId, lines.length > 0 ? lines.join('\n') : undefined);
     resetState();
-  };
+  }, [selectedNodeId, note, activities, people, locations, onSaveCallback, resetState]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     onCloseCallback();
     resetState();
-  };
+  }, [onCloseCallback, resetState]);
 
   return {
     step,

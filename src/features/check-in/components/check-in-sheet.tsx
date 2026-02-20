@@ -85,7 +85,10 @@ export function CheckInSheet({ visible, onClose, onSave }: Props) {
                 <Text style={styles.title}>What are you feeling?</Text>
                 <Text style={styles.subtitle}>{getTimeSubtitle()}</Text>
               </View>
-              <Pressable onPress={form.handleClose} style={styles.closeBtn}>
+              <Pressable
+                onPress={form.handleClose}
+                style={({ pressed }) => [styles.closeBtn, pressed && { opacity: 0.7 }]}
+              >
                 <Text style={styles.closeIcon}>✕</Text>
               </Pressable>
             </View>
@@ -120,7 +123,10 @@ export function CheckInSheet({ visible, onClose, onSave }: Props) {
         ) : (
           <>
             <View style={styles.step2Header}>
-              <Pressable onPress={() => form.setStep('emotion')}>
+              <Pressable
+                onPress={() => form.setStep('emotion')}
+                style={({ pressed }) => pressed && { opacity: 0.7 }}
+              >
                 <Text style={[styles.backBtn, { color: selectedColor ?? theme.colors.typography }]}>
                   ← Back
                 </Text>
@@ -136,7 +142,10 @@ export function CheckInSheet({ visible, onClose, onSave }: Props) {
                 <Text style={styles.selectedEmotionText}>{selectedNode?.label}</Text>
               </View>
 
-              <Pressable onPress={form.handleClose} style={styles.closeBtn}>
+              <Pressable
+                onPress={form.handleClose}
+                style={({ pressed }) => [styles.closeBtn, pressed && { opacity: 0.7 }]}
+              >
                 <Text style={styles.closeIcon}>✕</Text>
               </Pressable>
             </View>
@@ -281,7 +290,7 @@ const styles = StyleSheet.create((theme) => ({
   emotionBannerPre: {
     fontSize: 13,
     fontWeight: '600',
-    color: 'rgba(5,5,5,0.55)',
+    color: 'rgba(255,255,255,0.7)',
     letterSpacing: 0.6,
     marginBottom: 4,
   },
@@ -289,7 +298,7 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: 36,
     fontWeight: '700',
     fontFamily: 'Fraunces',
-    color: '#050505',
+    color: '#ffffff',
     textTransform: 'capitalize',
     lineHeight: 40,
   },
@@ -322,5 +331,5 @@ const styles = StyleSheet.create((theme) => ({
     alignItems: 'center',
     backgroundColor: theme.colors.mosaicGold,
   },
-  saveBtnText: { fontSize: 17, fontWeight: '600', color: '#050505' },
+  saveBtnText: { fontSize: 17, fontWeight: '600', color: theme.colors.onAccent },
 }));

@@ -1,6 +1,6 @@
 import { Pressable, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
-import { StyleSheet } from 'react-native-unistyles';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import type { TimeSlot } from '../utils/time-of-day';
 import { getTimeSlotLabel } from '../utils/time-of-day';
 
@@ -15,6 +15,7 @@ type Props = {
 };
 
 export function MoodSlot({ slot, isCurrentSlot, moodColor, moodLabel, onPress }: Props) {
+  const { theme } = useUnistyles();
   const scale = useSharedValue(1);
   const isFilled = !!moodColor;
 
@@ -43,7 +44,13 @@ export function MoodSlot({ slot, isCurrentSlot, moodColor, moodLabel, onPress }:
       <View
         style={[
           styles.accentStrip,
-          { backgroundColor: isFilled ? moodColor : isCurrentSlot ? '#E0C097' : 'transparent' },
+          {
+            backgroundColor: isFilled
+              ? moodColor
+              : isCurrentSlot
+                ? theme.colors.mosaicGold
+                : 'transparent',
+          },
         ]}
       />
 
@@ -75,15 +82,14 @@ const styles = StyleSheet.create((theme) => ({
   tile: {
     flex: 1,
     minHeight: 150,
-    // Safely mixes background mapping depending on light/dark mode preference
-    backgroundColor: theme.isDark ? theme.colors.surface : theme.colors.background,
+    backgroundColor: theme.colors.tileBackground,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: theme.colors.divider,
     overflow: 'hidden',
-    shadowColor: theme.isDark ? 'transparent' : '#000',
+    shadowColor: theme.colors.tileShadowColor,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.12,
     shadowRadius: 12,
     elevation: theme.isDark ? 0 : 2,
   },

@@ -1,10 +1,11 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, Text, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
-import { LAYOUT } from '@/src/constants/layout'; // Assumes you made this!
+
+import { LAYOUT } from '@/src/constants/layout';
 import { CheckInSheet } from '@/src/features/check-in/components/check-in-sheet';
 import { DailyStatsRow } from '@/src/features/check-in/components/daily-stats';
 import {
@@ -19,11 +20,13 @@ import { hapticLight } from '@/src/lib/haptics/haptics';
 import { enableAndroidLayoutAnimations } from '@/src/utils/animations';
 import { getFormattedDateLabel } from '@/src/utils/format-date';
 
-enableAndroidLayoutAnimations();
-
 export default function CheckInScreen() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+
+  useEffect(() => {
+    enableAndroidLayoutAnimations();
+  }, []);
 
   const [sheetVisible, setSheetVisible] = useState(false);
   const { todayEntries, saveEntry } = useTodayCheckIns();
@@ -100,6 +103,7 @@ export default function CheckInScreen() {
           </Text>
         </Pressable>
 
+        {/* TODO: compute real streak from cross-day DB query */}
         <DailyStatsRow entriesCount={todayEntries.length} streakCount={1} />
       </ScrollView>
 
@@ -142,6 +146,6 @@ const styles = StyleSheet.create((theme) => ({
   checkInBtnLabel: (atLimit: boolean) => ({
     fontSize: 17,
     fontWeight: '600',
-    color: atLimit ? theme.colors.textMuted : '#050505',
+    color: atLimit ? theme.colors.textMuted : theme.colors.onAccent,
   }),
 }));
