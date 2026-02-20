@@ -1,9 +1,9 @@
-import { useMemo } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { Platform, ScrollView, UIManager, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import { EMOTIONS_CONTENT } from '../content';
 import type { EmotionGroupId, EmotionNode } from '../types';
+import { getEmotionNode } from '../utils/emotion-utils';
 import { AccordionGroup } from './accordion-group';
 import { SelectionModal } from './selection-modal';
 
@@ -13,13 +13,12 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 }
 
 // Static — derived from immutable content, never changes at runtime
-const nodesByGroup: Record<string, EmotionNode[]> = {};
-EMOTIONS_CONTENT.nodes.forEach((node) => {
-  if (node.level > 0) {
-    if (!nodesByGroup[node.groupId]) nodesByGroup[node.groupId] = [];
-    nodesByGroup[node.groupId].push(node);
-  }
-});
+const nodesByGroup = EMOTIONS_CONTENT.nodes.reduce<Record<string, EmotionNode[]>>((acc, node) => {
+  if (node.level === 0) return acc;
+  if (!acc[node.groupId]) acc[node.groupId] = [];
+  acc[node.groupId].push(node);
+  return acc;
+}, {});
 
 type Props = {
   selectedNodeId: string | null;
@@ -40,10 +39,7 @@ export function EmotionSelector({
   selectionModalStyle,
   scrollPaddingBottom = 180,
 }: Props) {
-  const selectedNode = useMemo(
-    () => EMOTIONS_CONTENT.nodes.find((n) => n.id === selectedNodeId) ?? null,
-    [selectedNodeId],
-  );
+  const selectedNode = getEmotionNode(selectedNodeId);
 
   return (
     <View style={styles.container}>

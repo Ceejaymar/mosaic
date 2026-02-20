@@ -21,28 +21,11 @@ import {
 import { useCheckInForm } from '@/src/features/check-in/hooks/useCheckInForm';
 import { getTimeSubtitle } from '@/src/features/check-in/utils/time-of-day';
 import { EmotionSelector } from '@/src/features/emotion-accordion/components/emotion-selector';
-import { EMOTIONS_CONTENT } from '@/src/features/emotion-accordion/content';
-import { EMOTION_PALETTES } from '@/src/features/emotion-accordion/palettes';
-import { muteColor } from '@/src/features/emotion-accordion/utils/color';
-
-/** Returns true when the hex color has enough luminance to need dark text. */
-function isLightColor(hex: string): boolean {
-  if (typeof hex !== 'string' || hex.length !== 7 || hex[0] !== '#') return false;
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  if (Number.isNaN(r) || Number.isNaN(g) || Number.isNaN(b)) return false;
-  return 0.299 * (r / 255) + 0.587 * (g / 255) + 0.114 * (b / 255) > 0.5;
-}
-
-/** Converts a 6-digit hex color to rgba() with the given alpha (0–1). */
-function hexToRgba(hex: string, alpha: number): string {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  if (Number.isNaN(r) || Number.isNaN(g) || Number.isNaN(b)) return hex;
-  return `rgba(${r},${g},${b},${alpha})`;
-}
+import {
+  getEmotionColor,
+  getEmotionNode,
+} from '@/src/features/emotion-accordion/utils/emotion-utils';
+import { hexToRgba, isLightColor } from '@/src/utils/color-ui';
 
 type Props = {
   visible: boolean;
@@ -56,21 +39,9 @@ export const CheckInSheet = memo(function CheckInSheet({ visible, onClose, onSav
 
   const form = useCheckInForm(onSave, onClose);
 
-  const selectedNode = useMemo(
-    () =>
-      form.selectedNodeId
-        ? (EMOTIONS_CONTENT.nodes.find((n) => n.id === form.selectedNodeId) ?? null)
-        : null,
-    [form.selectedNodeId],
-  );
+  const selectedNode = useMemo(() => getEmotionNode(form.selectedNodeId), [form.selectedNodeId]);
 
-  const selectedColor = useMemo(() => {
-    if (!selectedNode) return null;
-    const palette =
-      EMOTION_PALETTES.default[selectedNode.groupId as keyof typeof EMOTION_PALETTES.default];
-    const raw = palette?.[selectedNode.colorIndex] ?? null;
-    return raw ? muteColor(raw) : null;
-  }, [selectedNode]);
+  const selectedColor = useMemo(() => getEmotionColor(selectedNode), [selectedNode]);
 
   const selectionModalBottom = Math.max(insets.bottom, 16) + 8;
 
