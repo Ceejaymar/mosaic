@@ -12,7 +12,7 @@ import migrations from '@/drizzle/migrations';
 
 import { db } from '@/src/db/client';
 import '@/src/i18n/index';
-import { UnistylesRuntime, useUnistyles } from 'react-native-unistyles';
+import { useUnistyles } from 'react-native-unistyles';
 
 export { ErrorBoundary } from 'expo-router';
 
