@@ -1,4 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
@@ -7,6 +8,12 @@ export default function EditCheckInScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+
+  useEffect(() => {
+    if (!id) router.replace('/');
+  }, [id, router]);
+
+  if (!id) return null;
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 16, paddingBottom: insets.bottom }]}>
