@@ -2,9 +2,9 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
-import { EMOTION_PALETTES } from '../palettes';
 import type { EmotionGroup, EmotionNode } from '../types';
 import { muteColor } from '../utils/color';
+import { getGroupPalette } from '../utils/emotion-utils';
 import { Emotion } from './emotion';
 
 type Props = {
@@ -24,8 +24,7 @@ export function AccordionGroup({
   onToggle,
   onSelectNode,
 }: Props) {
-  const groupPalette =
-    EMOTION_PALETTES.default[group.id as keyof (typeof EMOTION_PALETTES)['default']];
+  const groupPalette = getGroupPalette(group.id);
   const mutedGroupColor = muteColor(group.color);
 
   const isCoreSelected = selectedNodeId === group.id;

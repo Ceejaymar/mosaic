@@ -45,6 +45,49 @@ function Tile({ color, label, occurredAt, style }: TileProps) {
   );
 }
 
+function TileItem({ tile }: { tile: MosaicTileData }) {
+  return (
+    <Tile color={tile.color} label={tile.label} occurredAt={tile.occurredAt} style={styles.flex1} />
+  );
+}
+
+function renderGrid(tiles: MosaicTileData[]) {
+  if (!tiles.length) return null;
+
+  if (tiles.length === 1) {
+    return <TileItem tile={tiles[0]} />;
+  }
+
+  if (tiles.length === 3) {
+    return (
+      <>
+        <View style={[styles.row, styles.flex1]}>
+          {tiles.slice(0, 2).map((tile) => (
+            <TileItem key={tile.id} tile={tile} />
+          ))}
+        </View>
+        <TileItem tile={tiles[2]} />
+      </>
+    );
+  }
+
+  // 2 tiles: one row; 4 tiles: two rows
+  const rows = tiles.length === 2 ? [tiles] : [tiles.slice(0, 2), tiles.slice(2)];
+  return (
+    <>
+      {rows
+        .filter((row) => row.length > 0)
+        .map((row) => (
+          <View key={row[0].id} style={[styles.row, styles.flex1]}>
+            {row.map((tile) => (
+              <TileItem key={tile.id} tile={tile} />
+            ))}
+          </View>
+        ))}
+    </>
+  );
+}
+
 export function MosaicDisplay({ tiles, onPress }: Props) {
   const cappedTiles = tiles.slice(0, 4);
   const count = cappedTiles.length;
@@ -73,86 +116,7 @@ export function MosaicDisplay({ tiles, onPress }: Props) {
       accessibilityRole={canAdd ? 'button' : 'none'}
       accessibilityLabel={canAdd ? 'Add another check-in' : 'Daily check-ins complete'}
     >
-      {count === 1 && (
-        <Tile
-          color={cappedTiles[0].color}
-          label={cappedTiles[0].label}
-          occurredAt={cappedTiles[0].occurredAt}
-          style={styles.flex1}
-        />
-      )}
-      {count === 2 && (
-        <View style={[styles.row, styles.flex1]}>
-          <Tile
-            color={cappedTiles[0].color}
-            label={cappedTiles[0].label}
-            occurredAt={cappedTiles[0].occurredAt}
-            style={styles.flex1}
-          />
-          <Tile
-            color={cappedTiles[1].color}
-            label={cappedTiles[1].label}
-            occurredAt={cappedTiles[1].occurredAt}
-            style={styles.flex1}
-          />
-        </View>
-      )}
-      {count === 3 && (
-        <>
-          <View style={[styles.row, styles.flex1]}>
-            <Tile
-              color={cappedTiles[0].color}
-              label={cappedTiles[0].label}
-              occurredAt={cappedTiles[0].occurredAt}
-              style={styles.flex1}
-            />
-            <Tile
-              color={cappedTiles[1].color}
-              label={cappedTiles[1].label}
-              occurredAt={cappedTiles[1].occurredAt}
-              style={styles.flex1}
-            />
-          </View>
-          <Tile
-            color={cappedTiles[2].color}
-            label={cappedTiles[2].label}
-            occurredAt={cappedTiles[2].occurredAt}
-            style={styles.flex1}
-          />
-        </>
-      )}
-      {count === 4 && (
-        <>
-          <View style={[styles.row, styles.flex1]}>
-            <Tile
-              color={cappedTiles[0].color}
-              label={cappedTiles[0].label}
-              occurredAt={cappedTiles[0].occurredAt}
-              style={styles.flex1}
-            />
-            <Tile
-              color={cappedTiles[1].color}
-              label={cappedTiles[1].label}
-              occurredAt={cappedTiles[1].occurredAt}
-              style={styles.flex1}
-            />
-          </View>
-          <View style={[styles.row, styles.flex1]}>
-            <Tile
-              color={cappedTiles[2].color}
-              label={cappedTiles[2].label}
-              occurredAt={cappedTiles[2].occurredAt}
-              style={styles.flex1}
-            />
-            <Tile
-              color={cappedTiles[3].color}
-              label={cappedTiles[3].label}
-              occurredAt={cappedTiles[3].occurredAt}
-              style={styles.flex1}
-            />
-          </View>
-        </>
-      )}
+      {renderGrid(cappedTiles)}
     </Pressable>
   );
 }

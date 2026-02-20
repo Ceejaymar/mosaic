@@ -1,9 +1,8 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Pressable, type StyleProp, Text, View, type ViewStyle } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
-import { EMOTION_PALETTES } from '../palettes';
 import type { EmotionNode } from '../types';
-import { muteColor } from '../utils/color';
+import { getEmotionColor } from '../utils/emotion-utils';
 
 type Props = {
   selectedNode: EmotionNode | null;
@@ -14,10 +13,7 @@ type Props = {
 export function SelectionModal({ selectedNode, onPress, style }: Props) {
   if (!selectedNode) return null;
 
-  const groupPalette =
-    EMOTION_PALETTES.default[selectedNode.groupId as keyof (typeof EMOTION_PALETTES)['default']];
-  const rawColor = groupPalette?.[selectedNode.colorIndex] ?? '#808080';
-  const color = muteColor(rawColor);
+  const color = getEmotionColor(selectedNode) ?? '#808080';
 
   return (
     <Pressable
