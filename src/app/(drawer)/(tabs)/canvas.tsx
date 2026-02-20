@@ -1,9 +1,18 @@
 import { Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
 
+import { LAYOUT } from '@/src/constants/layout';
+
 export default function CanvasScreen() {
+  const insets = useSafeAreaInsets();
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: LAYOUT.TAB_BAR_HEIGHT + insets.bottom },
+      ]}
+    >
       <Text style={styles.title}>Canvas</Text>
       <Text style={styles.subtitle}>Your emotional landscape, visualised.</Text>
     </View>

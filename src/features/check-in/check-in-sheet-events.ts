@@ -14,5 +14,6 @@ export function onOpenCheckInSheet(listener: Listener): () => void {
 
 /** Fire the open-sheet event to all current subscribers. */
 export function emitOpenCheckInSheet(): void {
-  for (const l of listeners) l();
+  const snapshot = [...listeners];
+  for (const l of snapshot) l();
 }

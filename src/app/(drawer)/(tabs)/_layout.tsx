@@ -3,6 +3,7 @@ import { DrawerToggleButton } from '@react-navigation/drawer';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Tabs } from 'expo-router';
 import { Pressable, View } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
@@ -10,11 +11,18 @@ import { LAYOUT } from '@/src/constants/layout';
 import { emitOpenCheckInSheet } from '@/src/features/check-in/check-in-sheet-events';
 import { hapticLight } from '@/src/lib/haptics/haptics';
 
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
 const FAB_SIZE = 60;
 
 export default function TabLayout() {
   const { theme } = useUnistyles();
   const insets = useSafeAreaInsets();
+
+  const fabScale = useSharedValue(1);
+  const fabAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: fabScale.value }],
+  }));
 
   const handleFabPress = () => {
     hapticLight();
@@ -22,7 +30,7 @@ export default function TabLayout() {
   };
 
   // Center of the FAB aligns with the top edge of the tab bar content area
-  const fabBottom = insets.bottom + LAYOUT.TAB_BAR_HEIGHT - FAB_SIZE / 3;
+  const fabBottom = insets.bottom + LAYOUT.TAB_BAR_HEIGHT - FAB_SIZE / 2;
 
   return (
     <View style={styles.root}>
@@ -112,22 +120,24 @@ export default function TabLayout() {
         />
 
         {/* Hidden routes */}
-        <Tabs.Screen name="check-in/[id]" options={{ href: null, headerTitle: 'Edit Check-in' }} />
+        <Tabs.Screen name="check-in/[id]" options={{ href: null, headerShown: false }} />
       </Tabs>
 
       {/* FAB — rendered as a sibling so it sits above all tab content in z-order */}
-      <Pressable
+      <AnimatedPressable
         onPress={handleFabPress}
-        style={({ pressed }) => [
-          styles.fab,
-          { bottom: fabBottom },
-          pressed && { opacity: 0.88, transform: [{ scale: 0.93 }] },
-        ]}
+        onPressIn={() => {
+          fabScale.value = withSpring(0.93, { damping: 12, stiffness: 200 });
+        }}
+        onPressOut={() => {
+          fabScale.value = withSpring(1, { damping: 12, stiffness: 200 });
+        }}
+        style={[styles.fab, { bottom: fabBottom }, fabAnimatedStyle]}
         accessibilityRole="button"
         accessibilityLabel="Check in"
       >
         <Ionicons name="add" size={32} color={theme.colors.onAccent} />
-      </Pressable>
+      </AnimatedPressable>
     </View>
   );
 }

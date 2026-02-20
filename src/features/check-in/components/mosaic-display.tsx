@@ -67,8 +67,6 @@ function TileItem({ tile, onPress }: { tile: MosaicTileData; onPress: () => void
 }
 
 function renderGrid(tiles: MosaicTileData[], onTilePress: (tile: MosaicTileData) => void) {
-  if (!tiles.length) return null;
-
   if (tiles.length === 1) {
     return <TileItem tile={tiles[0]} onPress={() => onTilePress(tiles[0])} />;
   }
@@ -111,7 +109,7 @@ export function MosaicDisplay({ tiles, onAddPress, onTilePress }: Props) {
     return (
       <Pressable
         onPress={onAddPress}
-        style={({ pressed }) => [styles.emptyContainer, pressed && { opacity: 0.8 }]}
+        style={({ pressed }) => [styles.emptyContainer, pressed && { opacity: 0.82 }]}
         accessibilityRole="button"
         accessibilityLabel="Check in"
       >
