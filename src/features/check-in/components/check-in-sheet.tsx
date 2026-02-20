@@ -20,11 +20,9 @@ import {
 } from '@/src/features/check-in/data/context-tags';
 import { useCheckInForm } from '@/src/features/check-in/hooks/useCheckInForm';
 import { getTimeSubtitle } from '@/src/features/check-in/utils/time-of-day';
-import { AccordionGroup } from '@/src/features/emotion-accordion/components/accordion-group';
-import { SelectionModal } from '@/src/features/emotion-accordion/components/selection-modal';
+import { EmotionSelector } from '@/src/features/emotion-accordion/components/emotion-selector';
 import { EMOTIONS_CONTENT } from '@/src/features/emotion-accordion/content';
 import { EMOTION_PALETTES } from '@/src/features/emotion-accordion/palettes';
-import type { EmotionNode } from '@/src/features/emotion-accordion/types';
 import { muteColor } from '@/src/features/emotion-accordion/utils/color';
 
 /** Returns true when the hex color has enough luminance to need dark text. */
@@ -57,17 +55,6 @@ export const CheckInSheet = memo(function CheckInSheet({ visible, onClose, onSav
   const { theme } = useUnistyles();
 
   const form = useCheckInForm(onSave, onClose);
-
-  const nodesByGroup = useMemo(() => {
-    const map: Record<string, EmotionNode[]> = {};
-    EMOTIONS_CONTENT.nodes.forEach((node) => {
-      if (node.level > 0) {
-        if (!map[node.groupId]) map[node.groupId] = [];
-        map[node.groupId].push(node);
-      }
-    });
-    return map;
-  }, []);
 
   const selectedNode = useMemo(
     () =>
@@ -119,31 +106,16 @@ export const CheckInSheet = memo(function CheckInSheet({ visible, onClose, onSav
               </Pressable>
             </View>
 
-            <ScrollView
-              style={styles.flex1}
-              contentContainerStyle={styles.emotionScroll(!!selectedNode)}
-              showsVerticalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled"
-            >
-              {EMOTIONS_CONTENT.groups.map((group) => (
-                <AccordionGroup
-                  key={group.id}
-                  group={group}
-                  childrenNodes={nodesByGroup[group.id] || []}
-                  isOpen={form.activeGroupId === group.id}
-                  selectedNodeId={form.selectedNodeId}
-                  onToggle={() => form.handleToggleGroup(group.id)}
-                  onSelectNode={form.setSelectedNodeId}
-                />
-              ))}
-            </ScrollView>
-
-            <SelectionModal
-              selectedNode={selectedNode}
-              onPress={() => {
+            <EmotionSelector
+              selectedNodeId={form.selectedNodeId}
+              activeGroupId={form.activeGroupId}
+              onSelectNode={form.setSelectedNodeId}
+              onToggleGroup={form.handleToggleGroup}
+              onSelectionPress={() => {
                 if (form.selectedNodeId) form.setStep('context');
               }}
-              style={{ bottom: selectionModalBottom }}
+              selectionModalStyle={{ bottom: selectionModalBottom }}
+              scrollPaddingBottom={form.selectedNodeId ? 160 : 32}
             />
           </>
         ) : (
@@ -294,11 +266,6 @@ const styles = StyleSheet.create((theme) => ({
     elevation: 1,
   },
   closeIcon: { fontSize: 13, color: theme.colors.textMuted },
-  emotionScroll: (hasSelected: boolean) => ({
-    paddingHorizontal: 16,
-    paddingTop: 4,
-    paddingBottom: hasSelected ? 160 : 32,
-  }),
 
   // Step 2 Styles
   step2Header: {

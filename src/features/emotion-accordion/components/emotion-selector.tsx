@@ -1,50 +1,57 @@
-import { useMemo, useState } from 'react';
-import { LayoutAnimation, Platform, ScrollView, UIManager } from 'react-native';
+import { useMemo } from 'react';
+import type { StyleProp, ViewStyle } from 'react-native';
+import { Platform, ScrollView, UIManager, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
-import { ThemedView } from '@/src/components/themed-view';
 import { EMOTIONS_CONTENT } from '../content';
 import type { EmotionGroupId, EmotionNode } from '../types';
 import { AccordionGroup } from './accordion-group';
 import { SelectionModal } from './selection-modal';
 
+// One-time Android layout animation setup
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-export function EmotionSelector() {
-  const [activeGroupId, setActiveGroupId] = useState<EmotionGroupId | null>(null);
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+// Static — derived from immutable content, never changes at runtime
+const nodesByGroup: Record<string, EmotionNode[]> = {};
+EMOTIONS_CONTENT.nodes.forEach((node) => {
+  if (node.level > 0) {
+    if (!nodesByGroup[node.groupId]) nodesByGroup[node.groupId] = [];
+    nodesByGroup[node.groupId].push(node);
+  }
+});
 
+type Props = {
+  selectedNodeId: string | null;
+  activeGroupId: EmotionGroupId | null;
+  onSelectNode: (nodeId: string) => void;
+  onToggleGroup: (groupId: EmotionGroupId) => void;
+  onSelectionPress?: () => void;
+  selectionModalStyle?: StyleProp<ViewStyle>;
+  scrollPaddingBottom?: number;
+};
+
+export function EmotionSelector({
+  selectedNodeId,
+  activeGroupId,
+  onSelectNode,
+  onToggleGroup,
+  onSelectionPress,
+  selectionModalStyle,
+  scrollPaddingBottom = 180,
+}: Props) {
   const selectedNode = useMemo(
     () => EMOTIONS_CONTENT.nodes.find((n) => n.id === selectedNodeId) ?? null,
     [selectedNodeId],
   );
 
-  const nodesByGroup = useMemo(() => {
-    const map: Record<string, EmotionNode[]> = {};
-    EMOTIONS_CONTENT.nodes.forEach((node) => {
-      if (node.level > 0) {
-        if (!map[node.groupId]) map[node.groupId] = [];
-        map[node.groupId].push(node);
-      }
-    });
-    return map;
-  }, []);
-
-  const handleToggleGroup = (groupId: EmotionGroupId) => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    const isOpening = activeGroupId !== groupId;
-    if (isOpening) setSelectedNodeId(groupId);
-    setActiveGroupId(isOpening ? groupId : null);
-  };
-
-  const handleSelectNode = (nodeId: string) => {
-    setSelectedNodeId(nodeId);
-  };
-
   return (
-    <ThemedView variant="background" style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+    <View style={styles.container}>
+      <ScrollView
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: scrollPaddingBottom }]}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
         {EMOTIONS_CONTENT.groups.map((group) => (
           <AccordionGroup
             key={group.id}
@@ -52,24 +59,25 @@ export function EmotionSelector() {
             childrenNodes={nodesByGroup[group.id] || []}
             isOpen={activeGroupId === group.id}
             selectedNodeId={selectedNodeId}
-            onToggle={() => handleToggleGroup(group.id)}
-            onSelectNode={handleSelectNode}
+            onToggle={() => onToggleGroup(group.id)}
+            onSelectNode={onSelectNode}
           />
         ))}
       </ScrollView>
 
-      <SelectionModal selectedNode={selectedNode} />
-    </ThemedView>
+      <SelectionModal
+        selectedNode={selectedNode}
+        onPress={onSelectionPress}
+        style={selectionModalStyle}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: 100,
-  },
+  container: { flex: 1 },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingBottom: 180,
+    paddingTop: 4,
   },
 });
