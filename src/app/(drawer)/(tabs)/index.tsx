@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { StyleSheet } from 'react-native-unistyles';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { LAYOUT } from '@/src/constants/layout';
 import { CheckInSheet } from '@/src/features/check-in/components/check-in-sheet';
@@ -23,13 +23,14 @@ import { getFormattedDateLabel } from '@/src/utils/format-date';
 export default function CheckInScreen() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const { theme } = useUnistyles();
 
   useEffect(() => {
     enableAndroidLayoutAnimations();
   }, []);
 
   const [sheetVisible, setSheetVisible] = useState(false);
-  const { todayEntries, saveEntry } = useTodayCheckIns();
+  const { todayEntries, isLoading, loadError, saveEntry, refresh } = useTodayCheckIns();
 
   const currentSlot = getCurrentTimeSlot();
   const atLimit = todayEntries.length >= CHECK_IN_CONSTANTS.MAX_DAILY_ENTRIES;
@@ -87,7 +88,25 @@ export default function CheckInScreen() {
         <Text style={styles.dateLabel}>{getFormattedDateLabel()}</Text>
 
         <View style={styles.mosaicWrapper}>
-          <MosaicDisplay tiles={mosaicTiles} onPress={handleOpenSheet} />
+          {isLoading && todayEntries.length === 0 ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={theme.colors.mosaicGold} />
+            </View>
+          ) : loadError && todayEntries.length === 0 ? (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>Could not load today's check-ins.</Text>
+              <Pressable
+                onPress={refresh}
+                style={({ pressed }) => [styles.retryBtn, pressed && { opacity: 0.7 }]}
+                accessibilityRole="button"
+                accessibilityLabel="Retry loading check-ins"
+              >
+                <Text style={styles.retryBtnText}>Try again</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <MosaicDisplay tiles={mosaicTiles} onPress={handleOpenSheet} />
+          )}
         </View>
 
         <Pressable
@@ -134,6 +153,31 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.textMuted,
   },
   mosaicWrapper: { marginBottom: 24 },
+  loadingContainer: {
+    width: '100%',
+    aspectRatio: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.surface,
+    borderRadius: 20,
+  },
+  errorContainer: {
+    width: '100%',
+    aspectRatio: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 16,
+    backgroundColor: theme.colors.surface,
+    borderRadius: 20,
+  },
+  errorText: { fontSize: 14, color: theme.colors.textMuted, textAlign: 'center' },
+  retryBtn: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 100,
+    backgroundColor: theme.colors.mosaicGold,
+  },
+  retryBtnText: { fontSize: 15, fontWeight: '600', color: theme.colors.onAccent },
   checkInBtn: (atLimit: boolean) => ({
     borderRadius: 100,
     paddingVertical: 16,

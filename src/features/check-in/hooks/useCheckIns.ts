@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { AppState } from 'react-native';
 import {
   dateToKey,
   fetchMoodEntriesForDate,
@@ -8,6 +9,23 @@ import {
 } from '@/src/db/repos/moodRepo';
 import { uuid } from '@/src/lib/uuid';
 import { triggerSpringLayoutAnimation } from '@/src/utils/animations';
+
+/**
+ * Constructs a full MoodEntry from a NewMoodEntry for optimistic UI updates.
+ * All fields are explicitly mapped so schema additions surface as type errors.
+ */
+function buildMoodEntryFromNew(entry: NewMoodEntry): MoodEntry {
+  const now = new Date().toISOString();
+  return {
+    id: entry.id ?? uuid(),
+    dateKey: entry.dateKey ?? dateToKey(),
+    primaryMood: entry.primaryMood ?? '',
+    note: entry.note ?? null,
+    occurredAt: entry.occurredAt ?? now,
+    createdAt: entry.createdAt ?? now,
+    updatedAt: entry.updatedAt ?? now,
+  };
+}
 
 export function useTodayCheckIns() {
   const [todayEntries, setTodayEntries] = useState<MoodEntry[]>([]);
@@ -28,8 +46,19 @@ export function useTodayCheckIns() {
     }
   }, []);
 
+  // Initial load
   useEffect(() => {
     loadTodayEntries();
+  }, [loadTodayEntries]);
+
+  // Refresh when the app becomes active (handles midnight crossover)
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active') {
+        loadTodayEntries();
+      }
+    });
+    return () => subscription.remove();
   }, [loadTodayEntries]);
 
   const saveEntry = useCallback(async (nodeId: string, note?: string) => {
@@ -46,8 +75,8 @@ export function useTodayCheckIns() {
 
     triggerSpringLayoutAnimation();
 
-    // Optimistic update — cast is safe because all required fields are set
-    setTodayEntries((prev) => [newEntry as MoodEntry, ...prev]);
+    // Optimistic update using explicit helper instead of a cast
+    setTodayEntries((prev) => [buildMoodEntryFromNew(newEntry), ...prev]);
 
     try {
       await insertMoodEntry(newEntry);

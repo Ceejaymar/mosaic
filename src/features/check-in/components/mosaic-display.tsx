@@ -2,7 +2,7 @@ import type { StyleProp, ViewStyle } from 'react-native';
 import { Pressable, Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
-const GAP = 2;
+const GAP = 4;
 const CONTAINER_RADIUS = 20;
 const TILE_RADIUS = 4;
 
@@ -177,7 +177,7 @@ const styles = StyleSheet.create((theme) => ({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  plusIcon: { fontSize: 32, color: theme.colors.mosaicGold, lineHeight: 38 },
+  plusIcon: { fontSize: 32, color: theme.colors.mosaicGold, lineHeight: 40 },
   emptyHint: { fontSize: 14, color: theme.colors.textMuted },
   container: {
     width: '100%',
@@ -197,6 +197,12 @@ const styles = StyleSheet.create((theme) => ({
     bottom: 0,
     backgroundColor: 'rgba(0,0,0,0.22)',
   },
-  tileLabel: { fontSize: 18, fontWeight: '700', fontFamily: 'Fraunces', color: '#fff' },
+  tileLabel: {
+    fontSize: 18,
+    fontWeight: '700',
+    fontFamily: 'Fraunces',
+    color: '#fff',
+    letterSpacing: -0.54,
+  },
   tileTime: { fontSize: 12, color: 'rgba(255,255,255,0.65)', marginTop: 4 },
 }));

@@ -1,4 +1,3 @@
-import type { Dispatch, SetStateAction } from 'react';
 import { useCallback, useState } from 'react';
 import type { EmotionGroupId } from '@/src/features/emotion-accordion/types';
 import { triggerSpringLayoutAnimation } from '@/src/utils/animations';
@@ -27,21 +26,32 @@ export function useCheckInForm(
     setLocations(new Set());
   }, []);
 
-  const handleToggleGroup = useCallback(
-    (groupId: EmotionGroupId) => {
-      triggerSpringLayoutAnimation();
-      if (activeGroupId === groupId) {
-        setActiveGroupId(null);
-      } else {
-        setActiveGroupId(groupId);
-        setSelectedNodeId(groupId);
-      }
-    },
-    [activeGroupId],
-  );
+  const handleToggleGroup = useCallback((groupId: EmotionGroupId) => {
+    triggerSpringLayoutAnimation();
+    setSelectedNodeId(null);
+    setActiveGroupId((prev) => (prev === groupId ? null : groupId));
+  }, []);
 
-  const toggleTag = useCallback((setter: Dispatch<SetStateAction<Set<string>>>, tag: string) => {
-    setter((prev) => {
+  const toggleActivity = useCallback((tag: string) => {
+    setActivities((prev) => {
+      const next = new Set(prev);
+      if (next.has(tag)) next.delete(tag);
+      else next.add(tag);
+      return next;
+    });
+  }, []);
+
+  const togglePerson = useCallback((tag: string) => {
+    setPeople((prev) => {
+      const next = new Set(prev);
+      if (next.has(tag)) next.delete(tag);
+      else next.add(tag);
+      return next;
+    });
+  }, []);
+
+  const toggleLocation = useCallback((tag: string) => {
+    setLocations((prev) => {
       const next = new Set(prev);
       if (next.has(tag)) next.delete(tag);
       else next.add(tag);
@@ -75,14 +85,13 @@ export function useCheckInForm(
     note,
     setNote,
     activities,
-    setActivities,
     people,
-    setPeople,
     locations,
-    setLocations,
     resetState,
     handleToggleGroup,
-    toggleTag,
+    toggleActivity,
+    togglePerson,
+    toggleLocation,
     handleSave,
     handleClose,
   };

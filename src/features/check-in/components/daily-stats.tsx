@@ -18,7 +18,7 @@ export function DailyStatsRow({ entriesCount, streakCount }: DailyStatsRow) {
       <View style={styles.statDivider} />
       <View style={styles.statGroup}>
         <Text style={styles.statNum}>{streakCount}</Text>
-        <Text style={styles.statLbl}>{streakCount === 1 ? 'day streak' : 'days streak'}</Text>
+        <Text style={styles.statLbl}>{`${streakCount}-day streak`}</Text>
       </View>
     </View>
   );

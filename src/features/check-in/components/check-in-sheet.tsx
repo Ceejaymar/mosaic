@@ -12,13 +12,20 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
+import { TagSection } from '@/src/features/check-in/components/context-tags';
+import {
+  ACTIVITY_TAGS,
+  LOCATION_TAGS,
+  PEOPLE_TAGS,
+} from '@/src/features/check-in/data/context-tags';
+import { useCheckInForm } from '@/src/features/check-in/hooks/useCheckInForm';
+import { getTimeSubtitle } from '@/src/features/check-in/utils/time-of-day';
 import { AccordionGroup } from '@/src/features/emotion-accordion/components/accordion-group';
 import { SelectionModal } from '@/src/features/emotion-accordion/components/selection-modal';
 import { EMOTIONS_CONTENT } from '@/src/features/emotion-accordion/content';
 import { EMOTION_PALETTES } from '@/src/features/emotion-accordion/palettes';
 import type { EmotionNode } from '@/src/features/emotion-accordion/types';
 import { muteColor } from '@/src/features/emotion-accordion/utils/color';
-import { ACTIVITY_TAGS, LOCATION_TAGS, PEOPLE_TAGS } from '../data/context-tags';
 
 /** Returns true when the hex color has enough luminance to need dark text. */
 function isLightColor(hex: string): boolean {
@@ -28,9 +35,14 @@ function isLightColor(hex: string): boolean {
   return 0.299 * r + 0.587 * g + 0.114 * b > 0.5;
 }
 
-import { useCheckInForm } from '../hooks/useCheckInForm';
-import { getTimeSubtitle } from '../utils/time-of-day';
-import { TagSection } from './context-tags';
+/** Converts a 6-digit hex color to rgba() with the given alpha (0–1). */
+function hexToRgba(hex: string, alpha: number): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  if (Number.isNaN(r) || Number.isNaN(g) || Number.isNaN(b)) return hex;
+  return `rgba(${r},${g},${b},${alpha})`;
+}
 
 type Props = {
   visible: boolean;
@@ -174,7 +186,7 @@ export const CheckInSheet = memo(function CheckInSheet({ visible, onClose, onSav
                   { backgroundColor: selectedColor ?? theme.colors.divider },
                 ]}
               >
-                <Text style={[styles.emotionBannerPre, { color: `${bannerTextColor}B3` }]}>
+                <Text style={[styles.emotionBannerPre, { color: hexToRgba(bannerTextColor, 0.7) }]}>
                   I'm feeling
                 </Text>
                 <Text style={[styles.emotionBannerText, { color: bannerTextColor }]}>
@@ -202,21 +214,21 @@ export const CheckInSheet = memo(function CheckInSheet({ visible, onClose, onSav
                 tags={ACTIVITY_TAGS}
                 selected={form.activities}
                 color={selectedColor}
-                onToggle={(tag) => form.toggleTag(form.setActivities, tag)}
+                onToggle={form.toggleActivity}
               />
               <TagSection
                 title="Who are you with?"
                 tags={PEOPLE_TAGS}
                 selected={form.people}
                 color={selectedColor}
-                onToggle={(tag) => form.toggleTag(form.setPeople, tag)}
+                onToggle={form.togglePerson}
               />
               <TagSection
                 title="Where are you?"
                 tags={LOCATION_TAGS}
                 selected={form.locations}
                 color={selectedColor}
-                onToggle={(tag) => form.toggleTag(form.setLocations, tag)}
+                onToggle={form.toggleLocation}
               />
             </ScrollView>
 
@@ -265,9 +277,9 @@ const styles = StyleSheet.create((theme) => ({
   },
   subtitle: { fontSize: 13, color: theme.colors.textMuted, marginTop: 4 },
   closeBtn: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: theme.colors.divider,
     alignItems: 'center',
     justifyContent: 'center',
@@ -293,7 +305,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   backBtn: { fontSize: 15, fontWeight: '500' },
   selectedEmotionPill: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  emotionDot: { width: 9, height: 9, borderRadius: 5 },
+  emotionDot: { width: 8, height: 8, borderRadius: 4 },
   selectedEmotionText: {
     fontSize: 16,
     fontWeight: '700',
@@ -327,7 +339,7 @@ const styles = StyleSheet.create((theme) => ({
   inputContainer: {
     marginBottom: 28,
     backgroundColor: theme.colors.surface,
-    borderRadius: 14,
+    borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 12,
     minHeight: 80,

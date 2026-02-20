@@ -81,7 +81,7 @@ export function MoodSlot({ slot, isCurrentSlot, moodColor, moodLabel, onPress }:
 const styles = StyleSheet.create((theme) => ({
   tile: {
     flex: 1,
-    minHeight: 150,
+    minHeight: 152,
     backgroundColor: theme.colors.tileBackground,
     borderRadius: 16,
     borderWidth: 1,
