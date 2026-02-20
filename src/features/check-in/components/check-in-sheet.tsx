@@ -29,10 +29,12 @@ import { muteColor } from '@/src/features/emotion-accordion/utils/color';
 
 /** Returns true when the hex color has enough luminance to need dark text. */
 function isLightColor(hex: string): boolean {
-  const r = parseInt(hex.slice(1, 3), 16) / 255;
-  const g = parseInt(hex.slice(3, 5), 16) / 255;
-  const b = parseInt(hex.slice(5, 7), 16) / 255;
-  return 0.299 * r + 0.587 * g + 0.114 * b > 0.5;
+  if (typeof hex !== 'string' || hex.length !== 7 || hex[0] !== '#') return false;
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  if (Number.isNaN(r) || Number.isNaN(g) || Number.isNaN(b)) return false;
+  return 0.299 * (r / 255) + 0.587 * (g / 255) + 0.114 * (b / 255) > 0.5;
 }
 
 /** Converts a 6-digit hex color to rgba() with the given alpha (0–1). */

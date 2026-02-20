@@ -45,8 +45,8 @@ export default function CheckInScreen() {
 
   const handleSave = useCallback(
     async (nodeId: string, note?: string) => {
-      await saveEntry(nodeId, note);
       setSheetVisible(false);
+      await saveEntry(nodeId, note);
     },
     [saveEntry],
   );
