@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import { LayoutAnimation } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { ThemedView } from '@/src/components/themed-view';
@@ -7,6 +8,7 @@ import { EmotionSelector } from '@/src/features/emotion-accordion/components/emo
 import type { EmotionGroupId } from '@/src/features/emotion-accordion/types';
 
 export default function EmotionsScreen() {
+  const insets = useSafeAreaInsets();
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [activeGroupId, setActiveGroupId] = useState<EmotionGroupId | null>(null);
 
@@ -21,7 +23,7 @@ export default function EmotionsScreen() {
   );
 
   return (
-    <ThemedView variant="background" style={styles.container}>
+    <ThemedView variant="background" style={[styles.container, { paddingTop: insets.top }]}>
       <EmotionSelector
         selectedNodeId={selectedNodeId}
         activeGroupId={activeGroupId}
@@ -33,5 +35,5 @@ export default function EmotionsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingTop: 100 },
+  container: { flex: 1 },
 });
