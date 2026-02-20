@@ -2,7 +2,7 @@ import type { StyleProp, ViewStyle } from 'react-native';
 import { Pressable, Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
-const GAP = 2;
+const GAP = 4;
 const CONTAINER_RADIUS = 20;
 const TILE_RADIUS = 4;
 
@@ -14,7 +14,7 @@ export type MosaicTileData = {
 };
 
 type Props = {
-  tiles: MosaicTileData[]; // max 4 enforced internally
+  tiles: MosaicTileData[];
   onPress: () => void;
 };
 
@@ -81,7 +81,6 @@ export function MosaicDisplay({ tiles, onPress }: Props) {
           style={styles.flex1}
         />
       )}
-
       {count === 2 && (
         <View style={[styles.row, styles.flex1]}>
           <Tile
@@ -98,7 +97,6 @@ export function MosaicDisplay({ tiles, onPress }: Props) {
           />
         </View>
       )}
-
       {count === 3 && (
         <>
           <View style={[styles.row, styles.flex1]}>
@@ -123,7 +121,6 @@ export function MosaicDisplay({ tiles, onPress }: Props) {
           />
         </>
       )}
-
       {count === 4 && (
         <>
           <View style={[styles.row, styles.flex1]}>
@@ -160,75 +157,52 @@ export function MosaicDisplay({ tiles, onPress }: Props) {
   );
 }
 
-const styles = StyleSheet.create((theme) => {
-  const isDark = theme.isDark;
-  return {
-    emptyContainer: {
-      width: '100%',
-      aspectRatio: 1,
-      backgroundColor: isDark ? '#1C1C1E' : '#F2F2F7',
-      borderRadius: CONTAINER_RADIUS,
-      borderWidth: 1,
-      borderColor: isDark ? '#2C2C2E' : '#E5E5EA',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 12,
-    },
-    plusCircle: {
-      width: 64,
-      height: 64,
-      borderRadius: 32,
-      backgroundColor: isDark ? '#2C2C2E' : '#E5E5EA',
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    plusIcon: {
-      fontSize: 32,
-      color: '#E0C097',
-      lineHeight: 38,
-    },
-    emptyHint: {
-      fontSize: 14,
-      color: '#8E8E93',
-    },
-    container: {
-      width: '100%',
-      aspectRatio: 1,
-      borderRadius: CONTAINER_RADIUS,
-      overflow: 'hidden',
-      gap: GAP,
-    },
-    row: {
-      flexDirection: 'row',
-      gap: GAP,
-    },
-    flex1: {
-      flex: 1,
-    },
-    tile: {
-      borderRadius: TILE_RADIUS,
-      justifyContent: 'flex-end',
-      padding: 14,
-      overflow: 'hidden',
-    },
-    scrim: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: 'rgba(0,0,0,0.22)',
-    },
-    tileLabel: {
-      fontSize: 18,
-      fontWeight: '700',
-      fontFamily: 'Fraunces',
-      color: '#fff',
-    },
-    tileTime: {
-      fontSize: 12,
-      color: 'rgba(255,255,255,0.65)',
-      marginTop: 2,
-    },
-  };
-});
+const styles = StyleSheet.create((theme) => ({
+  emptyContainer: {
+    width: '100%',
+    aspectRatio: 1,
+    backgroundColor: theme.colors.surface,
+    borderRadius: CONTAINER_RADIUS,
+    borderWidth: 1,
+    borderColor: theme.colors.divider,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  plusCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: theme.colors.divider,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  plusIcon: { fontSize: 32, color: theme.colors.mosaicGold, lineHeight: 40 },
+  emptyHint: { fontSize: 14, color: theme.colors.textMuted },
+  container: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: CONTAINER_RADIUS,
+    overflow: 'hidden',
+    gap: GAP,
+  },
+  row: { flexDirection: 'row', gap: GAP },
+  flex1: { flex: 1 },
+  tile: { borderRadius: TILE_RADIUS, justifyContent: 'flex-end', padding: 16, overflow: 'hidden' },
+  scrim: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.22)',
+  },
+  tileLabel: {
+    fontSize: 18,
+    fontWeight: '700',
+    fontFamily: 'Fraunces',
+    color: '#fff',
+    letterSpacing: -0.54,
+  },
+  tileTime: { fontSize: 12, color: 'rgba(255,255,255,0.65)', marginTop: 4 },
+}));

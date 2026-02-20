@@ -28,8 +28,12 @@ export function AccordionGroup({
     EMOTION_PALETTES.default[group.id as keyof (typeof EMOTION_PALETTES)['default']];
   const mutedGroupColor = muteColor(group.color);
 
+  const isCoreSelected = selectedNodeId === group.id;
+
   return (
-    <View style={styles.container}>
+    <View
+      style={[styles.container, isCoreSelected && { borderWidth: 2, borderColor: mutedGroupColor }]}
+    >
       <Pressable
         onPress={onToggle}
         style={({ pressed }) => [
@@ -38,7 +42,7 @@ export function AccordionGroup({
           pressed && { opacity: 0.88 },
         ]}
         accessibilityRole="button"
-        accessibilityState={{ expanded: isOpen }}
+        accessibilityState={{ expanded: isOpen, selected: isCoreSelected }}
         accessibilityLabel={group.label}
       >
         {/* Noise/depth gradient overlay */}
