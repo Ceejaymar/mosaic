@@ -1,18 +1,17 @@
 import type { StyleProp, ViewStyle } from 'react-native';
 import { Platform, ScrollView, UIManager, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
+
 import { EMOTIONS_CONTENT } from '../content';
 import type { EmotionGroupId, EmotionNode } from '../types';
 import { getEmotionNode } from '../utils/emotion-utils';
 import { AccordionGroup } from './accordion-group';
-import { SelectionModal } from './selection-modal';
+import SelectionModal from './selection-modal';
 
-// One-time Android layout animation setup
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-// Static — derived from immutable content, never changes at runtime
 const nodesByGroup = EMOTIONS_CONTENT.nodes.reduce<Record<string, EmotionNode[]>>((acc, node) => {
   if (node.level === 0) return acc;
   if (!acc[node.groupId]) acc[node.groupId] = [];
@@ -25,8 +24,7 @@ type Props = {
   activeGroupId: EmotionGroupId | null;
   onSelectNode: (nodeId: string) => void;
   onToggleGroup: (groupId: EmotionGroupId) => void;
-  onSelectionPress?: () => void;
-  selectionModalStyle?: StyleProp<ViewStyle>;
+  onSelectionPress: () => void;
   scrollPaddingBottom?: number;
 };
 
@@ -36,7 +34,6 @@ export function EmotionSelector({
   onSelectNode,
   onToggleGroup,
   onSelectionPress,
-  selectionModalStyle,
   scrollPaddingBottom = 180,
 }: Props) {
   const selectedNode = getEmotionNode(selectedNodeId);
@@ -61,19 +58,12 @@ export function EmotionSelector({
         ))}
       </ScrollView>
 
-      <SelectionModal
-        selectedNode={selectedNode}
-        onPress={onSelectionPress}
-        style={selectionModalStyle}
-      />
+      {selectedNode && <SelectionModal selectedNode={selectedNode} onPress={onSelectionPress} />}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 4,
-  },
+  scrollContent: { paddingHorizontal: 20, paddingTop: 4 },
 });

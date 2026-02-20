@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Text, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
+import { PillButton } from '@/src/components/pill-button';
 import { LAYOUT } from '@/src/constants/layout';
 import { CheckInSheet } from '@/src/features/check-in/components/check-in-sheet';
 import { DailyStatsRow } from '@/src/features/check-in/components/daily-stats';
@@ -95,34 +96,26 @@ export default function CheckInScreen() {
           ) : loadError && todayEntries.length === 0 ? (
             <View style={styles.errorContainer}>
               <Text style={styles.errorText}>Could not load today's check-ins.</Text>
-              <Pressable
+              <PillButton
+                label="Try again"
                 onPress={refresh}
-                style={({ pressed }) => [styles.retryBtn, pressed && { opacity: 0.7 }]}
-                accessibilityRole="button"
+                size="sm"
                 accessibilityLabel="Retry loading check-ins"
-              >
-                <Text style={styles.retryBtnText}>Try again</Text>
-              </Pressable>
+              />
             </View>
           ) : (
             <MosaicDisplay tiles={mosaicTiles} onPress={handleOpenSheet} />
           )}
         </View>
 
-        <Pressable
+        <PillButton
+          label={atLimit ? 'Daily check-ins complete ✓' : '+ Check in'}
           onPress={handleOpenSheet}
           disabled={atLimit}
-          style={({ pressed }) => [
-            styles.checkInBtn(atLimit),
-            pressed && !atLimit && { opacity: 0.88, transform: [{ scale: 0.97 }] },
-          ]}
-          accessibilityRole="button"
+          elevated={!atLimit}
           accessibilityLabel={atLimit ? 'Daily check-ins complete' : 'Check in now'}
-        >
-          <Text style={styles.checkInBtnLabel(atLimit)}>
-            {atLimit ? 'Daily check-ins complete ✓' : '+ Check in'}
-          </Text>
-        </Pressable>
+          style={styles.checkInBtn}
+        />
 
         {/* TODO: compute real streak from cross-day DB query */}
         <DailyStatsRow entriesCount={todayEntries.length} streakCount={1} />
@@ -171,23 +164,5 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: 20,
   },
   errorText: { fontSize: 14, color: theme.colors.textMuted, textAlign: 'center' },
-  retryBtn: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 100,
-    backgroundColor: theme.colors.mosaicGold,
-  },
-  retryBtnText: { fontSize: 15, fontWeight: '600', color: theme.colors.onAccent },
-  checkInBtn: (atLimit: boolean) => ({
-    borderRadius: 100,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginBottom: 20,
-    backgroundColor: atLimit ? theme.colors.surface : theme.colors.mosaicGold,
-  }),
-  checkInBtnLabel: (atLimit: boolean) => ({
-    fontSize: 17,
-    fontWeight: '600',
-    color: atLimit ? theme.colors.textMuted : theme.colors.onAccent,
-  }),
+  checkInBtn: { marginBottom: 20 },
 }));

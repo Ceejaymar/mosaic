@@ -12,6 +12,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
+import { PillButton } from '@/src/components/pill-button';
 import { TagSection } from '@/src/features/check-in/components/context-tags';
 import {
   ACTIVITY_TAGS,
@@ -33,6 +34,19 @@ type Props = {
   onSave: (nodeId: string, note?: string) => void;
 };
 
+function CloseButton({ onPress }: { onPress: () => void }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [styles.closeBtn, pressed && { opacity: 0.7 }]}
+      accessibilityRole="button"
+      accessibilityLabel="Close"
+    >
+      <Text style={styles.closeIcon}>✕</Text>
+    </Pressable>
+  );
+}
+
 export const CheckInSheet = memo(function CheckInSheet({ visible, onClose, onSave }: Props) {
   const insets = useSafeAreaInsets();
   const { theme } = useUnistyles();
@@ -42,8 +56,6 @@ export const CheckInSheet = memo(function CheckInSheet({ visible, onClose, onSav
   const selectedNode = useMemo(() => getEmotionNode(form.selectedNodeId), [form.selectedNodeId]);
 
   const selectedColor = useMemo(() => getEmotionColor(selectedNode), [selectedNode]);
-
-  const selectionModalBottom = Math.max(insets.bottom, 16) + 8;
 
   const bannerBg = selectedColor ?? theme.colors.divider;
   const bannerTextColor = isLightColor(bannerBg) ? theme.colors.onAccent : '#ffffff';
@@ -69,12 +81,7 @@ export const CheckInSheet = memo(function CheckInSheet({ visible, onClose, onSav
                 <Text style={styles.title}>What are you feeling?</Text>
                 <Text style={styles.subtitle}>{getTimeSubtitle()}</Text>
               </View>
-              <Pressable
-                onPress={form.handleClose}
-                style={({ pressed }) => [styles.closeBtn, pressed && { opacity: 0.7 }]}
-              >
-                <Text style={styles.closeIcon}>✕</Text>
-              </Pressable>
+              <CloseButton onPress={form.handleClose} />
             </View>
 
             <EmotionSelector
@@ -85,7 +92,6 @@ export const CheckInSheet = memo(function CheckInSheet({ visible, onClose, onSav
               onSelectionPress={() => {
                 if (form.selectedNodeId) form.setStep('context');
               }}
-              selectionModalStyle={{ bottom: selectionModalBottom }}
               scrollPaddingBottom={form.selectedNodeId ? 160 : 32}
             />
           </>
@@ -111,12 +117,7 @@ export const CheckInSheet = memo(function CheckInSheet({ visible, onClose, onSav
                 <Text style={styles.selectedEmotionText}>{selectedNode?.label}</Text>
               </View>
 
-              <Pressable
-                onPress={form.handleClose}
-                style={({ pressed }) => [styles.closeBtn, pressed && { opacity: 0.7 }]}
-              >
-                <Text style={styles.closeIcon}>✕</Text>
-              </Pressable>
+              <CloseButton onPress={form.handleClose} />
             </View>
 
             <ScrollView
@@ -178,15 +179,7 @@ export const CheckInSheet = memo(function CheckInSheet({ visible, onClose, onSav
             </ScrollView>
 
             <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 20) }]}>
-              <Pressable
-                onPress={form.handleSave}
-                style={({ pressed }) => [
-                  styles.saveBtn,
-                  pressed && { opacity: 0.88, transform: [{ scale: 0.98 }] },
-                ]}
-              >
-                <Text style={styles.saveBtnText}>Save check-in</Text>
-              </Pressable>
+              <PillButton label="Save check-in" onPress={form.handleSave} elevated />
             </View>
           </>
         )}
@@ -303,16 +296,4 @@ const styles = StyleSheet.create((theme) => ({
     borderTopWidth: 1,
     borderTopColor: theme.colors.divider,
   },
-  saveBtn: {
-    paddingVertical: 16,
-    borderRadius: 100,
-    alignItems: 'center',
-    backgroundColor: theme.colors.mosaicGold,
-    shadowColor: theme.colors.typography,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  saveBtnText: { fontSize: 17, fontWeight: '600', color: theme.colors.onAccent },
 }));
