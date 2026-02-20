@@ -18,14 +18,14 @@ export default function SelectionModal({ selectedNode, onPress, style }: Props) 
   if (!selectedNode) return null;
 
   const color = getEmotionColor(selectedNode) ?? '#808080';
-  const bottom = Math.max(insets.bottom, 16) + 8; // Safe padding above the home bar
+  const bottom = Math.max(insets.bottom, 16) + 8;
 
   return (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => [styles.wrapper, { bottom }, style, pressed && { opacity: 0.82 }]}
       accessibilityRole="button"
-      accessibilityLabel={`Continue with ${selectedNode.label}`} // Fixed backticks!
+      accessibilityLabel={`Continue with ${selectedNode.label}`}
     >
       <View style={styles.container}>
         <Text style={[styles.value, { color }]}>{selectedNode.label}</Text>
@@ -50,7 +50,7 @@ const styles = StyleSheet.create((theme) => ({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 10,
+    gap: 12,
     left: 20,
     right: 20,
     padding: 20,

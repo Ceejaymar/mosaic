@@ -112,6 +112,7 @@ export default function CheckInScreen() {
           label={atLimit ? 'Daily check-ins complete ✓' : '+ Check in'}
           onPress={handleOpenSheet}
           disabled={atLimit}
+          elevated={!atLimit}
           accessibilityLabel={atLimit ? 'Daily check-ins complete' : 'Check in now'}
           style={styles.checkInBtn}
         />
