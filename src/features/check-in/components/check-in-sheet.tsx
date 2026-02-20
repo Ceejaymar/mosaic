@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import {
   KeyboardAvoidingView,
   Modal,
@@ -19,7 +19,16 @@ import { EMOTION_PALETTES } from '@/src/features/emotion-accordion/palettes';
 import type { EmotionNode } from '@/src/features/emotion-accordion/types';
 import { muteColor } from '@/src/features/emotion-accordion/utils/color';
 import { ACTIVITY_TAGS, LOCATION_TAGS, PEOPLE_TAGS } from '../data/context-tags';
-import { useCheckInForm } from '../hooks/useCheckInsForm';
+
+/** Returns true when the hex color has enough luminance to need dark text. */
+function isLightColor(hex: string): boolean {
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  return 0.299 * r + 0.587 * g + 0.114 * b > 0.5;
+}
+
+import { useCheckInForm } from '../hooks/useCheckInForm';
 import { getTimeSubtitle } from '../utils/time-of-day';
 import { TagSection } from './context-tags';
 
@@ -29,7 +38,7 @@ type Props = {
   onSave: (nodeId: string, note?: string) => void;
 };
 
-export function CheckInSheet({ visible, onClose, onSave }: Props) {
+export const CheckInSheet = memo(function CheckInSheet({ visible, onClose, onSave }: Props) {
   const insets = useSafeAreaInsets();
   const { theme } = useUnistyles();
 
@@ -63,6 +72,9 @@ export function CheckInSheet({ visible, onClose, onSave }: Props) {
   }, [selectedNode]);
 
   const selectionModalBottom = Math.max(insets.bottom, 16) + 8;
+
+  const bannerBg = selectedColor ?? theme.colors.divider;
+  const bannerTextColor = isLightColor(bannerBg) ? theme.colors.onAccent : '#ffffff';
 
   return (
     <Modal
@@ -162,8 +174,12 @@ export function CheckInSheet({ visible, onClose, onSave }: Props) {
                   { backgroundColor: selectedColor ?? theme.colors.divider },
                 ]}
               >
-                <Text style={styles.emotionBannerPre}>I'm feeling</Text>
-                <Text style={styles.emotionBannerText}>{selectedNode?.label}</Text>
+                <Text style={[styles.emotionBannerPre, { color: `${bannerTextColor}B3` }]}>
+                  I'm feeling
+                </Text>
+                <Text style={[styles.emotionBannerText, { color: bannerTextColor }]}>
+                  {selectedNode?.label}
+                </Text>
               </View>
 
               <Text style={styles.inputLabel}>What's on your mind?</Text>
@@ -220,7 +236,7 @@ export function CheckInSheet({ visible, onClose, onSave }: Props) {
       </KeyboardAvoidingView>
     </Modal>
   );
-}
+});
 
 const styles = StyleSheet.create((theme) => ({
   flex1: { flex: 1 },
@@ -247,7 +263,7 @@ const styles = StyleSheet.create((theme) => ({
     fontFamily: 'Fraunces',
     color: theme.colors.typography,
   },
-  subtitle: { fontSize: 13, color: theme.colors.textMuted, marginTop: 3 },
+  subtitle: { fontSize: 13, color: theme.colors.textMuted, marginTop: 4 },
   closeBtn: {
     width: 30,
     height: 30,
@@ -276,7 +292,7 @@ const styles = StyleSheet.create((theme) => ({
     borderBottomColor: theme.colors.divider,
   },
   backBtn: { fontSize: 15, fontWeight: '500' },
-  selectedEmotionPill: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+  selectedEmotionPill: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   emotionDot: { width: 9, height: 9, borderRadius: 5 },
   selectedEmotionText: {
     fontSize: 16,
@@ -290,7 +306,6 @@ const styles = StyleSheet.create((theme) => ({
   emotionBannerPre: {
     fontSize: 13,
     fontWeight: '600',
-    color: 'rgba(255,255,255,0.7)',
     letterSpacing: 0.6,
     marginBottom: 4,
   },
@@ -298,7 +313,6 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: 36,
     fontWeight: '700',
     fontFamily: 'Fraunces',
-    color: '#ffffff',
     textTransform: 'capitalize',
     lineHeight: 40,
   },
@@ -314,7 +328,7 @@ const styles = StyleSheet.create((theme) => ({
     marginBottom: 28,
     backgroundColor: theme.colors.surface,
     borderRadius: 14,
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     paddingVertical: 12,
     minHeight: 80,
   },

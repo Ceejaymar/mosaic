@@ -198,5 +198,5 @@ const styles = StyleSheet.create((theme) => ({
     backgroundColor: 'rgba(0,0,0,0.22)',
   },
   tileLabel: { fontSize: 18, fontWeight: '700', fontFamily: 'Fraunces', color: '#fff' },
-  tileTime: { fontSize: 12, color: 'rgba(255,255,255,0.65)', marginTop: 2 },
+  tileTime: { fontSize: 12, color: 'rgba(255,255,255,0.65)', marginTop: 4 },
 }));

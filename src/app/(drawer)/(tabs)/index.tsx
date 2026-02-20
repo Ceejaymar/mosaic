@@ -34,6 +34,8 @@ export default function CheckInScreen() {
   const currentSlot = getCurrentTimeSlot();
   const atLimit = todayEntries.length >= CHECK_IN_CONSTANTS.MAX_DAILY_ENTRIES;
 
+  const handleCloseSheet = useCallback(() => setSheetVisible(false), []);
+
   const handleOpenSheet = useCallback(() => {
     if (atLimit) return;
     hapticLight();
@@ -107,11 +109,7 @@ export default function CheckInScreen() {
         <DailyStatsRow entriesCount={todayEntries.length} streakCount={1} />
       </ScrollView>
 
-      <CheckInSheet
-        visible={sheetVisible}
-        onClose={() => setSheetVisible(false)}
-        onSave={handleSave}
-      />
+      <CheckInSheet visible={sheetVisible} onClose={handleCloseSheet} onSave={handleSave} />
     </View>
   );
 }
@@ -138,7 +136,7 @@ const styles = StyleSheet.create((theme) => ({
   mosaicWrapper: { marginBottom: 24 },
   checkInBtn: (atLimit: boolean) => ({
     borderRadius: 100,
-    paddingVertical: 17,
+    paddingVertical: 16,
     alignItems: 'center',
     marginBottom: 20,
     backgroundColor: atLimit ? theme.colors.surface : theme.colors.mosaicGold,
