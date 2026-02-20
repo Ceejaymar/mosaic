@@ -45,24 +45,28 @@ function Tile({ color, label, occurredAt, style }: TileProps) {
   );
 }
 
-function TileItem({ t }: { t: MosaicTileData }) {
-  return <Tile color={t.color} label={t.label} occurredAt={t.occurredAt} style={styles.flex1} />;
+function TileItem({ tile }: { tile: MosaicTileData }) {
+  return (
+    <Tile color={tile.color} label={tile.label} occurredAt={tile.occurredAt} style={styles.flex1} />
+  );
 }
 
 function renderGrid(tiles: MosaicTileData[]) {
+  if (!tiles.length) return null;
+
   if (tiles.length === 1) {
-    return <TileItem t={tiles[0]} />;
+    return <TileItem tile={tiles[0]} />;
   }
 
   if (tiles.length === 3) {
     return (
       <>
         <View style={[styles.row, styles.flex1]}>
-          {tiles.slice(0, 2).map((t) => (
-            <TileItem key={t.id} t={t} />
+          {tiles.slice(0, 2).map((tile) => (
+            <TileItem key={tile.id} tile={tile} />
           ))}
         </View>
-        <TileItem t={tiles[2]} />
+        <TileItem tile={tiles[2]} />
       </>
     );
   }
@@ -71,13 +75,15 @@ function renderGrid(tiles: MosaicTileData[]) {
   const rows = tiles.length === 2 ? [tiles] : [tiles.slice(0, 2), tiles.slice(2)];
   return (
     <>
-      {rows.map((row) => (
-        <View key={row[0].id} style={[styles.row, styles.flex1]}>
-          {row.map((t) => (
-            <TileItem key={t.id} t={t} />
-          ))}
-        </View>
-      ))}
+      {rows
+        .filter((row) => row.length > 0)
+        .map((row) => (
+          <View key={row[0].id} style={[styles.row, styles.flex1]}>
+            {row.map((tile) => (
+              <TileItem key={tile.id} tile={tile} />
+            ))}
+          </View>
+        ))}
     </>
   );
 }

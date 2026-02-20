@@ -10,6 +10,7 @@ export function isLightColor(hex: string): boolean {
 
 /** Converts a 6-digit hex color to an rgba() string with the given alpha (0–1). */
 export function hexToRgba(hex: string, alpha: number): string {
+  if (typeof hex !== 'string' || hex.length !== 7 || hex[0] !== '#') return hex;
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
