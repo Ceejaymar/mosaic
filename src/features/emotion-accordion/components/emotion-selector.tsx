@@ -33,12 +33,9 @@ export function EmotionSelector() {
 
   const handleToggleGroup = (groupId: EmotionGroupId) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    if (activeGroupId === groupId) {
-      setActiveGroupId(null);
-    } else {
-      setActiveGroupId(groupId);
-      setSelectedNodeId(null);
-    }
+    const isOpening = activeGroupId !== groupId;
+    if (isOpening) setSelectedNodeId(groupId);
+    setActiveGroupId(isOpening ? groupId : null);
   };
 
   const handleSelectNode = (nodeId: string) => {

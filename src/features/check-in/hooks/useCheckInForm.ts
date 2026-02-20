@@ -26,11 +26,15 @@ export function useCheckInForm(
     setLocations(new Set());
   }, []);
 
-  const handleToggleGroup = useCallback((groupId: EmotionGroupId) => {
-    triggerSpringLayoutAnimation();
-    setSelectedNodeId(null);
-    setActiveGroupId((prev) => (prev === groupId ? null : groupId));
-  }, []);
+  const handleToggleGroup = useCallback(
+    (groupId: EmotionGroupId) => {
+      triggerSpringLayoutAnimation();
+      const isOpening = activeGroupId !== groupId;
+      if (isOpening) setSelectedNodeId(groupId);
+      setActiveGroupId(isOpening ? groupId : null);
+    },
+    [activeGroupId],
+  );
 
   const toggleActivity = useCallback((tag: string) => {
     setActivities((prev) => {
