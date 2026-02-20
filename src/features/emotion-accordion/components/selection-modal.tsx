@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, type StyleProp, Text, View, type ViewStyle } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import { EMOTION_PALETTES } from '../palettes';
 import type { EmotionNode } from '../types';
@@ -8,7 +8,7 @@ import { muteColor } from '../utils/color';
 type Props = {
   selectedNode: EmotionNode | null;
   onPress?: () => void;
-  style?: object;
+  style?: StyleProp<ViewStyle>;
 };
 
 export function SelectionModal({ selectedNode, onPress, style }: Props) {

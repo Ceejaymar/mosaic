@@ -5,14 +5,6 @@ import { moodEntries } from '../schema';
 
 export type MoodEntry = typeof moodEntries.$inferSelect;
 export type NewMoodEntry = typeof moodEntries.$inferInsert;
-function makeDateKey(iso: string) {
-  const d = new Date(iso);
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
-}
-
 export function dateToKey(date: Date = new Date()): string {
   const yyyy = date.getFullYear();
   const mm = String(date.getMonth() + 1).padStart(2, '0');
@@ -30,7 +22,7 @@ export async function insertTestMoodEntry(overrides?: Partial<NewMoodEntry>) {
 
   const entry: NewMoodEntry = {
     id: uuid(),
-    dateKey: makeDateKey(now),
+    dateKey: dateToKey(new Date(now)),
     primaryMood: 'happy',
     note: 'This is a test note',
     occurredAt: now,
