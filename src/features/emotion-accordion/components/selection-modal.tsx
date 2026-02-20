@@ -23,7 +23,7 @@ export function SelectionModal({ selectedNode, onPress, style }: Props) {
     <Pressable
       onPress={onPress}
       disabled={!onPress}
-      style={({ pressed }) => [styles.wrapper, style, pressed && !!onPress && { opacity: 0.82 }]}
+      style={({ pressed }) => [styles.wrapper, style, pressed && { opacity: 0.82 }]}
       accessibilityRole={onPress ? 'button' : 'none'}
       accessibilityLabel={onPress ? `Continue with ${selectedNode.label}` : undefined}
     >
