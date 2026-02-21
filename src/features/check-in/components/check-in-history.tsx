@@ -57,6 +57,6 @@ const styles = StyleSheet.create((theme) => ({
   divider: {
     height: 1,
     backgroundColor: theme.colors.divider,
-    marginLeft: 98,
+    marginLeft: 100,
   },
 }));

@@ -4,7 +4,7 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { formatTime } from '@/src/features/check-in/utils/format-time';
 
-const SQUIRCLE_SIZE = 14;
+const SQUIRCLE_SIZE = 16;
 const FADE_WIDTH = 20;
 
 type Props = {
