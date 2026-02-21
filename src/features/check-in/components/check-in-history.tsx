@@ -8,7 +8,6 @@ import { parseStoredTags } from '@/src/features/check-in/utils/parse-tags';
 import { CheckInHistoryRow } from './check-in-history-row';
 
 type Props = {
-  /** All of today's entries — rendered newest-first. */
   entries: MoodEntry[];
   onEntryPress: (id: string) => void;
 };
@@ -53,10 +52,9 @@ const styles = StyleSheet.create((theme) => ({
     letterSpacing: -0.5,
     marginBottom: 4,
   },
-  // Divider is inset to align with the label column (past time + squircle + gaps)
   divider: {
     height: 1,
     backgroundColor: theme.colors.divider,
-    marginLeft: 100,
+    marginLeft: 64,
   },
 }));

@@ -4,7 +4,7 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { formatTime } from '@/src/features/check-in/utils/format-time';
 
-const SQUIRCLE_SIZE = 16;
+const SQUIRCLE_SIZE = 12;
 const FADE_WIDTH = 20;
 
 type Props = {
@@ -69,9 +69,9 @@ const styles = StyleSheet.create((theme) => ({
     gap: 8,
   },
   time: {
-    fontSize: 13,
+    fontSize: 12,
     color: theme.colors.textMuted,
-    width: 68,
+    width: 56,
   },
   squircle: {
     width: SQUIRCLE_SIZE,
@@ -79,10 +79,9 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: 4,
   },
   label: {
-    fontSize: 17,
-    fontWeight: '700',
+    fontSize: 18,
     color: theme.colors.typography,
-    letterSpacing: -0.4,
+    letterSpacing: -0.3,
     flexShrink: 1,
   },
   tagsContainer: {
@@ -105,7 +104,7 @@ const styles = StyleSheet.create((theme) => ({
   tag: {
     backgroundColor: theme.colors.surface,
     borderRadius: 100,
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
     paddingVertical: 4,
   },
   tagText: {
