@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Text, View } from 'react-native';
@@ -7,6 +8,7 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { PillButton } from '@/src/components/pill-button';
 import { LAYOUT } from '@/src/constants/layout';
+import { onOpenCheckInSheet } from '@/src/features/check-in/check-in-sheet-events';
 import { CheckInSheet } from '@/src/features/check-in/components/check-in-sheet';
 import { DailyStatsRow } from '@/src/features/check-in/components/daily-stats';
 import {
@@ -25,6 +27,7 @@ export default function CheckInScreen() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { theme } = useUnistyles();
+  const router = useRouter();
 
   useEffect(() => {
     enableAndroidLayoutAnimations();
@@ -36,13 +39,13 @@ export default function CheckInScreen() {
   const currentSlot = getCurrentTimeSlot();
   const atLimit = todayEntries.length >= CHECK_IN_CONSTANTS.MAX_DAILY_ENTRIES;
 
-  const handleCloseSheet = useCallback(() => setSheetVisible(false), []);
-
   const handleOpenSheet = useCallback(() => {
     if (atLimit) return;
     hapticLight();
     setSheetVisible(true);
   }, [atLimit]);
+
+  const handleCloseSheet = useCallback(() => setSheetVisible(false), []);
 
   const handleSave = useCallback(
     async (nodeId: string, note?: string) => {
@@ -51,6 +54,18 @@ export default function CheckInScreen() {
     },
     [saveEntry],
   );
+
+  const handleTilePress = useCallback(
+    (tile: MosaicTileData) => {
+      router.push(`/check-in/${tile.id}`);
+    },
+    [router],
+  );
+
+  // Open the sheet when the global FAB fires the event
+  useEffect(() => {
+    return onOpenCheckInSheet(handleOpenSheet);
+  }, [handleOpenSheet]);
 
   const mosaicTiles = useMemo<MosaicTileData[]>(() => {
     return todayEntries
@@ -104,18 +119,13 @@ export default function CheckInScreen() {
               />
             </View>
           ) : (
-            <MosaicDisplay tiles={mosaicTiles} onPress={handleOpenSheet} />
+            <MosaicDisplay
+              tiles={mosaicTiles}
+              onAddPress={handleOpenSheet}
+              onTilePress={handleTilePress}
+            />
           )}
         </View>
-
-        <PillButton
-          label={atLimit ? 'Daily check-ins complete ✓' : '+ Check in'}
-          onPress={handleOpenSheet}
-          disabled={atLimit}
-          elevated={!atLimit}
-          accessibilityLabel={atLimit ? 'Daily check-ins complete' : 'Check in now'}
-          style={styles.checkInBtn}
-        />
 
         {/* TODO: compute real streak from cross-day DB query */}
         <DailyStatsRow entriesCount={todayEntries.length} streakCount={1} />
@@ -164,5 +174,4 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: 20,
   },
   errorText: { fontSize: 14, color: theme.colors.textMuted, textAlign: 'center' },
-  checkInBtn: { marginBottom: 20 },
 }));

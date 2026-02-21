@@ -15,7 +15,10 @@ export type MosaicTileData = {
 
 type Props = {
   tiles: MosaicTileData[];
-  onPress: () => void;
+  /** Called when the empty-state container is tapped (open a new check-in). */
+  onAddPress: () => void;
+  /** Called when an individual filled tile is tapped (open edit for that entry). */
+  onTilePress: (tile: MosaicTileData) => void;
 };
 
 function formatTime(iso: string): string {
@@ -45,17 +48,27 @@ function Tile({ color, label, occurredAt, style }: TileProps) {
   );
 }
 
-function TileItem({ tile }: { tile: MosaicTileData }) {
+function TileItem({ tile, onPress }: { tile: MosaicTileData; onPress: () => void }) {
   return (
-    <Tile color={tile.color} label={tile.label} occurredAt={tile.occurredAt} style={styles.flex1} />
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [styles.flex1, pressed && { opacity: 0.82 }]}
+      accessibilityRole="button"
+      accessibilityLabel={`${tile.label} at ${formatTime(tile.occurredAt)}, tap to edit`}
+    >
+      <Tile
+        color={tile.color}
+        label={tile.label}
+        occurredAt={tile.occurredAt}
+        style={styles.flex1}
+      />
+    </Pressable>
   );
 }
 
-function renderGrid(tiles: MosaicTileData[]) {
-  if (!tiles.length) return null;
-
+function renderGrid(tiles: MosaicTileData[], onTilePress: (tile: MosaicTileData) => void) {
   if (tiles.length === 1) {
-    return <TileItem tile={tiles[0]} />;
+    return <TileItem tile={tiles[0]} onPress={() => onTilePress(tiles[0])} />;
   }
 
   if (tiles.length === 3) {
@@ -63,10 +76,10 @@ function renderGrid(tiles: MosaicTileData[]) {
       <>
         <View style={[styles.row, styles.flex1]}>
           {tiles.slice(0, 2).map((tile) => (
-            <TileItem key={tile.id} tile={tile} />
+            <TileItem key={tile.id} tile={tile} onPress={() => onTilePress(tile)} />
           ))}
         </View>
-        <TileItem tile={tiles[2]} />
+        <TileItem tile={tiles[2]} onPress={() => onTilePress(tiles[2])} />
       </>
     );
   }
@@ -80,7 +93,7 @@ function renderGrid(tiles: MosaicTileData[]) {
         .map((row) => (
           <View key={row[0].id} style={[styles.row, styles.flex1]}>
             {row.map((tile) => (
-              <TileItem key={tile.id} tile={tile} />
+              <TileItem key={tile.id} tile={tile} onPress={() => onTilePress(tile)} />
             ))}
           </View>
         ))}
@@ -88,16 +101,15 @@ function renderGrid(tiles: MosaicTileData[]) {
   );
 }
 
-export function MosaicDisplay({ tiles, onPress }: Props) {
+export function MosaicDisplay({ tiles, onAddPress, onTilePress }: Props) {
   const cappedTiles = tiles.slice(0, 4);
   const count = cappedTiles.length;
-  const canAdd = count < 4;
 
   if (count === 0) {
     return (
       <Pressable
-        onPress={onPress}
-        style={({ pressed }) => [styles.emptyContainer, pressed && { opacity: 0.8 }]}
+        onPress={onAddPress}
+        style={({ pressed }) => [styles.emptyContainer, pressed && { opacity: 0.82 }]}
         accessibilityRole="button"
         accessibilityLabel="Check in"
       >
@@ -109,16 +121,7 @@ export function MosaicDisplay({ tiles, onPress }: Props) {
     );
   }
 
-  return (
-    <Pressable
-      onPress={canAdd ? onPress : undefined}
-      style={({ pressed }) => [styles.container, pressed && canAdd && { opacity: 0.9 }]}
-      accessibilityRole={canAdd ? 'button' : 'none'}
-      accessibilityLabel={canAdd ? 'Add another check-in' : 'Daily check-ins complete'}
-    >
-      {renderGrid(cappedTiles)}
-    </Pressable>
-  );
+  return <View style={styles.container}>{renderGrid(cappedTiles, onTilePress)}</View>;
 }
 
 const styles = StyleSheet.create((theme) => ({

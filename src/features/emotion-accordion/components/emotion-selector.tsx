@@ -1,4 +1,3 @@
-import type { StyleProp, ViewStyle } from 'react-native';
 import { Platform, ScrollView, UIManager, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
