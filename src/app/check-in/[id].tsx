@@ -25,6 +25,7 @@ export default function EditCheckInScreen() {
         style: 'destructive',
         onPress: async () => {
           try {
+            setDeleteError(null);
             await deleteMoodEntry(id as string);
             router.replace('/');
           } catch (err) {

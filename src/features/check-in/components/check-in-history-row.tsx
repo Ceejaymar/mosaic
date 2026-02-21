@@ -2,6 +2,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
+import { formatTime } from '@/src/features/check-in/utils/format-time';
+
 const SQUIRCLE_SIZE = 14;
 const FADE_WIDTH = 20;
 
@@ -12,14 +14,6 @@ type Props = {
   tags: string[];
   onPress: () => void;
 };
-
-function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  });
-}
 
 export function CheckInHistoryRow({ occurredAt, label, color, tags, onPress }: Props) {
   const { theme } = useUnistyles();
