@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Alert, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
@@ -15,6 +15,8 @@ export default function EditCheckInScreen() {
     if (!id) router.replace('/');
   }, [id, router]);
 
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
   const handleDelete = useCallback(() => {
     Alert.alert('Remove check-in', 'This will permanently delete this mood entry.', [
       { text: 'Cancel', style: 'cancel' },
@@ -22,8 +24,13 @@ export default function EditCheckInScreen() {
         text: 'Remove',
         style: 'destructive',
         onPress: async () => {
-          await deleteMoodEntry(id as string);
-          router.replace('/');
+          try {
+            await deleteMoodEntry(id as string);
+            router.replace('/');
+          } catch (err) {
+            console.error('Failed to delete mood entry', err);
+            setDeleteError('Could not delete this check-in. Please try again.');
+          }
         },
       },
     ]);
@@ -48,6 +55,7 @@ export default function EditCheckInScreen() {
 
       <View style={styles.spacer} />
 
+      {deleteError && <Text style={styles.deleteError}>{deleteError}</Text>}
       <Pressable
         onPress={handleDelete}
         style={({ pressed }) => [styles.deleteBtn, pressed && { opacity: 0.6 }]}
@@ -75,6 +83,12 @@ const styles = StyleSheet.create((theme) => ({
   meta: { fontSize: 13, color: theme.colors.textMuted, marginBottom: 24 },
   body: { fontSize: 15, color: theme.colors.textMuted, lineHeight: 22 },
   spacer: { flex: 1 },
+  deleteError: {
+    fontSize: 13,
+    color: theme.colors.destructive,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
   deleteBtn: {
     alignItems: 'center',
     paddingVertical: 16,
@@ -83,6 +97,6 @@ const styles = StyleSheet.create((theme) => ({
   deleteBtnText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#FF3B30',
+    color: theme.colors.destructive,
   },
 }));

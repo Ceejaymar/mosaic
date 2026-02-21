@@ -23,15 +23,16 @@ function formatTime(iso: string): string {
 
 export function CheckInHistoryRow({ occurredAt, label, color, tags, onPress }: Props) {
   const { theme } = useUnistyles();
+  const formattedTime = formatTime(occurredAt);
 
   return (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => [styles.row, pressed && { opacity: 0.7 }]}
       accessibilityRole="button"
-      accessibilityLabel={`${label} at ${formatTime(occurredAt)}, tap to edit`}
+      accessibilityLabel={`${label} at ${formattedTime}, tap to edit`}
     >
-      <Text style={styles.time}>{formatTime(occurredAt)}</Text>
+      <Text style={styles.time}>{formattedTime}</Text>
 
       <View style={[styles.squircle, { backgroundColor: color }]} />
 
@@ -72,7 +73,7 @@ const styles = StyleSheet.create((theme) => ({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 16,
-    gap: 10,
+    gap: 8,
   },
   time: {
     fontSize: 13,
@@ -89,6 +90,7 @@ const styles = StyleSheet.create((theme) => ({
     fontWeight: '700',
     color: theme.colors.typography,
     letterSpacing: -0.4,
+    flexShrink: 1,
   },
   tagsContainer: {
     flex: 1,
@@ -96,7 +98,7 @@ const styles = StyleSheet.create((theme) => ({
   tagsContent: {
     flexGrow: 1,
     justifyContent: 'flex-end',
-    gap: 6,
+    gap: 8,
     paddingLeft: FADE_WIDTH,
   },
   fadeLeft: {
@@ -109,7 +111,7 @@ const styles = StyleSheet.create((theme) => ({
   tag: {
     backgroundColor: theme.colors.surface,
     borderRadius: 100,
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
     paddingVertical: 4,
   },
   tagText: {

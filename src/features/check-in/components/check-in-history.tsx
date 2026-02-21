@@ -20,11 +20,12 @@ export function CheckInHistory({ entries, onEntryPress }: Props) {
     <View style={styles.container}>
       <Text style={styles.heading}>Today</Text>
 
-      {entries.map((entry, index) => {
-        const display = getMoodDisplayInfo(entry.primaryMood);
-        if (!display) return null;
-
-        return (
+      {entries
+        .flatMap((entry) => {
+          const display = getMoodDisplayInfo(entry.primaryMood);
+          return display ? [{ entry, display }] : [];
+        })
+        .map(({ entry, display }, index, visible) => (
           <View key={entry.id}>
             <CheckInHistoryRow
               occurredAt={entry.occurredAt}
@@ -33,10 +34,9 @@ export function CheckInHistory({ entries, onEntryPress }: Props) {
               tags={parseStoredTags(entry.tags)}
               onPress={() => onEntryPress(entry.id)}
             />
-            {index < entries.length - 1 && <View style={styles.divider} />}
+            {index < visible.length - 1 && <View style={styles.divider} />}
           </View>
-        );
-      })}
+        ))}
     </View>
   );
 }
@@ -57,6 +57,6 @@ const styles = StyleSheet.create((theme) => ({
   divider: {
     height: 1,
     backgroundColor: theme.colors.divider,
-    marginLeft: 88,
+    marginLeft: 98,
   },
 }));

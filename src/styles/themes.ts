@@ -14,6 +14,8 @@ const lightTheme = {
     tileBackground: '#ffffff',
     /** Shadow color for cards (brand-tinted) */
     tileShadowColor: '#E0C097',
+    /** Destructive action color (delete, remove) */
+    destructive: '#FF3B30',
     headerGradient: ['rgba(255,255,255,0.9)', 'rgba(255,255,255,0.1)'],
     tabBarGradient: ['rgba(255,255,255,0)', 'rgba(255,255,255,0.9)'],
   },
@@ -35,6 +37,8 @@ const darkTheme = {
     tileBackground: '#1C1C1E',
     /** Shadow color for cards — transparent in dark mode */
     tileShadowColor: 'transparent',
+    /** Destructive action color (delete, remove) */
+    destructive: '#FF3B30',
     headerGradient: ['rgba(0,0,0,0.9)', 'rgba(0,0,0,0.1)'],
     tabBarGradient: ['rgba(0,0,0,0)', 'rgba(0,0,0,0.9)'],
   },
