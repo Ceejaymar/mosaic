@@ -5,7 +5,7 @@ import { triggerSpringLayoutAnimation } from '@/src/utils/animations';
 export type Step = 'emotion' | 'context';
 
 export function useCheckInForm(
-  onSaveCallback: (nodeId: string, note?: string) => void,
+  onSaveCallback: (nodeId: string, note?: string, tags?: string[]) => void,
   onCloseCallback: () => void,
 ) {
   const [step, setStep] = useState<Step>('emotion');
@@ -65,13 +65,8 @@ export function useCheckInForm(
 
   const handleSave = useCallback(() => {
     if (!selectedNodeId) return;
-    const lines: string[] = [];
-    if (note.trim()) lines.push(note.trim());
-    if (activities.size > 0) lines.push(`Doing: ${[...activities].join(', ')}`);
-    if (people.size > 0) lines.push(`With: ${[...people].join(', ')}`);
-    if (locations.size > 0) lines.push(`At: ${[...locations].join(', ')}`);
-
-    onSaveCallback(selectedNodeId, lines.length > 0 ? lines.join('\n') : undefined);
+    const tags = [...activities, ...people, ...locations];
+    onSaveCallback(selectedNodeId, note.trim() || undefined, tags.length > 0 ? tags : undefined);
     resetState();
   }, [selectedNodeId, note, activities, people, locations, onSaveCallback, resetState]);
 

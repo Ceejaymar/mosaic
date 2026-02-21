@@ -7,6 +7,7 @@ export const moodEntries = sqliteTable(
     dateKey: text('date_key').notNull(),
     primaryMood: text('primary_mood').notNull(),
     note: text('note'),
+    tags: text('tags'), // JSON-serialised string[] of selected context tags
     occurredAt: text('occurred_at').notNull(),
     createdAt: text('created_at').notNull(),
     updatedAt: text('updated_at').notNull(),
