@@ -50,11 +50,10 @@ export function CheckInHistoryRow({ occurredAt, label, color, tags, onPress }: P
 
           {/* Left-edge fade so tags dissolve gracefully into the label */}
           <LinearGradient
-            colors={[theme.colors.background, 'transparent']}
+            colors={[theme.colors.background, `${theme.colors.background}00`]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.fadeLeft}
-            pointerEvents="none"
           />
         </View>
       )}
@@ -101,6 +100,7 @@ const styles = StyleSheet.create((theme) => ({
     top: 0,
     bottom: 0,
     width: FADE_WIDTH,
+    pointerEvents: 'none',
   },
   tag: {
     backgroundColor: theme.colors.surface,
