@@ -22,32 +22,39 @@ function seededRand(seed: number): number {
   return x - Math.floor(x);
 }
 
-export function useCanvasData(month: number, year: number): CanvasDay[] {
-  return useMemo(() => {
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const today = new Date();
-    today.setHours(23, 59, 59, 999);
+/**
+ * Pure computation of mock canvas days for a given month/year.
+ * Exported so callers that cannot use hooks (e.g. batch loops) can generate
+ * mock data without calling useCanvasData.
+ */
+export function computeMockCanvasDays(month: number, year: number): CanvasDay[] {
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const today = new Date();
+  today.setHours(23, 59, 59, 999);
 
-    return Array.from({ length: daysInMonth }, (_, i) => {
-      const day = i + 1;
-      const date = new Date(year, month, day);
-      const mm = String(month + 1).padStart(2, '0');
-      const dd = String(day).padStart(2, '0');
-      const dateStr = `${year}-${mm}-${dd}`;
+  return Array.from({ length: daysInMonth }, (_, i) => {
+    const day = i + 1;
+    const date = new Date(year, month, day);
+    const mm = String(month + 1).padStart(2, '0');
+    const dd = String(day).padStart(2, '0');
+    const dateStr = `${year}-${mm}-${dd}`;
 
-      // Future days have no entries
-      if (date > today) return { date: dateStr, entries: [] };
+    // Future days have no entries
+    if (date > today) return { date: dateStr, entries: [] };
 
-      const seed = year * 10000 + (month + 1) * 100 + day;
-      const r = seededRand(seed);
-      const count = r < 0.28 ? 0 : r < 0.52 ? 1 : r < 0.72 ? 2 : r < 0.88 ? 3 : 4;
+    const seed = year * 10000 + (month + 1) * 100 + day;
+    const r = seededRand(seed);
+    const count = r < 0.28 ? 0 : r < 0.52 ? 1 : r < 0.72 ? 2 : r < 0.88 ? 3 : 4;
 
-      const entries = Array.from({ length: count }, (_, j) => {
-        const idx = Math.floor(seededRand(seed * 7 + j * 13) * PALETTE.length);
-        return PALETTE[idx];
-      });
-
-      return { date: dateStr, entries };
+    const entries = Array.from({ length: count }, (_, j) => {
+      const idx = Math.floor(seededRand(seed * 7 + j * 13) * PALETTE.length);
+      return PALETTE[idx];
     });
-  }, [month, year]);
+
+    return { date: dateStr, entries };
+  });
+}
+
+export function useCanvasData(month: number, year: number): CanvasDay[] {
+  return useMemo(() => computeMockCanvasDays(month, year), [month, year]);
 }

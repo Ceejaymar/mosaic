@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 
 import { fetchMoodEntriesForMonth } from '@/src/db/repos/moodRepo';
-import { getMoodDisplayInfo } from '@/src/features/check-in/utils/mood-helpers';
 
+import { buildCanvasDays } from '../utils/buildCanvasDays';
 import type { CanvasDay } from './useCanvasData';
 
 export type CanvasDbState = {
@@ -35,28 +35,7 @@ export function useCanvasDbData(month: number, year: number, enabled: boolean): 
     fetchMoodEntriesForMonth(year, month)
       .then((entries) => {
         if (cancelled) return;
-
-        // Group colors by dateKey, capped at 4 per day (oldest → newest order)
-        const grouped = new Map<string, string[]>();
-        for (const entry of entries) {
-          const color = getMoodDisplayInfo(entry.primaryMood)?.color;
-          if (!color) continue;
-          const existing = grouped.get(entry.dateKey) ?? [];
-          if (existing.length < 4) {
-            grouped.set(entry.dateKey, [...existing, color]);
-          }
-        }
-
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-        const canvasDays: CanvasDay[] = Array.from({ length: daysInMonth }, (_, i) => {
-          const day = i + 1;
-          const mm = String(month + 1).padStart(2, '0');
-          const dd = String(day).padStart(2, '0');
-          const dateStr = `${year}-${mm}-${dd}`;
-          return { date: dateStr, entries: grouped.get(dateStr) ?? [] };
-        });
-
-        setDays(canvasDays);
+        setDays(buildCanvasDays(entries, year, month));
         setLoading(false);
       })
       .catch((err) => {

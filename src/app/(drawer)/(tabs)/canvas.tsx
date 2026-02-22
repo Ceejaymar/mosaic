@@ -1,8 +1,16 @@
 import { useHeaderHeight } from '@react-navigation/elements';
 import { LinearGradient } from 'expo-linear-gradient';
-import { memo, useCallback, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, FlatList, Pressable, Text, useWindowDimensions, View } from 'react-native';
+import {
+  Alert,
+  AppState,
+  FlatList,
+  Pressable,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
@@ -24,6 +32,9 @@ const MONTHS_BACK = 36;
 /** Height of the peeking adjacent-month strip at top/bottom of each page */
 const PEEK_HEIGHT = 80;
 
+/** Stable noop passed to peek grids — avoids creating a new function per render */
+const NOOP_ON_DAY_PRESS = (_date: string) => {};
+
 type ViewMode = 'month' | 'year';
 
 // ─── Month list: OLDEST-FIRST (index 0 = oldest, last = current month) ───────
@@ -38,9 +49,6 @@ function buildMonthList(count: number): MonthItem[] {
     return { month: d.getMonth(), year: d.getFullYear() };
   });
 }
-
-const MONTH_LIST = buildMonthList(MONTHS_BACK);
-const INITIAL_INDEX = MONTH_LIST.length - 1; // current month
 
 // ─── PeekGrid ─────────────────────────────────────────────────────────────────
 
@@ -63,7 +71,7 @@ const PeekGrid = memo(function PeekGrid({ month, year, tileSize, demoMode }: Pee
       tileGap={TILE_GAP}
       hideEmpty={false}
       showDowHeader={false}
-      onDayPress={() => {}}
+      onDayPress={NOOP_ON_DAY_PRESS}
     />
   );
 });
@@ -72,6 +80,7 @@ const PeekGrid = memo(function PeekGrid({ month, year, tileSize, demoMode }: Pee
 
 type MonthPageProps = {
   index: number;
+  monthList: MonthItem[];
   pageHeight: number;
   tileSize: number;
   hideEmpty: boolean;
@@ -81,15 +90,16 @@ type MonthPageProps = {
 
 const MonthPage = memo(function MonthPage({
   index,
+  monthList,
   pageHeight,
   tileSize,
   hideEmpty,
   demoMode,
   onDayPress,
 }: MonthPageProps) {
-  const { month, year } = MONTH_LIST[index];
-  const prevItem = MONTH_LIST[index - 1]; // older month — appears when swiping DOWN
-  const nextItem = MONTH_LIST[index + 1]; // newer month — appears when swiping UP
+  const { month, year } = monthList[index];
+  const prevItem = monthList[index - 1]; // older month — appears when swiping DOWN
+  const nextItem = monthList[index + 1]; // newer month — appears when swiping UP
 
   const { i18n } = useTranslation();
   const { theme } = useUnistyles();
@@ -182,7 +192,27 @@ export default function CanvasScreen() {
   const [containerHeight, setContainerHeight] = useState(0);
   const [isYearMounted, setIsYearMounted] = useState(false);
 
+  // ── Month list: recomputed on app foreground resume to handle month boundaries ──
+  const [monthList, setMonthList] = useState(() => buildMonthList(MONTHS_BACK));
+  const initialIndex = monthList.length - 1; // current month
+
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active') setMonthList(buildMonthList(MONTHS_BACK));
+    });
+    return () => sub.remove();
+  }, []);
+
   const flatListRef = useRef<FlatList<MonthItem>>(null);
+
+  // Scroll to the new current month when the list grows after a month boundary
+  const prevListLength = useRef(monthList.length);
+  useEffect(() => {
+    if (monthList.length !== prevListLength.current) {
+      flatListRef.current?.scrollToEnd({ animated: false });
+      prevListLength.current = monthList.length;
+    }
+  }, [monthList]);
 
   // Tile size based on tighter grid padding for larger tiles
   const gridContentWidth = screenWidth - GRID_H_PAD * 2;
@@ -288,11 +318,11 @@ export default function CanvasScreen() {
           {containerHeight > 0 && (
             <FlatList
               ref={flatListRef}
-              data={MONTH_LIST}
+              data={monthList}
               keyExtractor={(item) => `${item.year}-${item.month}`}
               pagingEnabled
               showsVerticalScrollIndicator={false}
-              initialScrollIndex={INITIAL_INDEX}
+              initialScrollIndex={initialIndex}
               windowSize={3}
               initialNumToRender={3}
               maxToRenderPerBatch={3}
@@ -304,6 +334,7 @@ export default function CanvasScreen() {
               renderItem={({ index }) => (
                 <MonthPage
                   index={index}
+                  monthList={monthList}
                   pageHeight={containerHeight}
                   tileSize={tileSize}
                   hideEmpty={hideEmpty}
