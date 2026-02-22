@@ -1,4 +1,4 @@
-import { desc, eq } from 'drizzle-orm';
+import { between, desc, eq } from 'drizzle-orm';
 import { uuid } from '@/src/lib/uuid';
 import { db } from '../client';
 import { moodEntries } from '../schema';
@@ -43,6 +43,15 @@ export async function fetchMoodEntriesForDate(dateKey: string, limit = 50) {
     .where(eq(moodEntries.dateKey, dateKey))
     .orderBy(desc(moodEntries.occurredAt))
     .limit(limit);
+}
+
+export async function fetchMoodEntriesForMonth(year: number, month: number): Promise<MoodEntry[]> {
+  const mm = String(month + 1).padStart(2, '0');
+  return db
+    .select()
+    .from(moodEntries)
+    .where(between(moodEntries.dateKey, `${year}-${mm}-01`, `${year}-${mm}-31`))
+    .orderBy(moodEntries.occurredAt);
 }
 
 export async function fetchRecentMoodEntries(limit = 100): Promise<MoodEntry[]> {
