@@ -1,6 +1,6 @@
 import { useHeaderHeight } from '@react-navigation/elements';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, FlatList, Pressable, Text, useWindowDimensions, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
@@ -10,8 +10,7 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { LAYOUT } from '@/src/constants/layout';
 import { MonthGrid } from '@/src/features/canvas/components/month-grid';
 import { YearView } from '@/src/features/canvas/components/year-view';
-import { useCanvasData } from '@/src/features/canvas/hooks/useCanvasData';
-import { useCanvasDbData } from '@/src/features/canvas/hooks/useCanvasDbData';
+import { useCanvasSource } from '@/src/features/canvas/hooks/useCanvasSource';
 import { getMonthName } from '@/src/features/canvas/utils/date-labels';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -52,10 +51,8 @@ type PeekGridProps = {
   demoMode: boolean;
 };
 
-function PeekGrid({ month, year, tileSize, demoMode }: PeekGridProps) {
-  const mockData = useCanvasData(month, year);
-  const dbData = useCanvasDbData(month, year, !demoMode);
-  const data = demoMode ? mockData : dbData;
+const PeekGrid = memo(function PeekGrid({ month, year, tileSize, demoMode }: PeekGridProps) {
+  const data = useCanvasSource(month, year, demoMode);
 
   return (
     <MonthGrid
@@ -69,7 +66,7 @@ function PeekGrid({ month, year, tileSize, demoMode }: PeekGridProps) {
       onDayPress={() => {}}
     />
   );
-}
+});
 
 // ─── MonthPage ────────────────────────────────────────────────────────────────
 
@@ -82,7 +79,7 @@ type MonthPageProps = {
   onDayPress: (date: string) => void;
 };
 
-function MonthPage({
+const MonthPage = memo(function MonthPage({
   index,
   pageHeight,
   tileSize,
@@ -98,9 +95,7 @@ function MonthPage({
   const { theme } = useUnistyles();
   const bg = theme.colors.background;
 
-  const mockData = useCanvasData(month, year);
-  const dbData = useCanvasDbData(month, year, !demoMode);
-  const data = demoMode ? mockData : dbData;
+  const data = useCanvasSource(month, year, demoMode);
 
   return (
     <View style={{ height: pageHeight }}>
@@ -134,7 +129,7 @@ function MonthPage({
       </View>
 
       {/* ── Main: month label + current grid ── */}
-      <View style={{ flex: 1, paddingHorizontal: GRID_H_PAD, justifyContent: 'center', gap: 10 }}>
+      <View style={{ flex: 1, paddingHorizontal: GRID_H_PAD, justifyContent: 'center', gap: 8 }}>
         <Text style={styles.monthPageLabel}>
           {getMonthName(month, 'long', i18n.language)} {year}
         </Text>
@@ -171,7 +166,7 @@ function MonthPage({
       </View>
     </View>
   );
-}
+});
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
@@ -179,11 +174,13 @@ export default function CanvasScreen() {
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight(); // transparent header height (includes status bar)
   const { width: screenWidth } = useWindowDimensions();
+  const { t } = useTranslation();
 
   const [viewMode, setViewMode] = useState<ViewMode>('month');
   const [hideEmpty, setHideEmpty] = useState(false);
   const [demoMode, setDemoMode] = useState(false);
   const [containerHeight, setContainerHeight] = useState(0);
+  const [isYearMounted, setIsYearMounted] = useState(false);
 
   const flatListRef = useRef<FlatList<MonthItem>>(null);
 
@@ -194,23 +191,13 @@ export default function CanvasScreen() {
   // YearView uses the same tight padding as the month grid for full-width tiles
   const yearContentWidth = screenWidth - GRID_H_PAD * 2;
 
-  // Label only shown in the top bar for year view; month view shows label inside each page
-  const headerLabel = viewMode === 'year' ? 'Year View' : '';
+  // Label only shown in the top bar for year view
+  const headerLabel = viewMode === 'year' ? t('canvas.overview') : '';
 
   // ── Placeholder day-press handler ──
   const onDayPress = useCallback((date: string) => {
     Alert.alert('Day selected', date);
   }, []);
-
-  // ── Scroll to current month (last item) once height is measured ──
-  useEffect(() => {
-    if (containerHeight > 0) {
-      flatListRef.current?.scrollToOffset({
-        offset: containerHeight * INITIAL_INDEX,
-        animated: false,
-      });
-    }
-  }, [containerHeight]);
 
   // ── View mode cross-fade ──
   const monthOpacity = useSharedValue(1);
@@ -223,6 +210,7 @@ export default function CanvasScreen() {
       if (prev === 'month') {
         monthOpacity.value = withTiming(0, { duration: 180 });
         yearOpacity.value = withTiming(1, { duration: 180 });
+        setIsYearMounted(true);
         return 'year';
       }
       yearOpacity.value = withTiming(0, { duration: 180 });
@@ -281,7 +269,7 @@ export default function CanvasScreen() {
             }
           >
             <Text style={[styles.toggleLabel, viewMode === 'year' && styles.toggleLabelActive]}>
-              {viewMode === 'month' ? 'Year' : 'Month'}
+              {viewMode === 'month' ? t('canvas.year') : t('canvas.month')}
             </Text>
           </Pressable>
         </View>
@@ -304,6 +292,10 @@ export default function CanvasScreen() {
               keyExtractor={(item) => `${item.year}-${item.month}`}
               pagingEnabled
               showsVerticalScrollIndicator={false}
+              initialScrollIndex={INITIAL_INDEX}
+              windowSize={3}
+              initialNumToRender={3}
+              maxToRenderPerBatch={3}
               getItemLayout={(_, index) => ({
                 length: containerHeight,
                 offset: containerHeight * index,
@@ -323,14 +315,20 @@ export default function CanvasScreen() {
           )}
         </Animated.View>
 
-        {/* Year view */}
+        {/* Year view — lazy-mounted on first open */}
         <Animated.View
           pointerEvents={viewMode === 'year' ? 'auto' : 'none'}
           style={[styles.absoluteFill, yearAnimStyle]}
         >
-          <View style={[styles.fill, { paddingHorizontal: GRID_H_PAD }]}>
-            <YearView onDayPress={onDayPress} contentWidth={yearContentWidth} demoMode={demoMode} />
-          </View>
+          {isYearMounted && (
+            <View style={[styles.fill, { paddingHorizontal: GRID_H_PAD }]}>
+              <YearView
+                onDayPress={onDayPress}
+                contentWidth={yearContentWidth}
+                demoMode={demoMode}
+              />
+            </View>
+          )}
         </Animated.View>
       </View>
     </View>
@@ -363,7 +361,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   chip: {
     height: 28,
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
     borderRadius: 14,
     borderWidth: 1,
     borderColor: theme.colors.divider,
@@ -378,6 +376,7 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: 12,
     fontWeight: '600',
     color: theme.colors.textMuted,
+    fontFamily: 'SpaceMono',
   },
   chipLabelActive: {
     color: theme.colors.onAccent,
@@ -401,6 +400,7 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: 13,
     fontWeight: '600',
     color: theme.colors.textMuted,
+    fontFamily: 'SpaceMono',
   },
   toggleLabelActive: {
     color: theme.colors.mosaicGold,

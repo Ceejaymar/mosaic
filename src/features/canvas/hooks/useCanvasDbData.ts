@@ -5,17 +5,32 @@ import { getMoodDisplayInfo } from '@/src/features/check-in/utils/mood-helpers';
 
 import type { CanvasDay } from './useCanvasData';
 
+export type CanvasDbState = {
+  days: CanvasDay[];
+  loading: boolean;
+  error: unknown;
+};
+
 /**
  * Fetches real mood entries from the DB for a given month/year and returns
  * them shaped as CanvasDay[]. Skips the fetch when `enabled` is false.
  */
-export function useCanvasDbData(month: number, year: number, enabled: boolean): CanvasDay[] {
+export function useCanvasDbData(month: number, year: number, enabled: boolean): CanvasDbState {
   const [days, setDays] = useState<CanvasDay[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<unknown>(null);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled) {
+      setDays([]);
+      setLoading(false);
+      setError(null);
+      return;
+    }
 
     let cancelled = false;
+    setLoading(true);
+    setError(null);
 
     fetchMoodEntriesForMonth(year, month)
       .then((entries) => {
@@ -42,18 +57,18 @@ export function useCanvasDbData(month: number, year: number, enabled: boolean): 
         });
 
         setDays(canvasDays);
+        setLoading(false);
       })
-      .catch(console.error);
+      .catch((err) => {
+        if (cancelled) return;
+        setError(err);
+        setLoading(false);
+      });
 
     return () => {
       cancelled = true;
     };
   }, [month, year, enabled]);
 
-  // Reset to empty when disabled (switching to demo mode)
-  useEffect(() => {
-    if (!enabled) setDays([]);
-  }, [enabled]);
-
-  return days;
+  return { days, loading, error };
 }

@@ -1,10 +1,13 @@
-import { memo, useRef } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
+import { fetchMoodEntriesForMonth } from '@/src/db/repos/moodRepo';
+import { getMoodDisplayInfo } from '@/src/features/check-in/utils/mood-helpers';
+
+import type { CanvasDay } from '../hooks/useCanvasData';
 import { useCanvasData } from '../hooks/useCanvasData';
-import { useCanvasDbData } from '../hooks/useCanvasDbData';
 import { getDowLabels, getMonthName } from '../utils/date-labels';
 import { MonthGrid } from './month-grid';
 
@@ -37,6 +40,7 @@ type MiniMonthProps = {
   year: number;
   tileSize: number;
   demoMode: boolean;
+  dbData: CanvasDay[];
   onDayPress: (date: string) => void;
 };
 
@@ -45,11 +49,11 @@ const MiniMonth = memo(function MiniMonth({
   year,
   tileSize,
   demoMode,
+  dbData,
   onDayPress,
 }: MiniMonthProps) {
   const { i18n } = useTranslation();
   const mockData = useCanvasData(month, year);
-  const dbData = useCanvasDbData(month, year, !demoMode);
   const data = demoMode ? mockData : dbData;
 
   return (
@@ -94,17 +98,75 @@ export function YearView({ onDayPress, contentWidth, demoMode }: Props) {
   const gridWidth = contentWidth - MONTH_LABEL_WIDTH - LABEL_GRID_GAP;
   const tileSize = (gridWidth - 6 * YEAR_TILE_GAP) / 7;
 
+  // ── Centralized DB data for all visible months ──
+  const [liveDataMap, setLiveDataMap] = useState<Record<string, CanvasDay[]>>({});
+
+  useEffect(() => {
+    if (demoMode) {
+      setLiveDataMap({});
+      return;
+    }
+
+    let cancelled = false;
+
+    const yearsList = [currentYear - 1, currentYear];
+    const monthsToFetch = yearsList.flatMap((year) =>
+      Array.from({ length: year === currentYear ? currentMonth + 1 : 12 }, (_, m) => ({
+        month: m,
+        year,
+      })),
+    );
+
+    Promise.all(
+      monthsToFetch.map(({ month, year }) =>
+        fetchMoodEntriesForMonth(year, month).then((entries) => {
+          const grouped = new Map<string, string[]>();
+          for (const entry of entries) {
+            const color = getMoodDisplayInfo(entry.primaryMood)?.color;
+            if (!color) continue;
+            const existing = grouped.get(entry.dateKey) ?? [];
+            if (existing.length < 4) grouped.set(entry.dateKey, [...existing, color]);
+          }
+
+          const daysInMonth = new Date(year, month + 1, 0).getDate();
+          const canvasDays: CanvasDay[] = Array.from({ length: daysInMonth }, (_, i) => {
+            const day = i + 1;
+            const mm = String(month + 1).padStart(2, '0');
+            const dd = String(day).padStart(2, '0');
+            const dateStr = `${year}-${mm}-${dd}`;
+            return { date: dateStr, entries: grouped.get(dateStr) ?? [] };
+          });
+
+          return { key: `${year}-${month}`, data: canvasDays };
+        }),
+      ),
+    )
+      .then((results) => {
+        if (cancelled) return;
+        const map: Record<string, CanvasDay[]> = {};
+        for (const { key, data } of results) map[key] = data;
+        setLiveDataMap(map);
+      })
+      .catch(console.error);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [demoMode, currentYear, currentMonth]);
+
+  const onContentSizeChange = useCallback(() => {
+    if (!didScrollToEnd.current) {
+      scrollRef.current?.scrollToEnd({ animated: false });
+      didScrollToEnd.current = true;
+    }
+  }, []);
+
   return (
     <ScrollView
       ref={scrollRef}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.container}
-      onContentSizeChange={() => {
-        if (!didScrollToEnd.current) {
-          scrollRef.current?.scrollToEnd({ animated: false });
-          didScrollToEnd.current = true;
-        }
-      }}
+      onContentSizeChange={onContentSizeChange}
     >
       {years.map((year) => (
         <View key={year} style={styles.yearBlock}>
@@ -131,6 +193,7 @@ export function YearView({ onDayPress, contentWidth, demoMode }: Props) {
               year={year}
               tileSize={tileSize}
               demoMode={demoMode}
+              dbData={liveDataMap[`${year}-${m}`] ?? []}
               onDayPress={onDayPress}
             />
           ))}
@@ -165,6 +228,7 @@ const styles = StyleSheet.create((theme) => ({
     fontWeight: '600',
     textAlign: 'center',
     color: theme.colors.textMuted,
+    fontFamily: 'SpaceMono',
   },
   miniMonth: {
     flexDirection: 'row',
@@ -178,5 +242,6 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.textMuted,
     letterSpacing: 0.2,
     paddingTop: 4,
+    fontFamily: 'SpaceMono',
   },
 }));

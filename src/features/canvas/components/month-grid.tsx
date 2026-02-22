@@ -7,6 +7,8 @@ import type { CanvasDay } from '../hooks/useCanvasData';
 import { getDowLabels } from '../utils/date-labels';
 import { DayTile } from './day-tile';
 
+type Cell = { key: string; day: number | null };
+
 type Props = {
   month: number; // 0-indexed
   year: number;
@@ -32,8 +34,6 @@ export const MonthGrid = memo(function MonthGrid({
   const firstDow = new Date(year, month, 1).getDay(); // 0 = Sunday
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const dayMap = new Map(data.map((d) => [Number(d.date.slice(8)), d]));
-
-  type Cell = { key: string; day: number | null };
 
   // Build cells with stable string keys: blank spacers use their column slot, days use the day number
   const cells: Cell[] = [

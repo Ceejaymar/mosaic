@@ -45,12 +45,19 @@ export async function fetchMoodEntriesForDate(dateKey: string, limit = 50) {
     .limit(limit);
 }
 
+/**
+ * Fetches all mood entries for a given month.
+ * @param year  Full year (e.g. 2025)
+ * @param month 0-indexed month, matching JavaScript's Date convention (0 = January)
+ */
 export async function fetchMoodEntriesForMonth(year: number, month: number): Promise<MoodEntry[]> {
   const mm = String(month + 1).padStart(2, '0');
+  const lastDay = new Date(year, month + 1, 0).getDate();
+  const dd = String(lastDay).padStart(2, '0');
   return db
     .select()
     .from(moodEntries)
-    .where(between(moodEntries.dateKey, `${year}-${mm}-01`, `${year}-${mm}-31`))
+    .where(between(moodEntries.dateKey, `${year}-${mm}-01`, `${year}-${mm}-${dd}`))
     .orderBy(moodEntries.occurredAt);
 }
 

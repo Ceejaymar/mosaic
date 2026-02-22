@@ -1,3 +1,4 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { memo } from 'react';
 import { Text, View } from 'react-native';
 import FastSquircleView from 'react-native-fast-squircle';
@@ -5,6 +6,9 @@ import { useUnistyles } from 'react-native-unistyles';
 
 const CORNER_SMOOTHING = 0.8;
 const FILL = { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 } as const;
+
+/** Semi-transparent gradient overlay for depth on each color segment */
+const SEGMENT_OVERLAY: readonly [string, string] = ['rgba(255,255,255,0.12)', 'rgba(0,0,0,0.10)'];
 
 type Props = {
   colors: string[]; // 0–4 hex colors
@@ -18,7 +22,12 @@ function ColorSegments({ colors, size }: { colors: string[]; size: number }) {
   if (colors.length === 0) return null;
 
   if (colors.length === 1) {
-    return <View style={[FILL, { backgroundColor: colors[0] }]} />;
+    return (
+      <>
+        <View style={[FILL, { backgroundColor: colors[0] }]} />
+        <LinearGradient colors={SEGMENT_OVERLAY} style={FILL} />
+      </>
+    );
   }
 
   if (colors.length === 2) {
@@ -44,6 +53,7 @@ function ColorSegments({ colors, size }: { colors: string[]; size: number }) {
             backgroundColor: colors[1],
           }}
         />
+        <LinearGradient colors={SEGMENT_OVERLAY} style={FILL} />
       </>
     );
   }
@@ -81,6 +91,7 @@ function ColorSegments({ colors, size }: { colors: string[]; size: number }) {
             backgroundColor: colors[2],
           }}
         />
+        <LinearGradient colors={SEGMENT_OVERLAY} style={FILL} />
       </>
     );
   }
@@ -128,6 +139,7 @@ function ColorSegments({ colors, size }: { colors: string[]; size: number }) {
           backgroundColor: colors[3],
         }}
       />
+      <LinearGradient colors={SEGMENT_OVERLAY} style={FILL} />
     </>
   );
 }
@@ -148,8 +160,8 @@ export const DayTile = memo(function DayTile({ colors, day, size }: Props) {
           allowFontScaling={false}
           style={{
             position: 'absolute',
-            bottom: 2,
-            right: 3,
+            bottom: 4,
+            right: 4,
             fontSize: Math.max(6, Math.round(size * 0.18)),
             color: theme.colors.textMuted,
           }}

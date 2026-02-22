@@ -9,8 +9,8 @@
 /** Stable React list keys for the 7 days of the week, Sunday-first */
 const DOW_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
 
-/** Jan 7 2024 was a Sunday — stable reference date for weekday name lookup */
-const SUNDAY_REF = new Date(2024, 0, 7);
+/** Jan 7 2024 was a Sunday — stable UTC reference date for weekday name lookup */
+const SUNDAY_REF = new Date(Date.UTC(2024, 0, 7));
 const MS_PER_DAY = 86_400_000;
 
 /**

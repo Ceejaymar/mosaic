@@ -17,6 +17,11 @@
     "projects_count_one": "Tienes un proyecto",
     "projects_count_other": "Tienes {{count}} proyectos"
   },
+  "canvas": {
+    "overview": "Resumen",
+    "year": "Año",
+    "month": "Mes"
+  },
   "settings": {
     "theme": {
       "title": "Apariencia",
