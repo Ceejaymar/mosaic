@@ -23,31 +23,38 @@ import { getMonthName } from '@/src/features/canvas/utils/date-labels';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-/** Horizontal padding for the top bar */
 const TOPBAR_H_PAD = 24;
-/** Horizontal padding for the month grid — smaller = bigger tiles */
 const GRID_H_PAD = 8;
 const TILE_GAP = 4;
 const MONTHS_BACK = 36;
-/** Height of the gradient fade at the top/bottom edges of each month page */
+/** Peek strip height — how much of the adjacent month shows at top/bottom */
+const PEEK_HEIGHT = 80;
+/** Gradient height used on side slots (no peek content, just a fade cue) */
 const EDGE_FADE_HEIGHT = 48;
+
+/** Stable noop for peek grids — never interactive */
+const NOOP_DAY_PRESS = (_date: string) => {};
 
 type ViewMode = 'month' | 'year';
 
-// ─── Month list: OLDEST-FIRST (index 0 = oldest, last = current month) ───────
+// ─── Month list ────────────────────────────────────────────────────────────────
 
 type MonthItem = { month: number; year: number };
 
 function buildMonthList(count: number): MonthItem[] {
   const now = new Date();
-  // Oldest at index 0 so swiping UP reveals the older month
   return Array.from({ length: count }, (_, i) => {
     const d = new Date(now.getFullYear(), now.getMonth() - (count - 1 - i), 1);
     return { month: d.getMonth(), year: d.getFullYear() };
   });
 }
 
-// ─── MonthPage ────────────────────────────────────────────────────────────────
+// ─── MonthPage — side slots (prev / next) ────────────────────────────────────
+//
+// No peek content here intentionally. During a scroll transition both the side
+// slot and the center slot are simultaneously visible; if the side slot also
+// rendered peek strips, the user would see two overlapping grids for the same
+// month. Instead, side slots show only a subtle gradient fade at their edges.
 
 type MonthPageProps = {
   monthItem: MonthItem;
@@ -58,12 +65,6 @@ type MonthPageProps = {
   onDayPress: (date: string) => void;
 };
 
-/**
- * Renders a single month's label + tile grid, centered vertically within
- * pageHeight. Gradient fades at the top and bottom edges signal that adjacent
- * months exist without rendering any cross-month content (avoids the overlap
- * artifacts that the peek-grid approach produced during transitions).
- */
 const MonthPage = memo(function MonthPage({
   monthItem,
   pageHeight,
@@ -80,7 +81,6 @@ const MonthPage = memo(function MonthPage({
 
   return (
     <View style={{ height: pageHeight }}>
-      {/* Month label + tile grid, vertically centered */}
       <View style={{ flex: 1, paddingHorizontal: GRID_H_PAD, justifyContent: 'center', gap: 8 }}>
         <Text style={styles.monthPageLabel}>
           {getMonthName(month, 'long', i18n.language)} {year}
@@ -96,18 +96,143 @@ const MonthPage = memo(function MonthPage({
         />
       </View>
 
-      {/* Top edge fade — "more months above" cue, no cross-month content */}
+      {/* Gradient cues that more months exist above/below */}
       <LinearGradient
         colors={[bg, `${bg}00`]}
         style={[styles.edgeFade, { top: 0 }]}
         pointerEvents="none"
       />
-      {/* Bottom edge fade — "more months below" cue */}
       <LinearGradient
         colors={[`${bg}00`, bg]}
         style={[styles.edgeFade, { bottom: 0 }]}
         pointerEvents="none"
       />
+    </View>
+  );
+});
+
+// ─── CenterMonthPage — center slot (with peek strips) ────────────────────────
+//
+// The center slot is always at rest from the user's perspective. It renders
+// faded peek strips showing the bottom rows of the previous month (top) and
+// the top rows of the next month (bottom), with gradient overlays blending them
+// into the background.
+
+type CenterMonthPageProps = {
+  monthItem: MonthItem;
+  prevItem: MonthItem | null;
+  nextItem: MonthItem | null;
+  pageHeight: number;
+  tileSize: number;
+  hideEmpty: boolean;
+  demoMode: boolean;
+  onDayPress: (date: string) => void;
+};
+
+const CenterMonthPage = memo(function CenterMonthPage({
+  monthItem,
+  prevItem,
+  nextItem,
+  pageHeight,
+  tileSize,
+  hideEmpty,
+  demoMode,
+  onDayPress,
+}: CenterMonthPageProps) {
+  const { month, year } = monthItem;
+  const { i18n } = useTranslation();
+  const { theme } = useUnistyles();
+  const bg = theme.colors.background;
+
+  const data = useCanvasSource(month, year, demoMode);
+  // Hooks must always be called. When no adjacent item exists (boundary month),
+  // fall back to the center item so deps remain stable and no data is wasted.
+  const prevData = useCanvasSource(
+    (prevItem ?? monthItem).month,
+    (prevItem ?? monthItem).year,
+    demoMode,
+  );
+  const nextData = useCanvasSource(
+    (nextItem ?? monthItem).month,
+    (nextItem ?? monthItem).year,
+    demoMode,
+  );
+
+  return (
+    <View style={{ height: pageHeight }}>
+      {/* ── Top peek: bottom rows of previous month ── */}
+      {prevItem ? (
+        <View style={{ height: PEEK_HEIGHT, overflow: 'hidden' }} pointerEvents="none">
+          <View
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              left: GRID_H_PAD,
+              right: GRID_H_PAD,
+              opacity: 0.45,
+            }}
+          >
+            <MonthGrid
+              month={prevItem.month}
+              year={prevItem.year}
+              data={prevData}
+              tileSize={tileSize}
+              tileGap={TILE_GAP}
+              hideEmpty={false}
+              showDowHeader={false}
+              onDayPress={NOOP_DAY_PRESS}
+            />
+          </View>
+          <LinearGradient
+            colors={[bg, `${bg}00`]}
+            style={styles.absoluteFill}
+            pointerEvents="none"
+          />
+        </View>
+      ) : (
+        <View style={{ height: PEEK_HEIGHT }} pointerEvents="none" />
+      )}
+
+      {/* ── Center: month label + interactive grid ── */}
+      <View style={{ flex: 1, paddingHorizontal: GRID_H_PAD, justifyContent: 'center', gap: 8 }}>
+        <Text style={styles.monthPageLabel}>
+          {getMonthName(month, 'long', i18n.language)} {year}
+        </Text>
+        <MonthGrid
+          month={month}
+          year={year}
+          data={data}
+          tileSize={tileSize}
+          tileGap={TILE_GAP}
+          hideEmpty={hideEmpty}
+          onDayPress={onDayPress}
+        />
+      </View>
+
+      {/* ── Bottom peek: top rows of next month ── */}
+      {nextItem ? (
+        <View style={{ height: PEEK_HEIGHT, overflow: 'hidden' }} pointerEvents="none">
+          <View style={{ paddingHorizontal: GRID_H_PAD, opacity: 0.45 }}>
+            <MonthGrid
+              month={nextItem.month}
+              year={nextItem.year}
+              data={nextData}
+              tileSize={tileSize}
+              tileGap={TILE_GAP}
+              hideEmpty={false}
+              showDowHeader={false}
+              onDayPress={NOOP_DAY_PRESS}
+            />
+          </View>
+          <LinearGradient
+            colors={[`${bg}00`, bg]}
+            style={styles.absoluteFill}
+            pointerEvents="none"
+          />
+        </View>
+      ) : (
+        <View style={{ height: PEEK_HEIGHT }} pointerEvents="none" />
+      )}
     </View>
   );
 });
@@ -126,7 +251,7 @@ export default function CanvasScreen() {
   const [containerHeight, setContainerHeight] = useState(0);
   const [isYearMounted, setIsYearMounted] = useState(false);
 
-  // ── Month list: recomputed on app-foreground resume to handle month boundaries ──
+  // ── Month list: recomputed on foreground resume to handle month boundaries ──
   const [monthList, setMonthList] = useState(() => buildMonthList(MONTHS_BACK));
 
   useEffect(() => {
@@ -137,18 +262,18 @@ export default function CanvasScreen() {
   }, []);
 
   // ── 3-slot recycling pager ──
-  // centerMonthIndex points to the month in monthList that occupies slot 1 (center).
-  // Slots 0 (prev) and 2 (next) hold adjacent months. After each scroll settle,
-  // we update centerMonthIndex and snap the ScrollView back to slot 1 — the user
-  // sees only one month at a time, and the same 3 component instances are reused.
   const [centerMonthIndex, setCenterMonthIndex] = useState(monthList.length - 1);
   const monthScrollRef = useRef<ScrollView>(null);
 
+  // Slot data — clamp to list bounds so boundary slots always have valid data
   const prevMonthItem = monthList[Math.max(0, centerMonthIndex - 1)];
   const centerMonthItem = monthList[centerMonthIndex];
   const nextMonthItem = monthList[Math.min(monthList.length - 1, centerMonthIndex + 1)];
 
-  // Scroll to center slot once the container is measured
+  // Peek items: null at list boundaries so CenterMonthPage suppresses that strip
+  const centerPrevItem = centerMonthIndex > 0 ? prevMonthItem : null;
+  const centerNextItem = centerMonthIndex < monthList.length - 1 ? nextMonthItem : null;
+
   useEffect(() => {
     if (containerHeight > 0) {
       monthScrollRef.current?.scrollTo({ y: containerHeight, animated: false });
@@ -169,10 +294,8 @@ export default function CanvasScreen() {
     [centerMonthIndex, containerHeight, monthList.length],
   );
 
-  // Tile size based on tight grid padding for larger tiles
   const gridContentWidth = screenWidth - GRID_H_PAD * 2;
   const tileSize = (gridContentWidth - 6 * TILE_GAP) / 7;
-
   const yearContentWidth = screenWidth - GRID_H_PAD * 2;
   const headerLabel = viewMode === 'year' ? t('canvas.overview') : '';
 
@@ -180,7 +303,6 @@ export default function CanvasScreen() {
     Alert.alert('Day selected', date);
   }, []);
 
-  // ── View mode cross-fade ──
   const monthOpacity = useSharedValue(1);
   const yearOpacity = useSharedValue(0);
   const monthAnimStyle = useAnimatedStyle(() => ({ opacity: monthOpacity.value }));
@@ -204,10 +326,7 @@ export default function CanvasScreen() {
     <View
       style={[
         styles.screen,
-        {
-          paddingTop: headerHeight,
-          paddingBottom: LAYOUT.TAB_BAR_HEIGHT + insets.bottom,
-        },
+        { paddingTop: headerHeight, paddingBottom: LAYOUT.TAB_BAR_HEIGHT + insets.bottom },
       ]}
     >
       {/* ── Top bar ── */}
@@ -272,7 +391,7 @@ export default function CanvasScreen() {
               scrollEventThrottle={16}
               onMomentumScrollEnd={handleMonthScrollEnd}
             >
-              {/* Slot 0 — previous month */}
+              {/* Slot 0 — previous month (no peeks: clean during transition) */}
               <MonthPage
                 key="prev"
                 monthItem={prevMonthItem}
@@ -282,17 +401,19 @@ export default function CanvasScreen() {
                 demoMode={demoMode}
                 onDayPress={onDayPress}
               />
-              {/* Slot 1 — current month (always starts here) */}
-              <MonthPage
+              {/* Slot 1 — current month (peek strips visible at rest) */}
+              <CenterMonthPage
                 key="center"
                 monthItem={centerMonthItem}
+                prevItem={centerPrevItem}
+                nextItem={centerNextItem}
                 pageHeight={containerHeight}
                 tileSize={tileSize}
                 hideEmpty={hideEmpty}
                 demoMode={demoMode}
                 onDayPress={onDayPress}
               />
-              {/* Slot 2 — next month */}
+              {/* Slot 2 — next month (no peeks: clean during transition) */}
               <MonthPage
                 key="next"
                 monthItem={nextMonthItem}
