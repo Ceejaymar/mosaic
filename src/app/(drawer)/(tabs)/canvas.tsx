@@ -1,6 +1,6 @@
 import { useHeaderHeight } from '@react-navigation/elements';
 import { LinearGradient } from 'expo-linear-gradient';
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Alert,
@@ -82,10 +82,16 @@ const MonthPage = memo(function MonthPage({
   const contentOpacity = useSharedValue(0);
   const contentAnimStyle = useAnimatedStyle(() => ({ opacity: contentOpacity.value }));
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: month/year are intentional retrigger deps
-  useEffect(() => {
+  // Reset to 0 before new content is painted (fires synchronously before the frame)
+  // biome-ignore lint/correctness/useExhaustiveDependencies: month/year trigger re-run but are not used in the body
+  useLayoutEffect(() => {
     contentOpacity.value = 0;
-    contentOpacity.value = withTiming(1, { duration: 200 });
+  }, [month, year, contentOpacity]);
+
+  // Start the fade after the opacity-0 frame is committed
+  // biome-ignore lint/correctness/useExhaustiveDependencies: month/year trigger re-run but are not used in the body
+  useEffect(() => {
+    contentOpacity.value = withTiming(1, { duration: 220 });
   }, [month, year, contentOpacity]);
 
   return (
