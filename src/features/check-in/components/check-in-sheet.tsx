@@ -31,7 +31,7 @@ import { hexToRgba, isLightColor } from '@/src/utils/color-ui';
 type Props = {
   visible: boolean;
   onClose: () => void;
-  onSave: (nodeId: string, note?: string) => void;
+  onSave: (nodeId: string, note?: string, tags?: string[]) => void;
 };
 
 function CloseButton({ onPress }: { onPress: () => void }) {

@@ -21,6 +21,7 @@ function buildMoodEntryFromNew(entry: NewMoodEntry): MoodEntry {
     dateKey: entry.dateKey ?? dateToKey(),
     primaryMood: entry.primaryMood ?? '',
     note: entry.note ?? null,
+    tags: entry.tags ?? null,
     occurredAt: entry.occurredAt ?? now,
     createdAt: entry.createdAt ?? now,
     updatedAt: entry.updatedAt ?? now,
@@ -61,13 +62,14 @@ export function useTodayCheckIns() {
     return () => subscription.remove();
   }, [loadTodayEntries]);
 
-  const saveEntry = useCallback(async (nodeId: string, note?: string) => {
+  const saveEntry = useCallback(async (nodeId: string, note?: string, tags?: string[]) => {
     const now = new Date();
     const newEntry: NewMoodEntry = {
       id: uuid(),
       dateKey: dateToKey(now),
       primaryMood: nodeId,
       note: note ?? null,
+      tags: tags && tags.length > 0 ? JSON.stringify(tags) : null,
       occurredAt: now.toISOString(),
       createdAt: now.toISOString(),
       updatedAt: now.toISOString(),

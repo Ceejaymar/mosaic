@@ -2,6 +2,8 @@ import type { StyleProp, ViewStyle } from 'react-native';
 import { Pressable, Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
+import { formatTime } from '@/src/features/check-in/utils/format-time';
+
 const GAP = 4;
 const CONTAINER_RADIUS = 20;
 const TILE_RADIUS = 4;
@@ -20,14 +22,6 @@ type Props = {
   /** Called when an individual filled tile is tapped (open edit for that entry). */
   onTilePress: (tile: MosaicTileData) => void;
 };
-
-function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  });
-}
 
 type TileProps = {
   color: string;

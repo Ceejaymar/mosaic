@@ -9,6 +9,7 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { PillButton } from '@/src/components/pill-button';
 import { LAYOUT } from '@/src/constants/layout';
 import { onOpenCheckInSheet } from '@/src/features/check-in/check-in-sheet-events';
+import { CheckInHistory } from '@/src/features/check-in/components/check-in-history';
 import { CheckInSheet } from '@/src/features/check-in/components/check-in-sheet';
 import { DailyStatsRow } from '@/src/features/check-in/components/daily-stats';
 import {
@@ -48,9 +49,9 @@ export default function CheckInScreen() {
   const handleCloseSheet = useCallback(() => setSheetVisible(false), []);
 
   const handleSave = useCallback(
-    async (nodeId: string, note?: string) => {
+    async (nodeId: string, note?: string, tags?: string[]) => {
       setSheetVisible(false);
-      await saveEntry(nodeId, note);
+      await saveEntry(nodeId, note, tags);
     },
     [saveEntry],
   );
@@ -61,6 +62,8 @@ export default function CheckInScreen() {
     },
     [router],
   );
+
+  const handleEntryPress = useCallback((id: string) => router.push(`/check-in/${id}`), [router]);
 
   // Open the sheet when the global FAB fires the event
   useEffect(() => {
@@ -129,6 +132,8 @@ export default function CheckInScreen() {
 
         {/* TODO: compute real streak from cross-day DB query */}
         <DailyStatsRow entriesCount={todayEntries.length} streakCount={1} />
+
+        <CheckInHistory entries={todayEntries} onEntryPress={handleEntryPress} />
       </ScrollView>
 
       <CheckInSheet visible={sheetVisible} onClose={handleCloseSheet} onSave={handleSave} />
