@@ -5,8 +5,8 @@ import { useTranslation } from 'react-i18next';
 import {
   Alert,
   AppState,
-  FlatList,
   Pressable,
+  ScrollView,
   Text,
   useWindowDimensions,
   View,
@@ -29,11 +29,8 @@ const TOPBAR_H_PAD = 24;
 const GRID_H_PAD = 8;
 const TILE_GAP = 4;
 const MONTHS_BACK = 36;
-/** Height of the peeking adjacent-month strip at top/bottom of each page */
-const PEEK_HEIGHT = 80;
-
-/** Stable noop passed to peek grids — avoids creating a new function per render */
-const NOOP_ON_DAY_PRESS = (_date: string) => {};
+/** Height of the gradient fade at the top/bottom edges of each month page */
+const EDGE_FADE_HEIGHT = 48;
 
 type ViewMode = 'month' | 'year';
 
@@ -43,44 +40,17 @@ type MonthItem = { month: number; year: number };
 
 function buildMonthList(count: number): MonthItem[] {
   const now = new Date();
-  // Oldest at index 0 so swipe-DOWN reveals the month above (older)
+  // Oldest at index 0 so swiping UP reveals the older month
   return Array.from({ length: count }, (_, i) => {
     const d = new Date(now.getFullYear(), now.getMonth() - (count - 1 - i), 1);
     return { month: d.getMonth(), year: d.getFullYear() };
   });
 }
 
-// ─── PeekGrid ─────────────────────────────────────────────────────────────────
-
-type PeekGridProps = {
-  month: number;
-  year: number;
-  tileSize: number;
-  demoMode: boolean;
-};
-
-const PeekGrid = memo(function PeekGrid({ month, year, tileSize, demoMode }: PeekGridProps) {
-  const data = useCanvasSource(month, year, demoMode);
-
-  return (
-    <MonthGrid
-      month={month}
-      year={year}
-      data={data}
-      tileSize={tileSize}
-      tileGap={TILE_GAP}
-      hideEmpty={false}
-      showDowHeader={false}
-      onDayPress={NOOP_ON_DAY_PRESS}
-    />
-  );
-});
-
 // ─── MonthPage ────────────────────────────────────────────────────────────────
 
 type MonthPageProps = {
-  index: number;
-  monthList: MonthItem[];
+  monthItem: MonthItem;
   pageHeight: number;
   tileSize: number;
   hideEmpty: boolean;
@@ -88,57 +58,29 @@ type MonthPageProps = {
   onDayPress: (date: string) => void;
 };
 
+/**
+ * Renders a single month's label + tile grid, centered vertically within
+ * pageHeight. Gradient fades at the top and bottom edges signal that adjacent
+ * months exist without rendering any cross-month content (avoids the overlap
+ * artifacts that the peek-grid approach produced during transitions).
+ */
 const MonthPage = memo(function MonthPage({
-  index,
-  monthList,
+  monthItem,
   pageHeight,
   tileSize,
   hideEmpty,
   demoMode,
   onDayPress,
 }: MonthPageProps) {
-  const { month, year } = monthList[index];
-  const prevItem = monthList[index - 1]; // older month — appears when swiping DOWN
-  const nextItem = monthList[index + 1]; // newer month — appears when swiping UP
-
+  const { month, year } = monthItem;
   const { i18n } = useTranslation();
   const { theme } = useUnistyles();
   const bg = theme.colors.background;
-
   const data = useCanvasSource(month, year, demoMode);
 
   return (
     <View style={{ height: pageHeight }}>
-      {/* ── Top peek: older month, bottom rows visible ── */}
-      <View style={{ height: PEEK_HEIGHT, overflow: 'hidden' }} pointerEvents="none">
-        {prevItem && (
-          <>
-            <View
-              style={{
-                position: 'absolute',
-                bottom: 0,
-                left: GRID_H_PAD,
-                right: GRID_H_PAD,
-                opacity: 0.45,
-              }}
-            >
-              <PeekGrid
-                month={prevItem.month}
-                year={prevItem.year}
-                tileSize={tileSize}
-                demoMode={demoMode}
-              />
-            </View>
-            <LinearGradient
-              colors={[bg, `${bg}00`]}
-              style={styles.absoluteFill}
-              pointerEvents="none"
-            />
-          </>
-        )}
-      </View>
-
-      {/* ── Main: month label + current grid ── */}
+      {/* Month label + tile grid, vertically centered */}
       <View style={{ flex: 1, paddingHorizontal: GRID_H_PAD, justifyContent: 'center', gap: 8 }}>
         <Text style={styles.monthPageLabel}>
           {getMonthName(month, 'long', i18n.language)} {year}
@@ -154,26 +96,18 @@ const MonthPage = memo(function MonthPage({
         />
       </View>
 
-      {/* ── Bottom peek: newer month, top rows visible ── */}
-      <View style={{ height: PEEK_HEIGHT, overflow: 'hidden' }} pointerEvents="none">
-        {nextItem && (
-          <>
-            <View style={{ paddingHorizontal: GRID_H_PAD, opacity: 0.45 }}>
-              <PeekGrid
-                month={nextItem.month}
-                year={nextItem.year}
-                tileSize={tileSize}
-                demoMode={demoMode}
-              />
-            </View>
-            <LinearGradient
-              colors={[`${bg}00`, bg]}
-              style={styles.absoluteFill}
-              pointerEvents="none"
-            />
-          </>
-        )}
-      </View>
+      {/* Top edge fade — "more months above" cue, no cross-month content */}
+      <LinearGradient
+        colors={[bg, `${bg}00`]}
+        style={[styles.edgeFade, { top: 0 }]}
+        pointerEvents="none"
+      />
+      {/* Bottom edge fade — "more months below" cue */}
+      <LinearGradient
+        colors={[`${bg}00`, bg]}
+        style={[styles.edgeFade, { bottom: 0 }]}
+        pointerEvents="none"
+      />
     </View>
   );
 });
@@ -182,7 +116,7 @@ const MonthPage = memo(function MonthPage({
 
 export default function CanvasScreen() {
   const insets = useSafeAreaInsets();
-  const headerHeight = useHeaderHeight(); // transparent header height (includes status bar)
+  const headerHeight = useHeaderHeight();
   const { width: screenWidth } = useWindowDimensions();
   const { t } = useTranslation();
 
@@ -192,9 +126,8 @@ export default function CanvasScreen() {
   const [containerHeight, setContainerHeight] = useState(0);
   const [isYearMounted, setIsYearMounted] = useState(false);
 
-  // ── Month list: recomputed on app foreground resume to handle month boundaries ──
+  // ── Month list: recomputed on app-foreground resume to handle month boundaries ──
   const [monthList, setMonthList] = useState(() => buildMonthList(MONTHS_BACK));
-  const initialIndex = monthList.length - 1; // current month
 
   useEffect(() => {
     const sub = AppState.addEventListener('change', (nextState) => {
@@ -203,28 +136,46 @@ export default function CanvasScreen() {
     return () => sub.remove();
   }, []);
 
-  const flatListRef = useRef<FlatList<MonthItem>>(null);
+  // ── 3-slot recycling pager ──
+  // centerMonthIndex points to the month in monthList that occupies slot 1 (center).
+  // Slots 0 (prev) and 2 (next) hold adjacent months. After each scroll settle,
+  // we update centerMonthIndex and snap the ScrollView back to slot 1 — the user
+  // sees only one month at a time, and the same 3 component instances are reused.
+  const [centerMonthIndex, setCenterMonthIndex] = useState(monthList.length - 1);
+  const monthScrollRef = useRef<ScrollView>(null);
 
-  // Scroll to the new current month when the list grows after a month boundary
-  const prevListLength = useRef(monthList.length);
+  const prevMonthItem = monthList[Math.max(0, centerMonthIndex - 1)];
+  const centerMonthItem = monthList[centerMonthIndex];
+  const nextMonthItem = monthList[Math.min(monthList.length - 1, centerMonthIndex + 1)];
+
+  // Scroll to center slot once the container is measured
   useEffect(() => {
-    if (monthList.length !== prevListLength.current) {
-      flatListRef.current?.scrollToEnd({ animated: false });
-      prevListLength.current = monthList.length;
+    if (containerHeight > 0) {
+      monthScrollRef.current?.scrollTo({ y: containerHeight, animated: false });
     }
-  }, [monthList]);
+  }, [containerHeight]);
 
-  // Tile size based on tighter grid padding for larger tiles
+  const handleMonthScrollEnd = useCallback(
+    (event: { nativeEvent: { contentOffset: { y: number } } }) => {
+      const page = Math.round(event.nativeEvent.contentOffset.y / containerHeight);
+      if (page === 0) {
+        if (centerMonthIndex > 0) setCenterMonthIndex((i) => i - 1);
+        monthScrollRef.current?.scrollTo({ y: containerHeight, animated: false });
+      } else if (page === 2) {
+        if (centerMonthIndex < monthList.length - 1) setCenterMonthIndex((i) => i + 1);
+        monthScrollRef.current?.scrollTo({ y: containerHeight, animated: false });
+      }
+    },
+    [centerMonthIndex, containerHeight, monthList.length],
+  );
+
+  // Tile size based on tight grid padding for larger tiles
   const gridContentWidth = screenWidth - GRID_H_PAD * 2;
   const tileSize = (gridContentWidth - 6 * TILE_GAP) / 7;
 
-  // YearView uses the same tight padding as the month grid for full-width tiles
   const yearContentWidth = screenWidth - GRID_H_PAD * 2;
-
-  // Label only shown in the top bar for year view
   const headerLabel = viewMode === 'year' ? t('canvas.overview') : '';
 
-  // ── Placeholder day-press handler ──
   const onDayPress = useCallback((date: string) => {
     Alert.alert('Day selected', date);
   }, []);
@@ -254,7 +205,6 @@ export default function CanvasScreen() {
       style={[
         styles.screen,
         {
-          // headerHeight already includes insets.top for the transparent header
           paddingTop: headerHeight,
           paddingBottom: LAYOUT.TAB_BAR_HEIGHT + insets.bottom,
         },
@@ -265,7 +215,6 @@ export default function CanvasScreen() {
         <Text style={styles.headerLabel}>{headerLabel}</Text>
 
         <View style={styles.controls}>
-          {/* Demo data toggle */}
           <Pressable
             onPress={() => setDemoMode((v) => !v)}
             style={({ pressed }) => [
@@ -279,7 +228,6 @@ export default function CanvasScreen() {
             <Text style={[styles.chipLabel, demoMode && styles.chipLabelActive]}>Demo</Text>
           </Pressable>
 
-          {/* Hide-empty toggle */}
           <Pressable
             onPress={() => setHideEmpty((v) => !v)}
             style={({ pressed }) => [styles.iconBtn, pressed && { opacity: 0.5 }]}
@@ -289,7 +237,6 @@ export default function CanvasScreen() {
             <View style={[styles.filterDot, hideEmpty && styles.filterDotActive]} />
           </Pressable>
 
-          {/* Month / Year view toggle */}
           <Pressable
             onPress={toggleViewMode}
             style={({ pressed }) => [styles.iconBtn, pressed && { opacity: 0.5 }]}
@@ -310,39 +257,52 @@ export default function CanvasScreen() {
         style={styles.fill}
         onLayout={({ nativeEvent }) => setContainerHeight(nativeEvent.layout.height)}
       >
-        {/* Month view — vertical paging FlatList, oldest on top, current at bottom */}
+        {/* Month view — 3-slot recycling pager */}
         <Animated.View
           pointerEvents={viewMode === 'month' ? 'auto' : 'none'}
           style={[styles.absoluteFill, monthAnimStyle]}
         >
           {containerHeight > 0 && (
-            <FlatList
-              ref={flatListRef}
-              data={monthList}
-              keyExtractor={(item) => `${item.year}-${item.month}`}
+            <ScrollView
+              ref={monthScrollRef}
               pagingEnabled
               showsVerticalScrollIndicator={false}
-              initialScrollIndex={initialIndex}
-              windowSize={3}
-              initialNumToRender={3}
-              maxToRenderPerBatch={3}
-              getItemLayout={(_, index) => ({
-                length: containerHeight,
-                offset: containerHeight * index,
-                index,
-              })}
-              renderItem={({ index }) => (
-                <MonthPage
-                  index={index}
-                  monthList={monthList}
-                  pageHeight={containerHeight}
-                  tileSize={tileSize}
-                  hideEmpty={hideEmpty}
-                  demoMode={demoMode}
-                  onDayPress={onDayPress}
-                />
-              )}
-            />
+              bounces={false}
+              overScrollMode="never"
+              scrollEventThrottle={16}
+              onMomentumScrollEnd={handleMonthScrollEnd}
+            >
+              {/* Slot 0 — previous month */}
+              <MonthPage
+                key="prev"
+                monthItem={prevMonthItem}
+                pageHeight={containerHeight}
+                tileSize={tileSize}
+                hideEmpty={hideEmpty}
+                demoMode={demoMode}
+                onDayPress={onDayPress}
+              />
+              {/* Slot 1 — current month (always starts here) */}
+              <MonthPage
+                key="center"
+                monthItem={centerMonthItem}
+                pageHeight={containerHeight}
+                tileSize={tileSize}
+                hideEmpty={hideEmpty}
+                demoMode={demoMode}
+                onDayPress={onDayPress}
+              />
+              {/* Slot 2 — next month */}
+              <MonthPage
+                key="next"
+                monthItem={nextMonthItem}
+                pageHeight={containerHeight}
+                tileSize={tileSize}
+                hideEmpty={hideEmpty}
+                demoMode={demoMode}
+                onDayPress={onDayPress}
+              />
+            </ScrollView>
           )}
         </Animated.View>
 
@@ -452,5 +412,11 @@ const styles = StyleSheet.create((theme) => ({
     fontFamily: 'Fraunces',
     color: theme.colors.typography,
     letterSpacing: -0.4,
+  },
+  edgeFade: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    height: EDGE_FADE_HEIGHT,
   },
 }));
