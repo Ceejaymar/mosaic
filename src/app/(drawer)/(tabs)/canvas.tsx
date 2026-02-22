@@ -79,9 +79,23 @@ const MonthPage = memo(function MonthPage({
   const bg = theme.colors.background;
   const data = useCanvasSource(month, year, demoMode);
 
+  const contentOpacity = useSharedValue(0);
+  const contentAnimStyle = useAnimatedStyle(() => ({ opacity: contentOpacity.value }));
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: month/year are intentional retrigger deps
+  useEffect(() => {
+    contentOpacity.value = 0;
+    contentOpacity.value = withTiming(1, { duration: 200 });
+  }, [month, year, contentOpacity]);
+
   return (
     <View style={{ height: pageHeight }}>
-      <View style={{ flex: 1, paddingHorizontal: GRID_H_PAD, justifyContent: 'center', gap: 8 }}>
+      <Animated.View
+        style={[
+          { flex: 1, paddingHorizontal: GRID_H_PAD, justifyContent: 'center', gap: 8 },
+          contentAnimStyle,
+        ]}
+      >
         <Text style={styles.monthPageLabel}>
           {getMonthName(month, 'long', i18n.language)} {year}
         </Text>
@@ -94,7 +108,7 @@ const MonthPage = memo(function MonthPage({
           hideEmpty={hideEmpty}
           onDayPress={onDayPress}
         />
-      </View>
+      </Animated.View>
 
       {/* Gradient cues that more months exist above/below */}
       <LinearGradient

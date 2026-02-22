@@ -12,11 +12,24 @@ export type CanvasDbState = {
 };
 
 /**
+ * Session-level cache keyed by "year-month". Past months are immutable so
+ * cached results stay valid for the app session. When the user adds a new
+ * entry for the current month, call `invalidateMonthCache` so the next fetch
+ * picks up the change.
+ */
+const _cache = new Map<string, CanvasDay[]>();
+
+export function invalidateMonthCache(year: number, month: number): void {
+  _cache.delete(`${year}-${month}`);
+}
+
+/**
  * Fetches real mood entries from the DB for a given month/year and returns
  * them shaped as CanvasDay[]. Skips the fetch when `enabled` is false.
+ * Results are cached so re-visiting a month is instant.
  */
 export function useCanvasDbData(month: number, year: number, enabled: boolean): CanvasDbState {
-  const [days, setDays] = useState<CanvasDay[]>([]);
+  const [days, setDays] = useState<CanvasDay[]>(() => _cache.get(`${year}-${month}`) ?? []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<unknown>(null);
 
@@ -28,6 +41,14 @@ export function useCanvasDbData(month: number, year: number, enabled: boolean): 
       return;
     }
 
+    const key = `${year}-${month}`;
+    const cached = _cache.get(key);
+    if (cached) {
+      setDays(cached);
+      setLoading(false);
+      return;
+    }
+
     let cancelled = false;
     setLoading(true);
     setError(null);
@@ -35,7 +56,9 @@ export function useCanvasDbData(month: number, year: number, enabled: boolean): 
     fetchMoodEntriesForMonth(year, month)
       .then((entries) => {
         if (cancelled) return;
-        setDays(buildCanvasDays(entries, year, month));
+        const result = buildCanvasDays(entries, year, month);
+        _cache.set(key, result);
+        setDays(result);
         setLoading(false);
       })
       .catch((err) => {
