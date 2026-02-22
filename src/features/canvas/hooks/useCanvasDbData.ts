@@ -24,6 +24,21 @@ export function invalidateMonthCache(year: number, month: number): void {
 }
 
 /**
+ * Proactively warms the cache for a month without rendering.
+ * Silent on failure — prefetch is best-effort.
+ */
+export async function prefetchMonth(year: number, month: number): Promise<void> {
+  const key = `${year}-${month}`;
+  if (_cache.has(key)) return;
+  try {
+    const entries = await fetchMoodEntriesForMonth(year, month);
+    if (!_cache.has(key)) _cache.set(key, buildCanvasDays(entries, year, month));
+  } catch {
+    // silent
+  }
+}
+
+/**
  * Fetches real mood entries from the DB for a given month/year and returns
  * them shaped as CanvasDay[]. Skips the fetch when `enabled` is false.
  * Results are cached so re-visiting a month is instant.

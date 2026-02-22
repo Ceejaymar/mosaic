@@ -1,6 +1,6 @@
 import { useHeaderHeight } from '@react-navigation/elements';
 import { LinearGradient } from 'expo-linear-gradient';
-import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Alert,
@@ -18,6 +18,7 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { LAYOUT } from '@/src/constants/layout';
 import { MonthGrid } from '@/src/features/canvas/components/month-grid';
 import { YearView } from '@/src/features/canvas/components/year-view';
+import { prefetchMonth } from '@/src/features/canvas/hooks/useCanvasDbData';
 import { useCanvasSource } from '@/src/features/canvas/hooks/useCanvasSource';
 import { getMonthName } from '@/src/features/canvas/utils/date-labels';
 
@@ -77,44 +78,36 @@ const MonthPage = memo(function MonthPage({
   const { i18n } = useTranslation();
   const { theme } = useUnistyles();
   const bg = theme.colors.background;
-  const data = useCanvasSource(month, year, demoMode);
+  const { data, loading } = useCanvasSource(month, year, demoMode);
 
-  const contentOpacity = useSharedValue(0);
-  const contentAnimStyle = useAnimatedStyle(() => ({ opacity: contentOpacity.value }));
+  // Animate the grid opacity: skeleton (0.25) while fetching, full (1) when ready.
+  // Driven by `loading` state so it fires reliably on a clean React state transition
+  // rather than on mount timing — no flash, no stale frame.
+  const gridOpacity = useSharedValue(loading ? 0.25 : 1);
+  const gridAnimStyle = useAnimatedStyle(() => ({ opacity: gridOpacity.value }));
 
-  // Reset to 0 before new content is painted (fires synchronously before the frame)
-  // biome-ignore lint/correctness/useExhaustiveDependencies: month/year trigger re-run but are not used in the body
-  useLayoutEffect(() => {
-    contentOpacity.value = 0;
-  }, [month, year, contentOpacity]);
-
-  // Start the fade after the opacity-0 frame is committed
-  // biome-ignore lint/correctness/useExhaustiveDependencies: month/year trigger re-run but are not used in the body
   useEffect(() => {
-    contentOpacity.value = withTiming(1, { duration: 220 });
-  }, [month, year, contentOpacity]);
+    gridOpacity.value = withTiming(loading ? 0.25 : 1, { duration: 260 });
+  }, [loading, gridOpacity]);
 
   return (
     <View style={{ height: pageHeight }}>
-      <Animated.View
-        style={[
-          { flex: 1, paddingHorizontal: GRID_H_PAD, justifyContent: 'center', gap: 8 },
-          contentAnimStyle,
-        ]}
-      >
+      <View style={{ flex: 1, paddingHorizontal: GRID_H_PAD, justifyContent: 'center', gap: 8 }}>
         <Text style={styles.monthPageLabel}>
           {getMonthName(month, 'long', i18n.language)} {year}
         </Text>
-        <MonthGrid
-          month={month}
-          year={year}
-          data={data}
-          tileSize={tileSize}
-          tileGap={TILE_GAP}
-          hideEmpty={hideEmpty}
-          onDayPress={onDayPress}
-        />
-      </Animated.View>
+        <Animated.View style={gridAnimStyle}>
+          <MonthGrid
+            month={month}
+            year={year}
+            data={data}
+            tileSize={tileSize}
+            tileGap={TILE_GAP}
+            hideEmpty={hideEmpty}
+            onDayPress={onDayPress}
+          />
+        </Animated.View>
+      </View>
 
       {/* Gradient cues that more months exist above/below */}
       <LinearGradient
@@ -164,15 +157,15 @@ const CenterMonthPage = memo(function CenterMonthPage({
   const { theme } = useUnistyles();
   const bg = theme.colors.background;
 
-  const data = useCanvasSource(month, year, demoMode);
+  const { data } = useCanvasSource(month, year, demoMode);
   // Hooks must always be called. When no adjacent item exists (boundary month),
   // fall back to the center item so deps remain stable and no data is wasted.
-  const prevData = useCanvasSource(
+  const { data: prevData } = useCanvasSource(
     (prevItem ?? monthItem).month,
     (prevItem ?? monthItem).year,
     demoMode,
   );
-  const nextData = useCanvasSource(
+  const { data: nextData } = useCanvasSource(
     (nextItem ?? monthItem).month,
     (nextItem ?? monthItem).year,
     demoMode,
@@ -293,6 +286,17 @@ export default function CanvasScreen() {
   // Peek items: null at list boundaries so CenterMonthPage suppresses that strip
   const centerPrevItem = centerMonthIndex > 0 ? prevMonthItem : null;
   const centerNextItem = centerMonthIndex < monthList.length - 1 ? nextMonthItem : null;
+
+  // Warm the cache for months ±2 around the current center so adjacent slots
+  // are likely already loaded by the time the user scrolls to them.
+  useEffect(() => {
+    if (demoMode) return;
+    for (const offset of [-2, -1, 1, 2]) {
+      const idx = Math.max(0, Math.min(monthList.length - 1, centerMonthIndex + offset));
+      const { month, year } = monthList[idx];
+      prefetchMonth(year, month);
+    }
+  }, [centerMonthIndex, demoMode, monthList]);
 
   useEffect(() => {
     if (containerHeight > 0) {
