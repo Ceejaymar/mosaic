@@ -35,11 +35,15 @@ export const MonthGrid = memo(function MonthGrid({
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const dayMap = new Map(data.map((d) => [Number(d.date.slice(8)), d]));
 
-  // Build cells with stable string keys: blank spacers use their column slot, days use the day number
+  // Always exactly 42 cells (6 rows × 7 cols) so every month has the same height.
+  // Trailing blanks pad months that end before row 6 is full.
   const cells: Cell[] = [
-    ...Array.from({ length: firstDow }, (_, i) => ({ key: `blank-${i}`, day: null })),
+    ...Array.from({ length: firstDow }, (_, i) => ({ key: `blank-start-${i}`, day: null })),
     ...Array.from({ length: daysInMonth }, (_, i) => ({ key: `day-${i + 1}`, day: i + 1 })),
   ];
+  while (cells.length < 42) {
+    cells.push({ key: `blank-end-${cells.length}`, day: null });
+  }
 
   return (
     <View>
