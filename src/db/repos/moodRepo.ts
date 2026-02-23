@@ -1,4 +1,4 @@
-import { desc, eq } from 'drizzle-orm';
+import { between, desc, eq } from 'drizzle-orm';
 import { uuid } from '@/src/lib/uuid';
 import { db } from '../client';
 import { moodEntries } from '../schema';
@@ -45,8 +45,29 @@ export async function fetchMoodEntriesForDate(dateKey: string, limit = 50) {
     .limit(limit);
 }
 
+/**
+ * Fetches all mood entries for a given month.
+ * @param year  Full year (e.g. 2025)
+ * @param month 0-indexed month, matching JavaScript's Date convention (0 = January)
+ */
+export async function fetchMoodEntriesForMonth(year: number, month: number): Promise<MoodEntry[]> {
+  const mm = String(month + 1).padStart(2, '0');
+  const lastDay = new Date(year, month + 1, 0).getDate();
+  const dd = String(lastDay).padStart(2, '0');
+  return db
+    .select()
+    .from(moodEntries)
+    .where(between(moodEntries.dateKey, `${year}-${mm}-01`, `${year}-${mm}-${dd}`))
+    .orderBy(moodEntries.occurredAt);
+}
+
 export async function fetchRecentMoodEntries(limit = 100): Promise<MoodEntry[]> {
   return db.select().from(moodEntries).orderBy(desc(moodEntries.occurredAt)).limit(limit);
+}
+
+export async function fetchMoodEntryById(id: string): Promise<MoodEntry | null> {
+  const rows = await db.select().from(moodEntries).where(eq(moodEntries.id, id)).limit(1);
+  return rows[0] ?? null;
 }
 
 export async function deleteMoodEntry(id: string): Promise<void> {

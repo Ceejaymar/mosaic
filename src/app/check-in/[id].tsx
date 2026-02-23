@@ -4,7 +4,8 @@ import { Alert, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
 
-import { deleteMoodEntry } from '@/src/db/repos/moodRepo';
+import { deleteMoodEntry, fetchMoodEntryById } from '@/src/db/repos/moodRepo';
+import { invalidateMonthCache } from '@/src/features/canvas/hooks/useCanvasDbData';
 
 export default function EditCheckInScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -26,7 +27,12 @@ export default function EditCheckInScreen() {
         onPress: async () => {
           try {
             setDeleteError(null);
+            const entry = await fetchMoodEntryById(id as string);
             await deleteMoodEntry(id as string);
+            if (entry) {
+              const [yearStr, monthStr] = entry.dateKey.split('-');
+              invalidateMonthCache(parseInt(yearStr, 10), parseInt(monthStr, 10) - 1);
+            }
             router.replace('/');
           } catch (err) {
             console.error('Failed to delete mood entry', err);

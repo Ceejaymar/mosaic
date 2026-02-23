@@ -20,6 +20,16 @@
     "projects_count_one": "You have one project",
     "projects_count_other": "You have {{count}} projects"
   },
+  "canvas": {
+    "overview": "Overview",
+    "year": "Year",
+    "month": "Month",
+    "demo": {
+      "label": "Demo",
+      "accessibilityLive": "Switch to live data",
+      "accessibilityDemo": "Switch to demo data"
+    }
+  },
   "settings": {
     "theme": {
       "title": "Appearance",
