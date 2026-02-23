@@ -373,7 +373,12 @@ export default function CanvasScreen() {
     <View
       style={[
         styles.screen,
-        { paddingTop: headerHeight, paddingBottom: LAYOUT.TAB_BAR_HEIGHT + insets.bottom },
+        {
+          // Guard against headerHeight being 0 when the navigator header is hidden —
+          // always respect at least the safe-area top inset.
+          paddingTop: Math.max(headerHeight, insets.top),
+          paddingBottom: LAYOUT.TAB_BAR_HEIGHT + insets.bottom,
+        },
       ]}
     >
       {/* ── Top bar ── */}

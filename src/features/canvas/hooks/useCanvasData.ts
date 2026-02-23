@@ -55,6 +55,6 @@ export function computeMockCanvasDays(month: number, year: number): CanvasDay[] 
   });
 }
 
-export function useCanvasData(month: number, year: number): CanvasDay[] {
-  return useMemo(() => computeMockCanvasDays(month, year), [month, year]);
+export function useCanvasData(month: number, year: number, enabled = true): CanvasDay[] {
+  return useMemo(() => (enabled ? computeMockCanvasDays(month, year) : []), [month, year, enabled]);
 }

@@ -14,7 +14,7 @@ export type CanvasSourceState = {
  * Exposes `loading` and `error` so callers can render skeleton / error states.
  */
 export function useCanvasSource(month: number, year: number, demoMode: boolean): CanvasSourceState {
-  const mockData = useCanvasData(month, year);
+  const mockData = useCanvasData(month, year, demoMode);
   const { days: dbData, loading, error } = useCanvasDbData(month, year, !demoMode);
   return demoMode
     ? { data: mockData, loading: false, error: undefined }
