@@ -277,13 +277,14 @@ export default function CanvasScreen() {
           pointerEvents={viewMode === 'year' ? 'auto' : 'none'}
           style={[styles.absoluteFill, yearAnimStyle]}
         >
-          {isYearMounted && (
+          {isYearMounted && containerHeight > 0 && (
             <View style={[styles.fill, { paddingHorizontal: GRID_H_PAD }]}>
               <YearView
                 onDayPress={(d) => Alert.alert('Day', d)}
                 contentWidth={gridContentWidth}
                 demoMode={demoMode}
                 onYearChange={setOverviewYear}
+                viewportHeight={containerHeight}
               />
             </View>
           )}

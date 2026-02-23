@@ -8,10 +8,11 @@ import { buildCanvasDays } from '../utils/buildCanvasDays';
 
 // ─── Configuration ────────────────────────────────────────────────────────────
 
-// 14 = 2 weeks per row (larger tiles)
-// 21 = 3 weeks per row (medium tiles)
-// 28 = 4 weeks per row (tiny tiles)
+// Number of tile columns. Controls tile width (height is derived from viewportHeight).
 const COLUMNS = 14;
+
+// Max rows needed to display a full year (365 days / 14 cols = 26.07 → ceil = 27).
+const MAX_ROWS = 27;
 
 // ─── YearTile ─────────────────────────────────────────────────────────────────
 
@@ -159,10 +160,12 @@ const SingleYearBlock = memo(function SingleYearBlock({
   year,
   demoMode,
   tileSize,
+  viewportHeight,
 }: {
   year: number;
   demoMode: boolean;
   tileSize: number;
+  viewportHeight: number;
 }) {
   const [flatDays, setFlatDays] = useState<FlatDay[]>([]);
   const [liveLoading, setLiveLoading] = useState(true);
@@ -221,16 +224,18 @@ const SingleYearBlock = memo(function SingleYearBlock({
   }, [demoMode, year]);
 
   return (
-    <View style={styles.grid}>
-      {flatDays.map((day) => (
-        <YearTile
-          key={day.dateKey}
-          colors={day.entries}
-          size={tileSize}
-          isEvenMonth={day.month % 2 === 0}
-          isFuture={day.isFuture}
-        />
-      ))}
+    <View style={[styles.yearBlock, { height: viewportHeight }]}>
+      <View style={styles.grid}>
+        {flatDays.map((day) => (
+          <YearTile
+            key={day.dateKey}
+            colors={day.entries}
+            size={tileSize}
+            isEvenMonth={day.month % 2 === 0}
+            isFuture={day.isFuture}
+          />
+        ))}
+      </View>
       {liveLoading && <Text style={styles.loadingText}>Loading {year}…</Text>}
     </View>
   );
@@ -243,20 +248,32 @@ type Props = {
   contentWidth: number;
   demoMode: boolean;
   onYearChange: (year: number) => void;
+  viewportHeight: number;
 };
 
-export function YearView({ onDayPress: _onDayPress, contentWidth, demoMode, onYearChange }: Props) {
+export function YearView({
+  onDayPress: _onDayPress,
+  contentWidth,
+  demoMode,
+  onYearChange,
+  viewportHeight,
+}: Props) {
   const currentYear = new Date().getFullYear();
+  // Inverted FlatList: data[0] renders at the bottom. Current year first = bottom.
   const [yearsList, setYearsList] = useState<number[]>([currentYear]);
 
-  const tileSize = contentWidth / COLUMNS;
+  // Fit tiles to whichever dimension is tighter — width or height.
+  const tileByWidth = contentWidth / COLUMNS;
+  const tileByHeight = viewportHeight / MAX_ROWS;
+  const tileSize = Math.min(tileByWidth, tileByHeight);
 
+  // With inverted=true, onEndReached fires when the user scrolls UP to the oldest year.
+  // Append the next older year to the END of the array so it renders above the current top.
   const loadPreviousYear = useCallback(() => {
     setYearsList((prev) => [...prev, prev[prev.length - 1] - 1]);
   }, []);
 
-  // Stable ref so FlatList never sees a new callback reference between renders.
-  // onYearChange is setOverviewYear (a stable state setter) so no stale closure risk.
+  // Stable ref — onYearChange is setOverviewYear (stable state setter), no stale closure risk.
   const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
     if (viewableItems.length > 0) {
       onYearChange(viewableItems[0].item as number);
@@ -269,10 +286,17 @@ export function YearView({ onDayPress: _onDayPress, contentWidth, demoMode, onYe
         data={yearsList}
         keyExtractor={(item) => item.toString()}
         renderItem={({ item }) => (
-          <SingleYearBlock year={item} demoMode={demoMode} tileSize={tileSize} />
+          <SingleYearBlock
+            year={item}
+            demoMode={demoMode}
+            tileSize={tileSize}
+            viewportHeight={viewportHeight}
+          />
         )}
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
+        pagingEnabled
+        inverted
         onEndReached={loadPreviousYear}
         onEndReachedThreshold={0.5}
         onViewableItemsChanged={onViewableItemsChanged}
@@ -287,9 +311,12 @@ const styles = StyleSheet.create((theme) => ({
     flex: 1,
   },
   container: {
-    paddingBottom: 60,
-    paddingTop: 16,
-    gap: 40,
+    paddingBottom: 0,
+    paddingTop: 0,
+  },
+  yearBlock: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   grid: {
     flexDirection: 'row',
@@ -299,8 +326,7 @@ const styles = StyleSheet.create((theme) => ({
   loadingText: {
     fontSize: 13,
     color: theme.colors.textMuted,
-    width: '100%',
-    textAlign: 'center',
-    paddingVertical: 24,
+    position: 'absolute',
+    bottom: 20,
   },
 }));
