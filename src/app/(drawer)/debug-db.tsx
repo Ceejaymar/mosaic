@@ -8,6 +8,7 @@ import {
   fetchMoodEntriesForDate,
   insertTestMoodEntry,
 } from '@/src/db/repos/moodRepo';
+import { invalidateMonthCache } from '@/src/features/canvas/hooks/useCanvasDbData';
 
 function todayKey() {
   return new Date().toISOString().slice(0, 10);
@@ -80,6 +81,7 @@ export default function DebugDbScreen() {
 
   const onDelete = useCallback(
     (id: string) => {
+      const entry = rows.find((r) => r.id === id);
       Alert.alert('Delete entry?', 'This cannot be undone.', [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -89,6 +91,10 @@ export default function DebugDbScreen() {
             try {
               setStatus('loading');
               await deleteMoodEntry(id);
+              if (entry) {
+                const [yearStr, monthStr] = entry.dateKey.split('-');
+                invalidateMonthCache(parseInt(yearStr, 10), parseInt(monthStr, 10) - 1);
+              }
               setRows((prev) => prev.filter((r) => r.id !== id));
               setStatus('success');
             } catch (e) {
@@ -101,7 +107,7 @@ export default function DebugDbScreen() {
         },
       ]);
     },
-    [fetchRows],
+    [fetchRows, rows],
   );
 
   const onClearAll = useCallback(() => {

@@ -166,7 +166,9 @@ export default function CanvasScreen() {
         setIsYearMounted(true);
         return 'year';
       }
-      yearOpacity.value = withTiming(0, { duration: 180 });
+      yearOpacity.value = withTiming(0, { duration: 180 }, (finished) => {
+        if (finished) setIsYearMounted(false);
+      });
       monthOpacity.value = withTiming(1, { duration: 180 });
       return 'month';
     });
@@ -192,8 +194,14 @@ export default function CanvasScreen() {
               demoMode && styles.chipActive,
               pressed && { opacity: 0.6 },
             ]}
+            accessibilityRole="button"
+            accessibilityLabel={
+              demoMode ? t('canvas.demo.accessibilityLive') : t('canvas.demo.accessibilityDemo')
+            }
           >
-            <Text style={[styles.chipLabel, demoMode && styles.chipLabelActive]}>Demo</Text>
+            <Text style={[styles.chipLabel, demoMode && styles.chipLabelActive]}>
+              {t('canvas.demo.label')}
+            </Text>
           </Pressable>
           <Pressable
             onPress={() => setHideEmpty((v) => !v)}

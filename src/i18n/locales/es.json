@@ -20,7 +20,12 @@
   "canvas": {
     "overview": "Resumen",
     "year": "Año",
-    "month": "Mes"
+    "month": "Mes",
+    "demo": {
+      "label": "Demo",
+      "accessibilityLive": "Cambiar a datos reales",
+      "accessibilityDemo": "Cambiar a datos de demostración"
+    }
   },
   "settings": {
     "theme": {

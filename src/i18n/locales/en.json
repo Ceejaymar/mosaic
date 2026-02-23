@@ -23,7 +23,12 @@
   "canvas": {
     "overview": "Overview",
     "year": "Year",
-    "month": "Month"
+    "month": "Month",
+    "demo": {
+      "label": "Demo",
+      "accessibilityLive": "Switch to live data",
+      "accessibilityDemo": "Switch to demo data"
+    }
   },
   "settings": {
     "theme": {
