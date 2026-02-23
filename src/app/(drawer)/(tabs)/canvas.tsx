@@ -157,19 +157,27 @@ const CenterMonthPage = memo(function CenterMonthPage({
   const { theme } = useUnistyles();
   const bg = theme.colors.background;
 
-  const { data } = useCanvasSource(month, year, demoMode);
+  const { data, loading } = useCanvasSource(month, year, demoMode);
   // Hooks must always be called. When no adjacent item exists (boundary month),
   // fall back to the center item so deps remain stable and no data is wasted.
-  const { data: prevData } = useCanvasSource(
+  const { data: prevData, loading: prevLoading } = useCanvasSource(
     (prevItem ?? monthItem).month,
     (prevItem ?? monthItem).year,
     demoMode,
   );
-  const { data: nextData } = useCanvasSource(
+  const { data: nextData, loading: nextLoading } = useCanvasSource(
     (nextItem ?? monthItem).month,
     (nextItem ?? monthItem).year,
     demoMode,
   );
+
+  const anyLoading = loading || prevLoading || nextLoading;
+  const gridOpacity = useSharedValue(anyLoading ? 0.25 : 1);
+  const gridAnimStyle = useAnimatedStyle(() => ({ opacity: gridOpacity.value }));
+
+  useEffect(() => {
+    gridOpacity.value = withTiming(anyLoading ? 0.25 : 1, { duration: 260 });
+  }, [anyLoading, gridOpacity]);
 
   return (
     <View style={{ height: pageHeight }}>
@@ -211,15 +219,17 @@ const CenterMonthPage = memo(function CenterMonthPage({
         <Text style={styles.monthPageLabel}>
           {getMonthName(month, 'long', i18n.language)} {year}
         </Text>
-        <MonthGrid
-          month={month}
-          year={year}
-          data={data}
-          tileSize={tileSize}
-          tileGap={TILE_GAP}
-          hideEmpty={hideEmpty}
-          onDayPress={onDayPress}
-        />
+        <Animated.View style={gridAnimStyle}>
+          <MonthGrid
+            month={month}
+            year={year}
+            data={data}
+            tileSize={tileSize}
+            tileGap={TILE_GAP}
+            hideEmpty={hideEmpty}
+            onDayPress={onDayPress}
+          />
+        </Animated.View>
       </View>
 
       {/* ── Bottom peek: top rows of next month ── */}
@@ -264,18 +274,31 @@ export default function CanvasScreen() {
   const [containerHeight, setContainerHeight] = useState(0);
   const [isYearMounted, setIsYearMounted] = useState(false);
 
-  // ── Month list: recomputed on foreground resume to handle month boundaries ──
+  // ── Month list + pager index ──
   const [monthList, setMonthList] = useState(() => buildMonthList(MONTHS_BACK));
+  const [centerMonthIndex, setCenterMonthIndex] = useState(monthList.length - 1);
+
+  // Refs let the AppState callback read the latest values without re-registering the listener
+  const monthListRef = useRef(monthList);
+  monthListRef.current = monthList;
+  const centerMonthIndexRef = useRef(centerMonthIndex);
+  centerMonthIndexRef.current = centerMonthIndex;
 
   useEffect(() => {
     const sub = AppState.addEventListener('change', (nextState) => {
-      if (nextState === 'active') setMonthList(buildMonthList(MONTHS_BACK));
+      if (nextState !== 'active') return;
+      const newList = buildMonthList(MONTHS_BACK);
+      const currentItem = monthListRef.current[centerMonthIndexRef.current];
+      const newIdx = newList.findIndex(
+        (item) => item.month === currentItem.month && item.year === currentItem.year,
+      );
+      setMonthList(newList);
+      setCenterMonthIndex(newIdx >= 0 ? newIdx : newList.length - 1);
     });
     return () => sub.remove();
   }, []);
 
   // ── 3-slot recycling pager ──
-  const [centerMonthIndex, setCenterMonthIndex] = useState(monthList.length - 1);
   const monthScrollRef = useRef<ScrollView>(null);
 
   // Slot data — clamp to list bounds so boundary slots always have valid data

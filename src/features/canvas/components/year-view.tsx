@@ -272,7 +272,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   errorText: {
     fontSize: 13,
-    color: theme.colors.textMuted,
+    color: theme.colors.destructive,
     textAlign: 'center',
     paddingVertical: 8,
   },

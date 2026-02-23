@@ -65,6 +65,11 @@ export async function fetchRecentMoodEntries(limit = 100): Promise<MoodEntry[]> 
   return db.select().from(moodEntries).orderBy(desc(moodEntries.occurredAt)).limit(limit);
 }
 
+export async function fetchMoodEntryById(id: string): Promise<MoodEntry | null> {
+  const rows = await db.select().from(moodEntries).where(eq(moodEntries.id, id)).limit(1);
+  return rows[0] ?? null;
+}
+
 export async function deleteMoodEntry(id: string): Promise<void> {
   await db.delete(moodEntries).where(eq(moodEntries.id, id));
 }

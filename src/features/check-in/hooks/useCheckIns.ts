@@ -7,6 +7,7 @@ import {
   type MoodEntry,
   type NewMoodEntry,
 } from '@/src/db/repos/moodRepo';
+import { invalidateMonthCache } from '@/src/features/canvas/hooks/useCanvasDbData';
 import { uuid } from '@/src/lib/uuid';
 import { triggerSpringLayoutAnimation } from '@/src/utils/animations';
 
@@ -82,6 +83,8 @@ export function useTodayCheckIns() {
 
     try {
       await insertMoodEntry(newEntry);
+      const [yearStr, monthStr] = newEntry.dateKey.split('-');
+      invalidateMonthCache(parseInt(yearStr, 10), parseInt(monthStr, 10) - 1);
     } catch (error) {
       console.error('Failed to persist mood entry', error);
       setTodayEntries((prev) => prev.filter((e) => e.id !== newEntry.id));
