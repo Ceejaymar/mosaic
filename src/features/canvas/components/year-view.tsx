@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
-import { FlatList, Text, View, type ViewToken } from 'react-native';
+import { FlatList, Pressable, Text, View, type ViewToken } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { fetchMoodEntriesForMonth } from '@/src/db/repos/moodRepo';
@@ -8,142 +8,121 @@ import { buildCanvasDays } from '../utils/buildCanvasDays';
 
 // ─── Configuration ────────────────────────────────────────────────────────────
 
-// Number of tile columns. Controls tile width (height is derived from viewportHeight).
 const COLUMNS = 14;
-
-// Max rows needed to display a full year (365 days / 14 cols = 26.07 → ceil = 27).
 const MAX_ROWS = 27;
+const VIEWABILITY_CONFIG = { itemVisiblePercentThreshold: 50 };
+
+// Pre-calculate exact percentage strings so Yoga handles the sub-pixel math perfectly.
+const TILE_W = `${100 / COLUMNS}%` as const;
+const TILE_H = `${100 / MAX_ROWS}%` as const;
+
+// Static absolute positions using 50% — no per-tile JS math required.
+const PANELS = {
+  left: { position: 'absolute' as const, top: 0, bottom: 0, left: 0, width: '50%' as const },
+  right: { position: 'absolute' as const, top: 0, bottom: 0, left: '50%' as const, right: 0 },
+  tl: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    width: '50%' as const,
+    height: '50%' as const,
+  },
+  tr: {
+    position: 'absolute' as const,
+    top: 0,
+    left: '50%' as const,
+    right: 0,
+    height: '50%' as const,
+  },
+  bl: {
+    position: 'absolute' as const,
+    top: '50%' as const,
+    left: 0,
+    width: '50%' as const,
+    bottom: 0,
+  },
+  br: {
+    position: 'absolute' as const,
+    top: '50%' as const,
+    left: '50%' as const,
+    right: 0,
+    bottom: 0,
+  },
+  bottom: { position: 'absolute' as const, top: '50%' as const, left: 0, right: 0, bottom: 0 },
+};
 
 // ─── YearTile ─────────────────────────────────────────────────────────────────
 
 type YearTileProps = {
   colors: string[];
-  size: number;
   isEvenMonth: boolean;
   isFuture: boolean;
+  onPress: () => void;
 };
 
-const YearTile = memo(function YearTile({ colors, size, isEvenMonth, isFuture }: YearTileProps) {
+const YearTile = memo(function YearTile({ colors, isEvenMonth, isFuture, onPress }: YearTileProps) {
   const { theme } = useUnistyles();
-  const half = size / 2;
   const emptyBg = isEvenMonth ? theme.colors.surface : 'transparent';
   const opacity = isFuture ? 0.25 : 1;
 
-  if (colors.length === 0) {
-    return <View style={{ width: size, height: size, backgroundColor: emptyBg, opacity }} />;
-  }
+  const flatStyle = {
+    width: TILE_W,
+    height: TILE_H,
+    opacity,
+    backgroundColor: colors.length === 0 ? emptyBg : colors[0],
+  };
+  const containerStyle = { width: TILE_W, height: TILE_H, overflow: 'hidden' as const, opacity };
 
-  if (colors.length === 1) {
-    return <View style={{ width: size, height: size, backgroundColor: colors[0], opacity }} />;
+  if (colors.length <= 1) {
+    return (
+      <Pressable
+        onPress={onPress}
+        style={({ pressed }) => (pressed ? [flatStyle, { opacity: opacity * 0.6 }] : flatStyle)}
+      />
+    );
   }
 
   if (colors.length === 2) {
     return (
-      <View style={{ width: size, height: size, overflow: 'hidden', opacity }}>
-        <View
-          style={{
-            position: 'absolute',
-            top: 0,
-            bottom: 0,
-            left: 0,
-            width: half,
-            backgroundColor: colors[0],
-          }}
-        />
-        <View
-          style={{
-            position: 'absolute',
-            top: 0,
-            bottom: 0,
-            left: half,
-            right: 0,
-            backgroundColor: colors[1],
-          }}
-        />
-      </View>
+      <Pressable
+        onPress={onPress}
+        style={({ pressed }) =>
+          pressed ? [containerStyle, { opacity: opacity * 0.6 }] : containerStyle
+        }
+      >
+        <View style={[PANELS.left, { backgroundColor: colors[0] }]} />
+        <View style={[PANELS.right, { backgroundColor: colors[1] }]} />
+      </Pressable>
     );
   }
 
   if (colors.length === 3) {
     return (
-      <View style={{ width: size, height: size, overflow: 'hidden', opacity }}>
-        <View
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: half,
-            height: half,
-            backgroundColor: colors[0],
-          }}
-        />
-        <View
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: half,
-            right: 0,
-            height: half,
-            backgroundColor: colors[1],
-          }}
-        />
-        <View
-          style={{
-            position: 'absolute',
-            top: half,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: colors[2],
-          }}
-        />
-      </View>
+      <Pressable
+        onPress={onPress}
+        style={({ pressed }) =>
+          pressed ? [containerStyle, { opacity: opacity * 0.6 }] : containerStyle
+        }
+      >
+        <View style={[PANELS.tl, { backgroundColor: colors[0] }]} />
+        <View style={[PANELS.tr, { backgroundColor: colors[1] }]} />
+        <View style={[PANELS.bottom, { backgroundColor: colors[2] }]} />
+      </Pressable>
     );
   }
 
   return (
-    <View style={{ width: size, height: size, overflow: 'hidden', opacity }}>
-      <View
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: half,
-          height: half,
-          backgroundColor: colors[0],
-        }}
-      />
-      <View
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: half,
-          right: 0,
-          height: half,
-          backgroundColor: colors[1],
-        }}
-      />
-      <View
-        style={{
-          position: 'absolute',
-          top: half,
-          left: 0,
-          width: half,
-          bottom: 0,
-          backgroundColor: colors[2],
-        }}
-      />
-      <View
-        style={{
-          position: 'absolute',
-          top: half,
-          left: half,
-          right: 0,
-          bottom: 0,
-          backgroundColor: colors[3],
-        }}
-      />
-    </View>
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) =>
+        pressed ? [containerStyle, { opacity: opacity * 0.6 }] : containerStyle
+      }
+    >
+      <View style={[PANELS.tl, { backgroundColor: colors[0] }]} />
+      <View style={[PANELS.tr, { backgroundColor: colors[1] }]} />
+      <View style={[PANELS.bl, { backgroundColor: colors[2] }]} />
+      <View style={[PANELS.br, { backgroundColor: colors[3] }]} />
+    </Pressable>
   );
 });
 
@@ -159,14 +138,24 @@ type FlatDay = {
 const SingleYearBlock = memo(function SingleYearBlock({
   year,
   demoMode,
-  tileSize,
   viewportHeight,
+  contentWidth,
+  isViewable,
+  onDayPress,
 }: {
   year: number;
   demoMode: boolean;
-  tileSize: number;
   viewportHeight: number;
+  contentWidth: number;
+  isViewable: boolean;
+  onDayPress: (date: string) => void;
 }) {
+  // Gate tile rendering: skip until this block is scrolled into view.
+  // Once rendered, keep rendered to avoid remounting on scroll.
+  const hasBeenVisible = useRef(false);
+  if (isViewable) hasBeenVisible.current = true;
+  const shouldRender = isViewable || hasBeenVisible.current;
+
   const [flatDays, setFlatDays] = useState<FlatDay[]>([]);
   const [liveLoading, setLiveLoading] = useState(true);
 
@@ -214,8 +203,11 @@ const SingleYearBlock = memo(function SingleYearBlock({
         setFlatDays(result);
         setLiveLoading(false);
       })
-      .catch(() => {
-        if (!cancelled) setLiveLoading(false);
+      .catch((err) => {
+        if (!cancelled) {
+          console.error(`Failed to load mood entries for year ${year}`, err);
+          setLiveLoading(false);
+        }
       });
 
     return () => {
@@ -225,17 +217,19 @@ const SingleYearBlock = memo(function SingleYearBlock({
 
   return (
     <View style={[styles.yearBlock, { height: viewportHeight }]}>
-      <View style={styles.grid}>
-        {flatDays.map((day) => (
-          <YearTile
-            key={day.dateKey}
-            colors={day.entries}
-            size={tileSize}
-            isEvenMonth={day.month % 2 === 0}
-            isFuture={day.isFuture}
-          />
-        ))}
-      </View>
+      {shouldRender && (
+        <View style={[styles.grid, { width: contentWidth, height: viewportHeight }]}>
+          {flatDays.map((day) => (
+            <YearTile
+              key={day.dateKey}
+              colors={day.entries}
+              isEvenMonth={day.month % 2 === 0}
+              isFuture={day.isFuture}
+              onPress={() => onDayPress(day.dateKey)}
+            />
+          ))}
+        </View>
+      )}
       {liveLoading && <Text style={styles.loadingText}>Loading {year}…</Text>}
     </View>
   );
@@ -252,7 +246,7 @@ type Props = {
 };
 
 export function YearView({
-  onDayPress: _onDayPress,
+  onDayPress,
   contentWidth,
   demoMode,
   onYearChange,
@@ -261,11 +255,7 @@ export function YearView({
   const currentYear = new Date().getFullYear();
   // Inverted FlatList: data[0] renders at the bottom. Current year first = bottom.
   const [yearsList, setYearsList] = useState<number[]>([currentYear]);
-
-  // Fit tiles to whichever dimension is tighter — width or height.
-  const tileByWidth = contentWidth / COLUMNS;
-  const tileByHeight = viewportHeight / MAX_ROWS;
-  const tileSize = Math.min(tileByWidth, tileByHeight);
+  const [visibleYear, setVisibleYear] = useState(currentYear);
 
   // With inverted=true, onEndReached fires when the user scrolls UP to the oldest year.
   // Append the next older year to the END of the array so it renders above the current top.
@@ -273,26 +263,44 @@ export function YearView({
     setYearsList((prev) => [...prev, prev[prev.length - 1] - 1]);
   }, []);
 
-  // Stable ref — onYearChange is setOverviewYear (stable state setter), no stale closure risk.
-  const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
-    if (viewableItems.length > 0) {
-      onYearChange(viewableItems[0].item as number);
-    }
-  }).current;
+  // Keep a fresh ref so the stable onViewableItemsChanged callback never reads a stale onYearChange.
+  const latestOnYearChangeRef = useRef(onYearChange);
+  useEffect(() => {
+    latestOnYearChangeRef.current = onYearChange;
+  }, [onYearChange]);
+
+  const onViewableItemsChanged = useCallback(
+    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+      if (viewableItems.length > 0) {
+        const year = viewableItems[0].item as number;
+        latestOnYearChangeRef.current(year);
+        setVisibleYear(year);
+      }
+    },
+    [],
+  );
+
+  const renderItem = useCallback(
+    ({ item }: { item: number }) => (
+      <SingleYearBlock
+        year={item}
+        demoMode={demoMode}
+        viewportHeight={viewportHeight}
+        contentWidth={contentWidth}
+        isViewable={item === visibleYear}
+        onDayPress={onDayPress}
+      />
+    ),
+    [demoMode, viewportHeight, contentWidth, visibleYear, onDayPress],
+  );
 
   return (
     <View style={styles.wrapper}>
       <FlatList
         data={yearsList}
         keyExtractor={(item) => item.toString()}
-        renderItem={({ item }) => (
-          <SingleYearBlock
-            year={item}
-            demoMode={demoMode}
-            tileSize={tileSize}
-            viewportHeight={viewportHeight}
-          />
-        )}
+        extraData={visibleYear}
+        renderItem={renderItem}
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
         pagingEnabled
@@ -300,7 +308,7 @@ export function YearView({
         onEndReached={loadPreviousYear}
         onEndReachedThreshold={0.5}
         onViewableItemsChanged={onViewableItemsChanged}
-        viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
+        viewabilityConfig={VIEWABILITY_CONFIG}
       />
     </View>
   );
@@ -321,6 +329,8 @@ const styles = StyleSheet.create((theme) => ({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    justifyContent: 'center',
+    alignContent: 'flex-start',
     gap: 0,
   },
   loadingText: {

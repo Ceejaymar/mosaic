@@ -205,16 +205,10 @@ export default function CanvasScreen() {
             </Text>
           </Pressable>
           <Pressable
-            onPress={() => setHideEmpty((v) => !v)}
-            style={({ pressed }) => [styles.iconBtn, pressed && { opacity: 0.5 }]}
-          >
-            <View style={[styles.filterDot, hideEmpty && styles.filterDotActive]} />
-          </Pressable>
-          <Pressable
             onPress={toggleViewMode}
-            style={({ pressed }) => [styles.iconBtn, pressed && { opacity: 0.5 }]}
+            style={({ pressed }) => [styles.toggleBtn, pressed && { opacity: 0.5 }]}
           >
-            <Text style={[styles.toggleLabel, viewMode === 'year' && styles.toggleLabelActive]}>
+            <Text style={[styles.toggleLabel]}>
               {viewMode === 'month' ? t('canvas.year') : t('canvas.month')}
             </Text>
           </Pressable>
@@ -278,10 +272,10 @@ export default function CanvasScreen() {
           style={[styles.absoluteFill, yearAnimStyle]}
         >
           {isYearMounted && containerHeight > 0 && (
-            <View style={[styles.fill, { paddingHorizontal: GRID_H_PAD }]}>
+            <View style={styles.fill}>
               <YearView
                 onDayPress={(d) => Alert.alert('Day', d)}
-                contentWidth={gridContentWidth}
+                contentWidth={screenWidth}
                 demoMode={demoMode}
                 onYearChange={setOverviewYear}
                 viewportHeight={containerHeight}
@@ -329,15 +323,13 @@ const styles = StyleSheet.create((theme) => ({
   },
   chipLabelActive: { color: theme.colors.onAccent },
   iconBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
-  filterDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: theme.colors.divider },
-  filterDotActive: { backgroundColor: theme.colors.mosaicGold },
+  toggleBtn: { height: 36, paddingHorizontal: 8, alignItems: 'center', justifyContent: 'center' },
   toggleLabel: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
     color: theme.colors.textMuted,
     fontFamily: 'SpaceMono',
   },
-  toggleLabelActive: { color: theme.colors.mosaicGold },
   fill: { flex: 1 },
   absoluteFill: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   monthPageLabel: {
