@@ -120,6 +120,7 @@ export default function CanvasScreen() {
   const [demoMode, setDemoMode] = useState(false);
   const [containerHeight, setContainerHeight] = useState(0);
   const [isYearMounted, setIsYearMounted] = useState(false);
+  const [overviewYear, setOverviewYear] = useState(new Date().getFullYear());
 
   // Use useMemo here to avoid an unused state setter warning
   const monthList = useMemo(() => buildMonthList(MONTHS_BACK), []);
@@ -159,16 +160,16 @@ export default function CanvasScreen() {
   const yearAnimStyle = useAnimatedStyle(() => ({ opacity: yearOpacity.value }));
 
   const toggleViewMode = useCallback(() => {
+    // Lazy-mount on first open; keep mounted while on this screen so re-opening
+    // is instant. The component unmounts automatically when navigating away.
+    setIsYearMounted(true);
     setViewMode((prev) => {
       if (prev === 'month') {
         monthOpacity.value = withTiming(0, { duration: 180 });
         yearOpacity.value = withTiming(1, { duration: 180 });
-        setIsYearMounted(true);
         return 'year';
       }
-      yearOpacity.value = withTiming(0, { duration: 180 }, (finished) => {
-        if (finished) setIsYearMounted(false);
-      });
+      yearOpacity.value = withTiming(0, { duration: 180 });
       monthOpacity.value = withTiming(1, { duration: 180 });
       return 'month';
     });
@@ -185,7 +186,7 @@ export default function CanvasScreen() {
       ]}
     >
       <View style={[styles.topBar, { paddingHorizontal: TOPBAR_H_PAD }]}>
-        <Text style={styles.headerLabel}>{viewMode === 'year' ? t('canvas.overview') : ''}</Text>
+        <Text style={styles.headerLabel}>{viewMode === 'year' ? overviewYear.toString() : ''}</Text>
         <View style={styles.controls}>
           <Pressable
             onPress={() => setDemoMode((v) => !v)}
@@ -282,6 +283,7 @@ export default function CanvasScreen() {
                 onDayPress={(d) => Alert.alert('Day', d)}
                 contentWidth={gridContentWidth}
                 demoMode={demoMode}
+                onYearChange={setOverviewYear}
               />
             </View>
           )}
