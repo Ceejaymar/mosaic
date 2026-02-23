@@ -1,10 +1,14 @@
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { createContext, memo, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { FlatList, Pressable, Text, View, type ViewToken } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { fetchMoodEntriesForMonth } from '@/src/db/repos/moodRepo';
 import { computeMockCanvasDays } from '../hooks/useCanvasData';
 import { buildCanvasDays } from '../utils/buildCanvasDays';
+
+// ─── Context ──────────────────────────────────────────────────────────────────
+
+const VisibleYearContext = createContext(new Date().getFullYear());
 
 // ─── Configuration ────────────────────────────────────────────────────────────
 
@@ -54,13 +58,20 @@ const PANELS = {
 // ─── YearTile ─────────────────────────────────────────────────────────────────
 
 type YearTileProps = {
+  dateKey: string;
   colors: string[];
   isEvenMonth: boolean;
   isFuture: boolean;
-  onPress: () => void;
+  onPress: (dateKey: string) => void;
 };
 
-const YearTile = memo(function YearTile({ colors, isEvenMonth, isFuture, onPress }: YearTileProps) {
+const YearTile = memo(function YearTile({
+  dateKey,
+  colors,
+  isEvenMonth,
+  isFuture,
+  onPress,
+}: YearTileProps) {
   const { theme } = useUnistyles();
   const emptyBg = isEvenMonth ? theme.colors.surface : 'transparent';
   const opacity = isFuture ? 0.25 : 1;
@@ -76,7 +87,7 @@ const YearTile = memo(function YearTile({ colors, isEvenMonth, isFuture, onPress
   if (colors.length <= 1) {
     return (
       <Pressable
-        onPress={onPress}
+        onPress={() => onPress(dateKey)}
         style={({ pressed }) => (pressed ? [flatStyle, { opacity: opacity * 0.6 }] : flatStyle)}
       />
     );
@@ -85,7 +96,7 @@ const YearTile = memo(function YearTile({ colors, isEvenMonth, isFuture, onPress
   if (colors.length === 2) {
     return (
       <Pressable
-        onPress={onPress}
+        onPress={() => onPress(dateKey)}
         style={({ pressed }) =>
           pressed ? [containerStyle, { opacity: opacity * 0.6 }] : containerStyle
         }
@@ -99,7 +110,7 @@ const YearTile = memo(function YearTile({ colors, isEvenMonth, isFuture, onPress
   if (colors.length === 3) {
     return (
       <Pressable
-        onPress={onPress}
+        onPress={() => onPress(dateKey)}
         style={({ pressed }) =>
           pressed ? [containerStyle, { opacity: opacity * 0.6 }] : containerStyle
         }
@@ -140,16 +151,16 @@ const SingleYearBlock = memo(function SingleYearBlock({
   demoMode,
   viewportHeight,
   contentWidth,
-  isViewable,
   onDayPress,
 }: {
   year: number;
   demoMode: boolean;
   viewportHeight: number;
   contentWidth: number;
-  isViewable: boolean;
   onDayPress: (date: string) => void;
 }) {
+  const visibleYear = useContext(VisibleYearContext);
+  const isViewable = year === visibleYear;
   // Gate tile rendering: skip until this block is scrolled into view.
   // Once rendered, keep rendered to avoid remounting on scroll.
   const hasBeenVisible = useRef(false);
@@ -157,9 +168,10 @@ const SingleYearBlock = memo(function SingleYearBlock({
   const shouldRender = isViewable || hasBeenVisible.current;
 
   const [flatDays, setFlatDays] = useState<FlatDay[]>([]);
-  const [liveLoading, setLiveLoading] = useState(true);
+  const [liveLoading, setLiveLoading] = useState(false);
 
   useEffect(() => {
+    if (!shouldRender) return;
     let cancelled = false;
     setLiveLoading(true);
 
@@ -213,7 +225,7 @@ const SingleYearBlock = memo(function SingleYearBlock({
     return () => {
       cancelled = true;
     };
-  }, [demoMode, year]);
+  }, [demoMode, year, shouldRender]);
 
   return (
     <View style={[styles.yearBlock, { height: viewportHeight }]}>
@@ -222,10 +234,11 @@ const SingleYearBlock = memo(function SingleYearBlock({
           {flatDays.map((day) => (
             <YearTile
               key={day.dateKey}
+              dateKey={day.dateKey}
               colors={day.entries}
               isEvenMonth={day.month % 2 === 0}
               isFuture={day.isFuture}
-              onPress={() => onDayPress(day.dateKey)}
+              onPress={onDayPress}
             />
           ))}
         </View>
@@ -287,29 +300,29 @@ export function YearView({
         demoMode={demoMode}
         viewportHeight={viewportHeight}
         contentWidth={contentWidth}
-        isViewable={item === visibleYear}
         onDayPress={onDayPress}
       />
     ),
-    [demoMode, viewportHeight, contentWidth, visibleYear, onDayPress],
+    [demoMode, viewportHeight, contentWidth, onDayPress],
   );
 
   return (
     <View style={styles.wrapper}>
-      <FlatList
-        data={yearsList}
-        keyExtractor={(item) => item.toString()}
-        extraData={visibleYear}
-        renderItem={renderItem}
-        contentContainerStyle={styles.container}
-        showsVerticalScrollIndicator={false}
-        pagingEnabled
-        inverted
-        onEndReached={loadPreviousYear}
-        onEndReachedThreshold={0.5}
-        onViewableItemsChanged={onViewableItemsChanged}
-        viewabilityConfig={VIEWABILITY_CONFIG}
-      />
+      <VisibleYearContext.Provider value={visibleYear}>
+        <FlatList
+          data={yearsList}
+          keyExtractor={(item) => item.toString()}
+          renderItem={renderItem}
+          contentContainerStyle={styles.container}
+          showsVerticalScrollIndicator={false}
+          pagingEnabled
+          inverted
+          onEndReached={loadPreviousYear}
+          onEndReachedThreshold={0.5}
+          onViewableItemsChanged={onViewableItemsChanged}
+          viewabilityConfig={VIEWABILITY_CONFIG}
+        />
+      </VisibleYearContext.Provider>
     </View>
   );
 }

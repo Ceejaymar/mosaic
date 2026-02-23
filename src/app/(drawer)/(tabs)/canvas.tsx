@@ -208,7 +208,7 @@ export default function CanvasScreen() {
             onPress={toggleViewMode}
             style={({ pressed }) => [styles.toggleBtn, pressed && { opacity: 0.5 }]}
           >
-            <Text style={[styles.toggleLabel]}>
+            <Text style={styles.toggleLabel}>
               {viewMode === 'month' ? t('canvas.year') : t('canvas.month')}
             </Text>
           </Pressable>
