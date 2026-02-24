@@ -159,6 +159,10 @@ export default function CanvasScreen() {
   const monthAnimStyle = useAnimatedStyle(() => ({ opacity: monthOpacity.value }));
   const yearAnimStyle = useAnimatedStyle(() => ({ opacity: yearOpacity.value }));
 
+  const handleDayPress = useCallback((d: string) => {
+    Alert.alert('Day', d);
+  }, []);
+
   const toggleViewMode = useCallback(() => {
     // Lazy-mount on first open; keep mounted while on this screen so re-opening
     // is instant. The component unmounts automatically when navigating away.
@@ -236,7 +240,7 @@ export default function CanvasScreen() {
                   tileSize={tileSize}
                   hideEmpty={hideEmpty}
                   demoMode={demoMode}
-                  onDayPress={(d) => Alert.alert('Day', d)}
+                  onDayPress={handleDayPress}
                 />
               )}
               getItemLayout={getItemLayout}
@@ -274,7 +278,7 @@ export default function CanvasScreen() {
           {isYearMounted && containerHeight > 0 && (
             <View style={styles.fill}>
               <YearView
-                onDayPress={(d) => Alert.alert('Day', d)}
+                onDayPress={handleDayPress}
                 contentWidth={screenWidth}
                 demoMode={demoMode}
                 onYearChange={setOverviewYear}

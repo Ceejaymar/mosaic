@@ -124,7 +124,7 @@ const YearTile = memo(function YearTile({
 
   return (
     <Pressable
-      onPress={onPress}
+      onPress={() => onPress(dateKey)}
       style={({ pressed }) =>
         pressed ? [containerStyle, { opacity: opacity * 0.6 }] : containerStyle
       }
@@ -266,6 +266,7 @@ export function YearView({
   viewportHeight,
 }: Props) {
   const currentYear = new Date().getFullYear();
+  const minYear = currentYear - 5;
   // Inverted FlatList: data[0] renders at the bottom. Current year first = bottom.
   const [yearsList, setYearsList] = useState<number[]>([currentYear]);
   const [visibleYear, setVisibleYear] = useState(currentYear);
@@ -273,8 +274,11 @@ export function YearView({
   // With inverted=true, onEndReached fires when the user scrolls UP to the oldest year.
   // Append the next older year to the END of the array so it renders above the current top.
   const loadPreviousYear = useCallback(() => {
-    setYearsList((prev) => [...prev, prev[prev.length - 1] - 1]);
-  }, []);
+    setYearsList((prev) => {
+      const oldest = prev[prev.length - 1];
+      return oldest > minYear ? [...prev, oldest - 1] : prev;
+    });
+  }, [minYear]);
 
   // Keep a fresh ref so the stable onViewableItemsChanged callback never reads a stale onYearChange.
   const latestOnYearChangeRef = useRef(onYearChange);

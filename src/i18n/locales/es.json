@@ -19,8 +19,8 @@
   },
   "canvas": {
     "overview": "Resumen",
-    "year": "Año",
-    "month": "Mes",
+    "year": "Anual",
+    "month": "Mensual",
     "demo": {
       "label": "Demo",
       "accessibilityLive": "Cambiar a datos reales",
