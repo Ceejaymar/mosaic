@@ -190,12 +190,12 @@ const cardStyles = StyleSheet.create((_theme) => ({
   tagRow: {
     flexDirection: 'row' as const,
     flexWrap: 'wrap' as const,
-    gap: 6,
+    gap: 8,
   },
   tag: {
     borderWidth: 1,
     borderRadius: 20,
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     paddingVertical: 4,
   },
   tagText: {
@@ -206,7 +206,7 @@ const cardStyles = StyleSheet.create((_theme) => ({
     fontSize: 12,
     fontWeight: '400' as const,
     letterSpacing: 0.2,
-    marginTop: 2,
+    marginTop: 4,
   },
 }));
 
@@ -274,7 +274,10 @@ export default function Journal() {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { theme } = useUnistyles();
-  const { t } = useTranslation();
+  const {
+    t,
+    i18n: { language },
+  } = useTranslation();
 
   const [entries, setEntries] = useState<MoodEntry[]>([]);
   const [notesOnly, setNotesOnly] = useState(true);
@@ -367,7 +370,11 @@ export default function Journal() {
     }, [refreshEntries]),
   );
 
-  const listItems = useMemo(() => buildListItems(entries, notesOnly), [entries, notesOnly]);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: language re-runs formatDayLabel (reads i18n.language internally)
+  const listItems = useMemo(
+    () => buildListItems(entries, notesOnly),
+    [entries, notesOnly, language],
+  );
 
   const handleEntryPress = useCallback((id: string) => {
     // biome-ignore lint/suspicious/noExplicitAny: expo-router typed routes
