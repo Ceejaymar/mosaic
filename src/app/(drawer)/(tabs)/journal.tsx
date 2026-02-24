@@ -279,11 +279,12 @@ export default function Journal() {
   const [entries, setEntries] = useState<MoodEntry[]>([]);
   const [notesOnly, setNotesOnly] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(false);
 
   const isLoadingRef = useRef(false);
   const hasMoreRef = useRef(true);
   const offsetRef = useRef(0);
+  const hasLoadedOnceRef = useRef(false);
 
   const toggleNotesOnly = useCallback(() => setNotesOnly((v) => !v), []);
 
@@ -298,36 +299,49 @@ export default function Journal() {
     isLoadingRef.current = false;
     hasMoreRef.current = true;
     offsetRef.current = 0;
-    setEntries([]);
-    setError(null);
-    setIsLoading(true);
+    const isFirstLoad = !hasLoadedOnceRef.current;
+    if (isFirstLoad) {
+      setEntries([]);
+      setError(false);
+      setIsLoading(true);
+    }
     isLoadingRef.current = true;
     try {
       const page = await fetchMoodEntriesPage(0, PAGE_SIZE);
       if (page.length < PAGE_SIZE) hasMoreRef.current = false;
       offsetRef.current = page.length;
       setEntries(page);
+      hasLoadedOnceRef.current = true;
     } catch {
-      setError('Could not load entries');
+      setError(true);
     } finally {
       isLoadingRef.current = false;
       setIsLoading(false);
     }
   }, []);
 
-  // Pagination — appends the next page; errors are silent (list already visible)
+  // Pagination — appends the next page; errors are silent (list already visible).
+  // When notesOnly=true, loops until at least one notes entry is found or data is exhausted,
+  // since onEndReached can't re-fire on a list that never grew.
   const loadNextPage = useCallback(async () => {
     if (isLoadingRef.current || !hasMoreRef.current) return;
     isLoadingRef.current = true;
     try {
-      const page = await fetchMoodEntriesPage(offsetRef.current, PAGE_SIZE);
-      if (page.length < PAGE_SIZE) hasMoreRef.current = false;
-      offsetRef.current += page.length;
-      setEntries((prev) => [...prev, ...page]);
+      let addedVisible = false;
+      while (!addedVisible && hasMoreRef.current) {
+        const page = await fetchMoodEntriesPage(offsetRef.current, PAGE_SIZE);
+        if (page.length < PAGE_SIZE) hasMoreRef.current = false;
+        offsetRef.current += page.length;
+        setEntries((prev) => [...prev, ...page]);
+        addedVisible = notesOnly
+          ? page.some((e) => (e.note ?? '').trim().length > 0)
+          : page.length > 0;
+        if (page.length === 0) break;
+      }
     } finally {
       isLoadingRef.current = false;
     }
-  }, []);
+  }, [notesOnly]);
 
   // Refresh whenever the screen comes into focus (picks up new check-ins)
   useFocusEffect(
@@ -356,7 +370,7 @@ export default function Journal() {
 
   if (isLoading) {
     return (
-      <View style={[styles.container, styles.centered]}>
+      <View style={[styles.container, styles.centered, { paddingTop }]}>
         <ActivityIndicator color={theme.colors.mosaicGold} />
       </View>
     );
@@ -364,7 +378,7 @@ export default function Journal() {
 
   if (error) {
     return (
-      <View style={[styles.container, styles.centered]}>
+      <View style={[styles.container, styles.centered, { paddingTop }]}>
         <Text style={[styles.errorText, { color: theme.colors.textMuted }]}>
           {t('journal.error_message')}
         </Text>
