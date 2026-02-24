@@ -13,8 +13,8 @@ import { FlatList, Pressable, Text, View, type ViewToken } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { fetchMoodEntriesForMonth } from '@/src/db/repos/moodRepo';
-import { computeMockCanvasDays } from '../hooks/useCanvasData';
-import { buildCanvasDays } from '../utils/buildCanvasDays';
+import { computeMockCanvasDays } from '@/src/features/canvas/hooks/useCanvasData';
+import { buildCanvasDays } from '@/src/features/canvas/utils/buildCanvasDays';
 
 // ─── Context ──────────────────────────────────────────────────────────────────
 
