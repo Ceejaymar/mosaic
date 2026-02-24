@@ -1,4 +1,13 @@
-import { createContext, memo, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import {
+  createContext,
+  memo,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { FlatList, Pressable, Text, View, type ViewToken } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
@@ -227,20 +236,26 @@ const SingleYearBlock = memo(function SingleYearBlock({
     };
   }, [demoMode, year, shouldRender]);
 
+  const memoizedTiles = useMemo(
+    () =>
+      flatDays.map((day) => (
+        <YearTile
+          key={day.dateKey}
+          dateKey={day.dateKey}
+          colors={day.entries}
+          isEvenMonth={day.month % 2 === 0}
+          isFuture={day.isFuture}
+          onPress={onDayPress}
+        />
+      )),
+    [flatDays, onDayPress],
+  );
+
   return (
     <View style={[styles.yearBlock, { height: viewportHeight }]}>
       {shouldRender && (
         <View style={[styles.grid, { width: contentWidth, height: viewportHeight }]}>
-          {flatDays.map((day) => (
-            <YearTile
-              key={day.dateKey}
-              dateKey={day.dateKey}
-              colors={day.entries}
-              isEvenMonth={day.month % 2 === 0}
-              isFuture={day.isFuture}
-              onPress={onDayPress}
-            />
-          ))}
+          {memoizedTiles}
         </View>
       )}
       {liveLoading && <Text style={styles.loadingText}>Loading {year}…</Text>}
