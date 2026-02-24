@@ -1,4 +1,4 @@
-🎨 Mosaic: Emotional Intelligence, Visualized
+# 🎨 Mosaic: Emotional Intelligence, Visualized
 
 
 <br />
@@ -30,28 +30,28 @@ Mosaic is a privacy-first mobile application built with React Native. It moves a
 🛠️ Architecture & Tech Stack
 The engineering focus of Mosaic is on speed and type safety.
 
-Framework: Expo (SDK 50+) with TypeScript
+- **Framework:** Expo (SDK 50+) with TypeScript
 
-Navigation: Expo Router for file-based routing.
+- **Navigation**: Expo Router for file-based routing.
 
-State Management: Zustand with MMKV for persisted, synchronous storage.
+- **State Management**: Zustand with MMKV for persisted, synchronous storage.
 
-Persistence: Drizzle ORM + SQLite for complex data relationships.
+- **Persistence**: Drizzle ORM + SQLite for complex data relationships.
 
-Styling: Unistyles for a performant, runtime-based styling solution.
+- **Styling**: Unistyles for a performant, runtime-based styling solution.
 
 🗺️ Roadmap
-[x] High-performance local persistence layer
+- [x] High-performance local persistence layer
 
-[x] Multi-entry daily mood logging
+- [x] Multi-entry daily mood logging
 
-[ ] AI-Powered Mood Trend Analysis (High Priority)
+- [ ] AI-Powered Mood Trend Analysis (High Priority)
 
-[ ] Dynamic year-over-year vertical navigation
+- [ ] Dynamic year-over-year vertical navigation
 
-[ ] Dark mode + High-contrast accessibility overrides
+- [ ] Dark mode + High-contrast accessibility overrides
 
-[ ] Localized push notifications for consistency
+- [] Localized push notifications for consistency
 
 🔐 Privacy
 Mosaic is built on the principle that your emotions aren't for sale.
