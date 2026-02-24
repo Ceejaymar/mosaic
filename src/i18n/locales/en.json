@@ -24,6 +24,7 @@
     "overview": "Overview",
     "year": "Yearly",
     "month": "Monthly",
+    "loadingYear": "Loading {{year}}…",
     "demo": {
       "label": "Demo",
       "accessibilityLive": "Switch to live data",

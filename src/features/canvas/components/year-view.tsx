@@ -8,6 +8,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FlatList, Pressable, Text, View, type ViewToken } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
@@ -17,7 +18,10 @@ import { buildCanvasDays } from '../utils/buildCanvasDays';
 
 // ─── Context ──────────────────────────────────────────────────────────────────
 
-const VisibleYearContext = createContext(new Date().getFullYear());
+const CURRENT_YEAR = new Date().getFullYear();
+const MIN_YEAR = CURRENT_YEAR - 5;
+const VisibleYearContext = createContext(CURRENT_YEAR);
+const yearKeyExtractor = (item: number) => item.toString();
 
 // ─── Configuration ────────────────────────────────────────────────────────────
 
@@ -92,11 +96,13 @@ const YearTile = memo(function YearTile({
     backgroundColor: colors.length === 0 ? emptyBg : colors[0],
   };
   const containerStyle = { width: TILE_W, height: TILE_H, overflow: 'hidden' as const, opacity };
+  const hasData = colors.length > 0;
 
   if (colors.length <= 1) {
     return (
       <Pressable
         onPress={() => onPress(dateKey)}
+        disabled={!hasData || isFuture}
         style={({ pressed }) => (pressed ? [flatStyle, { opacity: opacity * 0.6 }] : flatStyle)}
       />
     );
@@ -168,6 +174,7 @@ const SingleYearBlock = memo(function SingleYearBlock({
   contentWidth: number;
   onDayPress: (date: string) => void;
 }) {
+  const { t } = useTranslation();
   const visibleYear = useContext(VisibleYearContext);
   const isViewable = year === visibleYear;
   // Gate tile rendering: skip until this block is scrolled into view.
@@ -258,7 +265,7 @@ const SingleYearBlock = memo(function SingleYearBlock({
           {memoizedTiles}
         </View>
       )}
-      {liveLoading && <Text style={styles.loadingText}>Loading {year}…</Text>}
+      {liveLoading && <Text style={styles.loadingText}>{t('canvas.loadingYear', { year })}</Text>}
     </View>
   );
 });
@@ -280,20 +287,18 @@ export function YearView({
   onYearChange,
   viewportHeight,
 }: Props) {
-  const currentYear = new Date().getFullYear();
-  const minYear = currentYear - 5;
   // Inverted FlatList: data[0] renders at the bottom. Current year first = bottom.
-  const [yearsList, setYearsList] = useState<number[]>([currentYear]);
-  const [visibleYear, setVisibleYear] = useState(currentYear);
+  const [yearsList, setYearsList] = useState<number[]>([CURRENT_YEAR]);
+  const [visibleYear, setVisibleYear] = useState(CURRENT_YEAR);
 
   // With inverted=true, onEndReached fires when the user scrolls UP to the oldest year.
   // Append the next older year to the END of the array so it renders above the current top.
   const loadPreviousYear = useCallback(() => {
     setYearsList((prev) => {
       const oldest = prev[prev.length - 1];
-      return oldest > minYear ? [...prev, oldest - 1] : prev;
+      return oldest > MIN_YEAR ? [...prev, oldest - 1] : prev;
     });
-  }, [minYear]);
+  }, []);
 
   // Keep a fresh ref so the stable onViewableItemsChanged callback never reads a stale onYearChange.
   const latestOnYearChangeRef = useRef(onYearChange);
@@ -330,7 +335,7 @@ export function YearView({
       <VisibleYearContext.Provider value={visibleYear}>
         <FlatList
           data={yearsList}
-          keyExtractor={(item) => item.toString()}
+          keyExtractor={yearKeyExtractor}
           renderItem={renderItem}
           contentContainerStyle={styles.container}
           showsVerticalScrollIndicator={false}

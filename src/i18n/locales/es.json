@@ -21,6 +21,7 @@
     "overview": "Resumen",
     "year": "Anual",
     "month": "Mensual",
+    "loadingYear": "Cargando {{year}}…",
     "demo": {
       "label": "Demo",
       "accessibilityLive": "Cambiar a datos reales",
