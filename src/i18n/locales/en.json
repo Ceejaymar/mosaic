@@ -22,8 +22,9 @@
   },
   "canvas": {
     "overview": "Overview",
-    "year": "Year",
-    "month": "Month",
+    "year": "Yearly",
+    "month": "Monthly",
+    "loadingYear": "Loading {{year}}…",
     "demo": {
       "label": "Demo",
       "accessibilityLive": "Switch to live data",

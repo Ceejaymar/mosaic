@@ -1,90 +1,271 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  createContext,
+  memo,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, Text, View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { FlatList, Pressable, Text, View, type ViewToken } from 'react-native';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { fetchMoodEntriesForMonth } from '@/src/db/repos/moodRepo';
+import { computeMockCanvasDays } from '@/src/features/canvas/hooks/useCanvasData';
+import { buildCanvasDays } from '@/src/features/canvas/utils/buildCanvasDays';
 
-import type { CanvasDay } from '../hooks/useCanvasData';
-import { computeMockCanvasDays } from '../hooks/useCanvasData';
-import { buildCanvasDays } from '../utils/buildCanvasDays';
-import { getDowLabels, getMonthName } from '../utils/date-labels';
-import { MonthGrid } from './month-grid';
+// ─── Context ──────────────────────────────────────────────────────────────────
 
-/** Stable React list keys for each month, used instead of array index */
-const MONTH_KEYS = [
-  'jan',
-  'feb',
-  'mar',
-  'apr',
-  'may',
-  'jun',
-  'jul',
-  'aug',
-  'sep',
-  'oct',
-  'nov',
-  'dec',
-] as const;
+const CURRENT_YEAR = new Date().getFullYear();
+const MIN_YEAR = CURRENT_YEAR - 5;
+const VisibleYearContext = createContext(CURRENT_YEAR);
+const yearKeyExtractor = (item: number) => item.toString();
 
-/**
- * Compact tile gap for the year overview grid.
- * Intentionally 3px (below the 4px token minimum) to pack 7 tiles across
- * the narrow per-month width without clipping.
- */
-const YEAR_TILE_GAP = 3;
+// ─── Configuration ────────────────────────────────────────────────────────────
 
-/**
- * Width of the 3-letter month abbreviation label column (e.g. "Jan").
- * Non-token value: sized to the narrowest locale abbreviation at 10px/600.
- */
-const MONTH_LABEL_WIDTH = 26;
+const COLUMNS = 14;
+const MAX_ROWS = 27;
+const VIEWABILITY_CONFIG = { itemVisiblePercentThreshold: 50 };
 
-/**
- * Gap between the month label column and the tile grid.
- * Uses 6px (between 4 and 8 tokens) for visual balance in the compact layout.
- */
-const LABEL_GRID_GAP = 6;
+// Pre-calculate exact percentage strings so Yoga handles the sub-pixel math perfectly.
+const TILE_W = `${100 / COLUMNS}%` as const;
+const TILE_H = `${100 / MAX_ROWS}%` as const;
 
-// ─── MiniMonth ────────────────────────────────────────────────────────────────
-
-type MiniMonthProps = {
-  month: number;
-  year: number;
-  tileSize: number;
-  demoMode: boolean;
-  mockData: CanvasDay[];
-  dbData: CanvasDay[];
-  onDayPress: (date: string) => void;
+// Static absolute positions using 50% — no per-tile JS math required.
+const PANELS = {
+  left: { position: 'absolute' as const, top: 0, bottom: 0, left: 0, width: '50%' as const },
+  right: { position: 'absolute' as const, top: 0, bottom: 0, left: '50%' as const, right: 0 },
+  tl: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    width: '50%' as const,
+    height: '50%' as const,
+  },
+  tr: {
+    position: 'absolute' as const,
+    top: 0,
+    left: '50%' as const,
+    right: 0,
+    height: '50%' as const,
+  },
+  bl: {
+    position: 'absolute' as const,
+    top: '50%' as const,
+    left: 0,
+    width: '50%' as const,
+    bottom: 0,
+  },
+  br: {
+    position: 'absolute' as const,
+    top: '50%' as const,
+    left: '50%' as const,
+    right: 0,
+    bottom: 0,
+  },
+  bottom: { position: 'absolute' as const, top: '50%' as const, left: 0, right: 0, bottom: 0 },
 };
 
-const MiniMonth = memo(function MiniMonth({
-  month,
-  year,
-  tileSize,
-  demoMode,
-  mockData,
-  dbData,
-  onDayPress,
-}: MiniMonthProps) {
-  const { i18n } = useTranslation();
-  const data = demoMode ? mockData : dbData;
+// ─── YearTile ─────────────────────────────────────────────────────────────────
+
+type YearTileProps = {
+  dateKey: string;
+  colors: string[];
+  isEvenMonth: boolean;
+  isFuture: boolean;
+  onPress: (dateKey: string) => void;
+};
+
+const YearTile = memo(function YearTile({
+  dateKey,
+  colors,
+  isEvenMonth,
+  isFuture,
+  onPress,
+}: YearTileProps) {
+  const { theme } = useUnistyles();
+  const emptyBg = isEvenMonth ? theme.colors.surface : 'transparent';
+  const opacity = isFuture ? 0.25 : 1;
+
+  const flatStyle = {
+    width: TILE_W,
+    height: TILE_H,
+    opacity,
+    backgroundColor: colors.length === 0 ? emptyBg : colors[0],
+  };
+  const containerStyle = { width: TILE_W, height: TILE_H, overflow: 'hidden' as const, opacity };
+  const hasData = colors.length > 0;
+
+  if (colors.length <= 1) {
+    return (
+      <Pressable
+        onPress={() => onPress(dateKey)}
+        disabled={!hasData || isFuture}
+        style={({ pressed }) => (pressed ? [flatStyle, { opacity: opacity * 0.6 }] : flatStyle)}
+      />
+    );
+  }
+
+  if (colors.length === 2) {
+    return (
+      <Pressable
+        onPress={() => onPress(dateKey)}
+        style={({ pressed }) =>
+          pressed ? [containerStyle, { opacity: opacity * 0.6 }] : containerStyle
+        }
+      >
+        <View style={[PANELS.left, { backgroundColor: colors[0] }]} />
+        <View style={[PANELS.right, { backgroundColor: colors[1] }]} />
+      </Pressable>
+    );
+  }
+
+  if (colors.length === 3) {
+    return (
+      <Pressable
+        onPress={() => onPress(dateKey)}
+        style={({ pressed }) =>
+          pressed ? [containerStyle, { opacity: opacity * 0.6 }] : containerStyle
+        }
+      >
+        <View style={[PANELS.tl, { backgroundColor: colors[0] }]} />
+        <View style={[PANELS.tr, { backgroundColor: colors[1] }]} />
+        <View style={[PANELS.bottom, { backgroundColor: colors[2] }]} />
+      </Pressable>
+    );
+  }
 
   return (
-    <View style={styles.miniMonth}>
-      <Text style={[styles.miniMonthLabel, { width: MONTH_LABEL_WIDTH }]}>
-        {getMonthName(month, 'short', i18n.language)}
-      </Text>
-      <MonthGrid
-        month={month}
-        year={year}
-        data={data}
-        tileSize={tileSize}
-        tileGap={YEAR_TILE_GAP}
-        hideEmpty={false}
-        showDowHeader={false}
-        onDayPress={onDayPress}
-      />
+    <Pressable
+      onPress={() => onPress(dateKey)}
+      style={({ pressed }) =>
+        pressed ? [containerStyle, { opacity: opacity * 0.6 }] : containerStyle
+      }
+    >
+      <View style={[PANELS.tl, { backgroundColor: colors[0] }]} />
+      <View style={[PANELS.tr, { backgroundColor: colors[1] }]} />
+      <View style={[PANELS.bl, { backgroundColor: colors[2] }]} />
+      <View style={[PANELS.br, { backgroundColor: colors[3] }]} />
+    </Pressable>
+  );
+});
+
+// ─── SingleYearBlock ──────────────────────────────────────────────────────────
+
+type FlatDay = {
+  dateKey: string;
+  month: number;
+  entries: string[];
+  isFuture: boolean;
+};
+
+const SingleYearBlock = memo(function SingleYearBlock({
+  year,
+  demoMode,
+  viewportHeight,
+  contentWidth,
+  onDayPress,
+}: {
+  year: number;
+  demoMode: boolean;
+  viewportHeight: number;
+  contentWidth: number;
+  onDayPress: (date: string) => void;
+}) {
+  const { t } = useTranslation();
+  const visibleYear = useContext(VisibleYearContext);
+  const isViewable = year === visibleYear;
+  // Gate tile rendering: skip until this block is scrolled into view.
+  // Once rendered, keep rendered to avoid remounting on scroll.
+  const hasBeenVisible = useRef(false);
+  if (isViewable) hasBeenVisible.current = true;
+  const shouldRender = isViewable || hasBeenVisible.current;
+
+  const [flatDays, setFlatDays] = useState<FlatDay[]>([]);
+  const [liveLoading, setLiveLoading] = useState(false);
+
+  useEffect(() => {
+    if (!shouldRender) return;
+    let cancelled = false;
+    setLiveLoading(true);
+
+    const months = Array.from({ length: 12 }, (_, m) => m);
+    const now = new Date();
+    const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+    if (demoMode) {
+      const result: FlatDay[] = [];
+      for (const month of months) {
+        for (const d of computeMockCanvasDays(month, year)) {
+          result.push({ dateKey: d.date, month, entries: d.entries, isFuture: d.date > todayKey });
+        }
+      }
+      setFlatDays(result);
+      setLiveLoading(false);
+      return;
+    }
+
+    Promise.all(
+      months.map((month) =>
+        fetchMoodEntriesForMonth(year, month).then((entries) => ({
+          month,
+          data: buildCanvasDays(entries, year, month),
+        })),
+      ),
+    )
+      .then((results) => {
+        if (cancelled) return;
+        const result: FlatDay[] = [];
+        for (const { month, data } of results) {
+          for (const d of data) {
+            result.push({
+              dateKey: d.date,
+              month,
+              entries: d.entries,
+              isFuture: d.date > todayKey,
+            });
+          }
+        }
+        setFlatDays(result);
+        setLiveLoading(false);
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          console.error(`Failed to load mood entries for year ${year}`, err);
+          setLiveLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [demoMode, year, shouldRender]);
+
+  const memoizedTiles = useMemo(
+    () =>
+      flatDays.map((day) => (
+        <YearTile
+          key={day.dateKey}
+          dateKey={day.dateKey}
+          colors={day.entries}
+          isEvenMonth={day.month % 2 === 0}
+          isFuture={day.isFuture}
+          onPress={onDayPress}
+        />
+      )),
+    [flatDays, onDayPress],
+  );
+
+  return (
+    <View style={[styles.yearBlock, { height: viewportHeight }]}>
+      {shouldRender && (
+        <View style={[styles.grid, { width: contentWidth, height: viewportHeight }]}>
+          {memoizedTiles}
+        </View>
+      )}
+      {liveLoading && <Text style={styles.loadingText}>{t('canvas.loadingYear', { year })}</Text>}
     </View>
   );
 });
@@ -95,191 +276,104 @@ type Props = {
   onDayPress: (date: string) => void;
   contentWidth: number;
   demoMode: boolean;
+  onYearChange: (year: number) => void;
+  viewportHeight: number;
 };
 
-export function YearView({ onDayPress, contentWidth, demoMode }: Props) {
-  const { i18n } = useTranslation();
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth(); // 0-indexed
-  // Older year first → current year at bottom → swipe DOWN reveals older year
-  const years = [currentYear - 1, currentYear];
+export function YearView({
+  onDayPress,
+  contentWidth,
+  demoMode,
+  onYearChange,
+  viewportHeight,
+}: Props) {
+  // Inverted FlatList: data[0] renders at the bottom. Current year first = bottom.
+  const [yearsList, setYearsList] = useState<number[]>([CURRENT_YEAR]);
+  const [visibleYear, setVisibleYear] = useState(CURRENT_YEAR);
 
-  const scrollRef = useRef<ScrollView>(null);
-  const didScrollToEnd = useRef(false);
-
-  // Grid occupies the remaining width after the month label column
-  const gridWidth = contentWidth - MONTH_LABEL_WIDTH - LABEL_GRID_GAP;
-  const tileSize = (gridWidth - 6 * YEAR_TILE_GAP) / 7;
-
-  // ── Mock data: computed once per demoMode=true, avoids per-MiniMonth hook calls ──
-  const mockDataMap = useMemo(() => {
-    if (!demoMode) return {} as Record<string, CanvasDay[]>;
-    const map: Record<string, CanvasDay[]> = {};
-    const yearsList = [currentYear - 1, currentYear];
-    for (const year of yearsList) {
-      const monthCount = year === currentYear ? currentMonth + 1 : 12;
-      for (let m = 0; m < monthCount; m++) {
-        map[`${year}-${m}`] = computeMockCanvasDays(m, year);
-      }
-    }
-    return map;
-  }, [demoMode, currentYear, currentMonth]);
-
-  // ── Centralized DB data for all visible months ──
-  const [liveDataMap, setLiveDataMap] = useState<Record<string, CanvasDay[]>>({});
-  const [liveLoading, setLiveLoading] = useState(false);
-  const [liveError, setLiveError] = useState<unknown>(null);
-
-  useEffect(() => {
-    if (demoMode) {
-      setLiveDataMap({});
-      setLiveLoading(false);
-      setLiveError(null);
-      return;
-    }
-
-    let cancelled = false;
-    setLiveLoading(true);
-    setLiveError(null);
-
-    const yearsList = [currentYear - 1, currentYear];
-    const monthsToFetch = yearsList.flatMap((year) =>
-      Array.from({ length: year === currentYear ? currentMonth + 1 : 12 }, (_, m) => ({
-        month: m,
-        year,
-      })),
-    );
-
-    Promise.all(
-      monthsToFetch.map(({ month, year }) =>
-        fetchMoodEntriesForMonth(year, month).then((entries) => ({
-          key: `${year}-${month}`,
-          data: buildCanvasDays(entries, year, month),
-        })),
-      ),
-    )
-      .then((results) => {
-        if (cancelled) return;
-        const map: Record<string, CanvasDay[]> = {};
-        for (const { key, data } of results) map[key] = data;
-        setLiveDataMap(map);
-        setLiveLoading(false);
-      })
-      .catch((err) => {
-        if (cancelled) return;
-        setLiveError(err);
-        setLiveLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [demoMode, currentYear, currentMonth]);
-
-  const onContentSizeChange = useCallback(() => {
-    if (!didScrollToEnd.current) {
-      scrollRef.current?.scrollToEnd({ animated: false });
-      didScrollToEnd.current = true;
-    }
+  // With inverted=true, onEndReached fires when the user scrolls UP to the oldest year.
+  // Append the next older year to the END of the array so it renders above the current top.
+  const loadPreviousYear = useCallback(() => {
+    setYearsList((prev) => {
+      const oldest = prev[prev.length - 1];
+      return oldest > MIN_YEAR ? [...prev, oldest - 1] : prev;
+    });
   }, []);
 
+  // Keep a fresh ref so the stable onViewableItemsChanged callback never reads a stale onYearChange.
+  const latestOnYearChangeRef = useRef(onYearChange);
+  useEffect(() => {
+    latestOnYearChangeRef.current = onYearChange;
+  }, [onYearChange]);
+
+  const onViewableItemsChanged = useCallback(
+    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+      if (viewableItems.length > 0) {
+        const year = viewableItems[0].item as number;
+        latestOnYearChangeRef.current(year);
+        setVisibleYear(year);
+      }
+    },
+    [],
+  );
+
+  const renderItem = useCallback(
+    ({ item }: { item: number }) => (
+      <SingleYearBlock
+        year={item}
+        demoMode={demoMode}
+        viewportHeight={viewportHeight}
+        contentWidth={contentWidth}
+        onDayPress={onDayPress}
+      />
+    ),
+    [demoMode, viewportHeight, contentWidth, onDayPress],
+  );
+
   return (
-    <ScrollView
-      ref={scrollRef}
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={styles.container}
-      onContentSizeChange={onContentSizeChange}
-    >
-      {liveError != null && !demoMode && <Text style={styles.errorText}>Failed to load data</Text>}
-      {years.map((year) => (
-        <View key={year} style={styles.yearBlock}>
-          <Text style={styles.yearLabel}>{year}</Text>
-
-          {/* DOW header — once per year block, offset to align with tile columns */}
-          <View
-            style={[
-              styles.dowRow,
-              { paddingLeft: MONTH_LABEL_WIDTH + LABEL_GRID_GAP, gap: YEAR_TILE_GAP },
-            ]}
-          >
-            {getDowLabels(i18n.language).map(({ key, label }) => (
-              <Text key={key} style={[styles.dowLabel, { width: tileSize }]}>
-                {label}
-              </Text>
-            ))}
-          </View>
-
-          {Array.from({ length: year === currentYear ? currentMonth + 1 : 12 }, (_, m) => (
-            <MiniMonth
-              key={MONTH_KEYS[m]}
-              month={m}
-              year={year}
-              tileSize={tileSize}
-              demoMode={demoMode}
-              mockData={mockDataMap[`${year}-${m}`] ?? []}
-              dbData={liveDataMap[`${year}-${m}`] ?? []}
-              onDayPress={onDayPress}
-            />
-          ))}
-        </View>
-      ))}
-      {liveLoading && !demoMode && <Text style={styles.loadingText}>Loading…</Text>}
-    </ScrollView>
+    <View style={styles.wrapper}>
+      <VisibleYearContext.Provider value={visibleYear}>
+        <FlatList
+          data={yearsList}
+          keyExtractor={yearKeyExtractor}
+          renderItem={renderItem}
+          contentContainerStyle={styles.container}
+          showsVerticalScrollIndicator={false}
+          pagingEnabled
+          inverted
+          onEndReached={loadPreviousYear}
+          onEndReachedThreshold={0.5}
+          onViewableItemsChanged={onViewableItemsChanged}
+          viewabilityConfig={VIEWABILITY_CONFIG}
+        />
+      </VisibleYearContext.Provider>
+    </View>
   );
 }
 
 const styles = StyleSheet.create((theme) => ({
+  wrapper: {
+    flex: 1,
+  },
   container: {
-    gap: 40,
-    paddingBottom: 32,
+    paddingBottom: 0,
+    paddingTop: 0,
   },
   yearBlock: {
-    gap: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  yearLabel: {
-    fontSize: 22,
-    fontWeight: '700',
-    fontFamily: 'Fraunces',
-    color: theme.colors.typography,
-    letterSpacing: -0.4,
-    marginBottom: 6,
-  },
-  dowRow: {
+  grid: {
     flexDirection: 'row',
-    marginBottom: 4,
-  },
-  dowLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    textAlign: 'center',
-    color: theme.colors.textMuted,
-    fontFamily: 'SpaceMono',
-  },
-  miniMonth: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: LABEL_GRID_GAP,
-    marginBottom: 2,
-  },
-  miniMonthLabel: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: theme.colors.textMuted,
-    letterSpacing: 0.2,
-    paddingTop: 4,
-    fontFamily: 'SpaceMono',
-  },
-  errorText: {
-    fontSize: 13,
-    color: theme.colors.destructive,
-    textAlign: 'center',
-    paddingVertical: 8,
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    alignContent: 'flex-start',
+    gap: 0,
   },
   loadingText: {
     fontSize: 13,
     color: theme.colors.textMuted,
-    textAlign: 'center',
-    paddingVertical: 8,
+    position: 'absolute',
+    bottom: 20,
   },
 }));

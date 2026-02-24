@@ -120,6 +120,7 @@ export default function CanvasScreen() {
   const [demoMode, setDemoMode] = useState(false);
   const [containerHeight, setContainerHeight] = useState(0);
   const [isYearMounted, setIsYearMounted] = useState(false);
+  const [overviewYear, setOverviewYear] = useState(new Date().getFullYear());
 
   // Use useMemo here to avoid an unused state setter warning
   const monthList = useMemo(() => buildMonthList(MONTHS_BACK), []);
@@ -158,17 +159,21 @@ export default function CanvasScreen() {
   const monthAnimStyle = useAnimatedStyle(() => ({ opacity: monthOpacity.value }));
   const yearAnimStyle = useAnimatedStyle(() => ({ opacity: yearOpacity.value }));
 
+  const handleDayPress = useCallback((d: string) => {
+    Alert.alert('Day', d);
+  }, []);
+
   const toggleViewMode = useCallback(() => {
+    // Lazy-mount on first open; keep mounted while on this screen so re-opening
+    // is instant. The component unmounts automatically when navigating away.
+    setIsYearMounted(true);
     setViewMode((prev) => {
       if (prev === 'month') {
         monthOpacity.value = withTiming(0, { duration: 180 });
         yearOpacity.value = withTiming(1, { duration: 180 });
-        setIsYearMounted(true);
         return 'year';
       }
-      yearOpacity.value = withTiming(0, { duration: 180 }, (finished) => {
-        if (finished) setIsYearMounted(false);
-      });
+      yearOpacity.value = withTiming(0, { duration: 180 });
       monthOpacity.value = withTiming(1, { duration: 180 });
       return 'month';
     });
@@ -185,7 +190,7 @@ export default function CanvasScreen() {
       ]}
     >
       <View style={[styles.topBar, { paddingHorizontal: TOPBAR_H_PAD }]}>
-        <Text style={styles.headerLabel}>{viewMode === 'year' ? t('canvas.overview') : ''}</Text>
+        <Text style={styles.headerLabel}>{viewMode === 'year' ? overviewYear.toString() : ''}</Text>
         <View style={styles.controls}>
           <Pressable
             onPress={() => setDemoMode((v) => !v)}
@@ -204,16 +209,10 @@ export default function CanvasScreen() {
             </Text>
           </Pressable>
           <Pressable
-            onPress={() => setHideEmpty((v) => !v)}
-            style={({ pressed }) => [styles.iconBtn, pressed && { opacity: 0.5 }]}
-          >
-            <View style={[styles.filterDot, hideEmpty && styles.filterDotActive]} />
-          </Pressable>
-          <Pressable
             onPress={toggleViewMode}
-            style={({ pressed }) => [styles.iconBtn, pressed && { opacity: 0.5 }]}
+            style={({ pressed }) => [styles.toggleBtn, pressed && { opacity: 0.5 }]}
           >
-            <Text style={[styles.toggleLabel, viewMode === 'year' && styles.toggleLabelActive]}>
+            <Text style={styles.toggleLabel}>
               {viewMode === 'month' ? t('canvas.year') : t('canvas.month')}
             </Text>
           </Pressable>
@@ -241,7 +240,7 @@ export default function CanvasScreen() {
                   tileSize={tileSize}
                   hideEmpty={hideEmpty}
                   demoMode={demoMode}
-                  onDayPress={(d) => Alert.alert('Day', d)}
+                  onDayPress={handleDayPress}
                 />
               )}
               getItemLayout={getItemLayout}
@@ -276,12 +275,14 @@ export default function CanvasScreen() {
           pointerEvents={viewMode === 'year' ? 'auto' : 'none'}
           style={[styles.absoluteFill, yearAnimStyle]}
         >
-          {isYearMounted && (
-            <View style={[styles.fill, { paddingHorizontal: GRID_H_PAD }]}>
+          {isYearMounted && containerHeight > 0 && (
+            <View style={styles.fill}>
               <YearView
-                onDayPress={(d) => Alert.alert('Day', d)}
-                contentWidth={gridContentWidth}
+                onDayPress={handleDayPress}
+                contentWidth={screenWidth}
                 demoMode={demoMode}
+                onYearChange={setOverviewYear}
+                viewportHeight={containerHeight}
               />
             </View>
           )}
@@ -326,15 +327,13 @@ const styles = StyleSheet.create((theme) => ({
   },
   chipLabelActive: { color: theme.colors.onAccent },
   iconBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
-  filterDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: theme.colors.divider },
-  filterDotActive: { backgroundColor: theme.colors.mosaicGold },
+  toggleBtn: { height: 36, paddingHorizontal: 8, alignItems: 'center', justifyContent: 'center' },
   toggleLabel: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
     color: theme.colors.textMuted,
     fontFamily: 'SpaceMono',
   },
-  toggleLabelActive: { color: theme.colors.mosaicGold },
   fill: { flex: 1 },
   absoluteFill: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   monthPageLabel: {
