@@ -30,6 +30,17 @@
       "accessibilityDemo": "Cambiar a datos de demostración"
     }
   },
+  "journal": {
+    "im_feeling": "Me siento ",
+    "empty_title": "Nada por aquí todavía",
+    "empty_subtitle": "Tus estados de ánimo aparecerán aquí",
+    "filter_with_notes": "con notas",
+    "filter_show_all": "mostrar todo",
+    "filter_a11y_with_notes": "Mostrar solo entradas con notas",
+    "filter_a11y_show_all": "Mostrar todas las entradas",
+    "error_message": "No se pudieron cargar las entradas",
+    "error_retry": "Reintentar"
+  },
   "settings": {
     "theme": {
       "title": "Apariencia",

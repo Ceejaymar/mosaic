@@ -33,6 +33,17 @@
       "accessibilityDemo": "Switch to demo data"
     }
   },
+  "journal": {
+    "im_feeling": "I'm feeling ",
+    "empty_title": "Nothing here yet",
+    "empty_subtitle": "Your mood check-ins will appear here",
+    "filter_with_notes": "with notes",
+    "filter_show_all": "show all",
+    "filter_a11y_with_notes": "Show only entries with notes",
+    "filter_a11y_show_all": "Show all entries",
+    "error_message": "Could not load entries",
+    "error_retry": "Retry"
+  },
   "settings": {
     "theme": {
       "title": "Appearance",

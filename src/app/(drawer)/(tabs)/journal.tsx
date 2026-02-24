@@ -3,6 +3,7 @@ import { FlashList } from '@shopify/flash-list';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useNavigation } from 'expo-router';
 import { memo, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
@@ -79,6 +80,7 @@ type EntryCardProps = {
 
 const EntryCard = memo(function EntryCard({ entry, onPress }: EntryCardProps) {
   const { theme } = useUnistyles();
+  const { t } = useTranslation();
   const info = getMoodDisplayInfo(entry.primaryMood);
   const accentColor = info?.color ?? theme.colors.mosaicGold;
   const label = info?.label ?? entry.primaryMood;
@@ -113,7 +115,7 @@ const EntryCard = memo(function EntryCard({ entry, onPress }: EntryCardProps) {
         {/* Emotion headline */}
         <View style={cardStyles.headlineRow}>
           <Text style={[cardStyles.iAmFeeling, { color: theme.colors.textMuted }]}>
-            {"I'm feeling "}
+            {t('journal.im_feeling')}
           </Text>
           <Text style={[cardStyles.emotion, { color: accentColor }]}>{label}</Text>
         </View>
@@ -211,10 +213,11 @@ const cardStyles = StyleSheet.create((_theme) => ({
 // ─── EmptyState ───────────────────────────────────────────────────────────────
 
 function EmptyState() {
+  const { t } = useTranslation();
   return (
     <View style={emptyStyles.container}>
-      <Text style={emptyStyles.title}>Nothing here yet</Text>
-      <Text style={emptyStyles.subtitle}>Your mood check-ins will appear here</Text>
+      <Text style={emptyStyles.title}>{t('journal.empty_title')}</Text>
+      <Text style={emptyStyles.subtitle}>{t('journal.empty_subtitle')}</Text>
     </View>
   );
 }
@@ -243,17 +246,18 @@ type FilterToggleProps = { notesOnly: boolean; onToggle: () => void };
 
 function FilterToggle({ notesOnly, onToggle }: FilterToggleProps) {
   const { theme } = useUnistyles();
+  const { t } = useTranslation();
   return (
     <Pressable
       onPress={onToggle}
       style={({ pressed }) => ({ marginRight: 16, opacity: pressed ? 0.4 : 1 })}
       accessibilityRole="button"
       accessibilityLabel={
-        notesOnly ? 'Switch to show all entries' : 'Switch to show entries with notes only'
+        notesOnly ? t('journal.filter_a11y_show_all') : t('journal.filter_a11y_with_notes')
       }
     >
       <Text style={{ fontSize: 15, fontWeight: '500', color: theme.colors.mosaicGold }}>
-        {notesOnly ? 'with notes' : 'show all'}
+        {notesOnly ? t('journal.filter_with_notes') : t('journal.filter_show_all')}
       </Text>
     </Pressable>
   );
@@ -270,6 +274,7 @@ export default function Journal() {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { theme } = useUnistyles();
+  const { t } = useTranslation();
 
   const [entries, setEntries] = useState<MoodEntry[]>([]);
   const [notesOnly, setNotesOnly] = useState(true);
@@ -360,13 +365,15 @@ export default function Journal() {
   if (error) {
     return (
       <View style={[styles.container, styles.centered]}>
-        <Text style={[styles.errorText, { color: theme.colors.textMuted }]}>{error}</Text>
+        <Text style={[styles.errorText, { color: theme.colors.textMuted }]}>
+          {t('journal.error_message')}
+        </Text>
         <Pressable
           onPress={refreshEntries}
           style={({ pressed }) => [styles.retryBtn, { opacity: pressed ? 0.6 : 1 }]}
         >
           <Text style={{ color: theme.colors.mosaicGold, fontWeight: '600', fontSize: 15 }}>
-            Retry
+            {t('journal.error_retry')}
           </Text>
         </Pressable>
       </View>
