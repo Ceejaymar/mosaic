@@ -17,7 +17,7 @@ import { StyleSheet } from 'react-native-unistyles';
 import { LAYOUT } from '@/src/constants/layout';
 import { MonthGrid } from '@/src/features/canvas/components/month-grid';
 import { YearView } from '@/src/features/canvas/components/year-view';
-import { useCanvasSource } from '@/src/features/canvas/hooks/useCanvasSource';
+import { useCanvasDbData } from '@/src/features/canvas/hooks/useCanvasDbData';
 import { getDowLabels, getMonthName } from '@/src/features/canvas/utils/date-labels';
 
 const TOPBAR_H_PAD = 24;
@@ -45,7 +45,6 @@ const AnimatedMonth = memo(function AnimatedMonth({
   itemHeight,
   tileSize,
   hideEmpty,
-  demoMode,
   onDayPress,
 }: {
   item: MonthItem;
@@ -54,11 +53,10 @@ const AnimatedMonth = memo(function AnimatedMonth({
   itemHeight: number;
   tileSize: number;
   hideEmpty: boolean;
-  demoMode: boolean;
   onDayPress: (date: string) => void;
 }) {
   const { i18n } = useTranslation();
-  const { data } = useCanvasSource(item.month, item.year, demoMode);
+  const { days: data } = useCanvasDbData(item.month, item.year);
   const dowLabels = getDowLabels(i18n.language);
 
   // 1. GRID FADE: Fades to 0.15 smoothly across the whole height
@@ -117,7 +115,6 @@ export default function CanvasScreen() {
 
   const [viewMode, setViewMode] = useState<'month' | 'year'>('month');
   const [hideEmpty, setHideEmpty] = useState(false);
-  const [demoMode, setDemoMode] = useState(false);
   const [containerHeight, setContainerHeight] = useState(0);
   const [isYearMounted, setIsYearMounted] = useState(false);
   const [overviewYear, setOverviewYear] = useState(new Date().getFullYear());
@@ -191,32 +188,14 @@ export default function CanvasScreen() {
     >
       <View style={[styles.topBar, { paddingHorizontal: TOPBAR_H_PAD }]}>
         <Text style={styles.headerLabel}>{viewMode === 'year' ? overviewYear.toString() : ''}</Text>
-        <View style={styles.controls}>
-          <Pressable
-            onPress={() => setDemoMode((v) => !v)}
-            style={({ pressed }) => [
-              styles.chip,
-              demoMode && styles.chipActive,
-              pressed && { opacity: 0.6 },
-            ]}
-            accessibilityRole="button"
-            accessibilityLabel={
-              demoMode ? t('canvas.demo.accessibilityLive') : t('canvas.demo.accessibilityDemo')
-            }
-          >
-            <Text style={[styles.chipLabel, demoMode && styles.chipLabelActive]}>
-              {t('canvas.demo.label')}
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={toggleViewMode}
-            style={({ pressed }) => [styles.toggleBtn, pressed && { opacity: 0.5 }]}
-          >
-            <Text style={styles.toggleLabel}>
-              {viewMode === 'month' ? t('canvas.year') : t('canvas.month')}
-            </Text>
-          </Pressable>
-        </View>
+        <Pressable
+          onPress={toggleViewMode}
+          style={({ pressed }) => [styles.toggleBtn, pressed && { opacity: 0.5 }]}
+        >
+          <Text style={styles.toggleLabel}>
+            {viewMode === 'month' ? t('canvas.year') : t('canvas.month')}
+          </Text>
+        </Pressable>
       </View>
 
       <View
@@ -239,7 +218,6 @@ export default function CanvasScreen() {
                   itemHeight={itemHeight}
                   tileSize={tileSize}
                   hideEmpty={hideEmpty}
-                  demoMode={demoMode}
                   onDayPress={handleDayPress}
                 />
               )}
@@ -280,7 +258,6 @@ export default function CanvasScreen() {
               <YearView
                 onDayPress={handleDayPress}
                 contentWidth={screenWidth}
-                demoMode={demoMode}
                 onYearChange={setOverviewYear}
                 viewportHeight={containerHeight}
               />
