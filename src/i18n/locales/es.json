@@ -2,7 +2,9 @@
   "common": {
     "save": "Guardar",
     "cancel": "Cancelar",
-    "loading": "Cargando..."
+    "loading": "Cargando...",
+    "today": "Hoy",
+    "yesterday": "Ayer"
   },
   "onboarding": {
     "welcome": "¡Bienvenido a Mosaic, {{name}}!",

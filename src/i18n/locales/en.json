@@ -2,7 +2,9 @@
   "common": {
     "save": "Save",
     "cancel": "Cancel",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "today": "Today",
+    "yesterday": "Yesterday"
   },
   "onboarding": {
     "welcome": "Welcome to Mosaic, {{name}}!",

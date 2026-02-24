@@ -1,13 +1,15 @@
+import { useFocusEffect } from '@react-navigation/native';
 import { FlashList } from '@shopify/flash-list';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useNavigation } from 'expo-router';
-import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { memo, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { LAYOUT } from '@/src/constants/layout';
 import { fetchMoodEntriesPage, type MoodEntry } from '@/src/db/repos/moodRepo';
+import { parseStoredTags } from '@/src/features/check-in/utils/parse-tags';
 import { getMoodDisplayInfo } from '@/src/features/emotion-accordion/utils/mood-display';
 import { formatDayLabel, formatEntryTime } from '@/src/utils/format-date';
 
@@ -80,7 +82,7 @@ const EntryCard = memo(function EntryCard({ entry, onPress }: EntryCardProps) {
   const info = getMoodDisplayInfo(entry.primaryMood);
   const accentColor = info?.color ?? theme.colors.mosaicGold;
   const label = info?.label ?? entry.primaryMood;
-  const tags: string[] = entry.tags ? (JSON.parse(entry.tags) as string[]) : [];
+  const tags = parseStoredTags(entry.tags);
 
   const handlePress = useCallback(() => onPress(entry.id), [entry.id, onPress]);
 
@@ -150,7 +152,7 @@ const EntryCard = memo(function EntryCard({ entry, onPress }: EntryCardProps) {
 const cardStyles = StyleSheet.create((_theme) => ({
   card: {
     marginHorizontal: 16,
-    marginVertical: 6,
+    marginVertical: 8,
     borderRadius: 20,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.14,
@@ -159,7 +161,7 @@ const cardStyles = StyleSheet.create((_theme) => ({
   },
   body: {
     padding: 20,
-    gap: 10,
+    gap: 8,
   },
   headlineRow: {
     flexDirection: 'row' as const,
@@ -192,7 +194,7 @@ const cardStyles = StyleSheet.create((_theme) => ({
     borderWidth: 1,
     borderRadius: 20,
     paddingHorizontal: 10,
-    paddingVertical: 3,
+    paddingVertical: 4,
   },
   tagText: {
     fontSize: 12,
@@ -267,9 +269,12 @@ const keyExtractor = (item: ListItem) => item.id;
 export default function Journal() {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
+  const { theme } = useUnistyles();
 
   const [entries, setEntries] = useState<MoodEntry[]>([]);
   const [notesOnly, setNotesOnly] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const isLoadingRef = useRef(false);
   const hasMoreRef = useRef(true);
@@ -283,7 +288,30 @@ export default function Journal() {
     });
   }, [navigation, notesOnly, toggleNotesOnly]);
 
-  const loadPage = useCallback(async () => {
+  // Full reset + first page — called on focus and for retry
+  const refreshEntries = useCallback(async () => {
+    isLoadingRef.current = false;
+    hasMoreRef.current = true;
+    offsetRef.current = 0;
+    setEntries([]);
+    setError(null);
+    setIsLoading(true);
+    isLoadingRef.current = true;
+    try {
+      const page = await fetchMoodEntriesPage(0, PAGE_SIZE);
+      if (page.length < PAGE_SIZE) hasMoreRef.current = false;
+      offsetRef.current = page.length;
+      setEntries(page);
+    } catch {
+      setError('Could not load entries');
+    } finally {
+      isLoadingRef.current = false;
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Pagination — appends the next page; errors are silent (list already visible)
+  const loadNextPage = useCallback(async () => {
     if (isLoadingRef.current || !hasMoreRef.current) return;
     isLoadingRef.current = true;
     try {
@@ -296,9 +324,12 @@ export default function Journal() {
     }
   }, []);
 
-  useEffect(() => {
-    loadPage();
-  }, [loadPage]);
+  // Refresh whenever the screen comes into focus (picks up new check-ins)
+  useFocusEffect(
+    useCallback(() => {
+      refreshEntries();
+    }, [refreshEntries]),
+  );
 
   const listItems = useMemo(() => buildListItems(entries, notesOnly), [entries, notesOnly]);
 
@@ -318,6 +349,30 @@ export default function Journal() {
   const paddingTop = insets.top + NAV_BAR_HEIGHT;
   const paddingBottom = LAYOUT.TAB_BAR_HEIGHT + insets.bottom + 16;
 
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <ActivityIndicator color={theme.colors.mosaicGold} />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <Text style={[styles.errorText, { color: theme.colors.textMuted }]}>{error}</Text>
+        <Pressable
+          onPress={refreshEntries}
+          style={({ pressed }) => [styles.retryBtn, { opacity: pressed ? 0.6 : 1 }]}
+        >
+          <Text style={{ color: theme.colors.mosaicGold, fontWeight: '600', fontSize: 15 }}>
+            Retry
+          </Text>
+        </Pressable>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <FlashList
@@ -325,7 +380,7 @@ export default function Journal() {
         keyExtractor={keyExtractor}
         getItemType={getItemType}
         renderItem={renderItem}
-        onEndReached={loadPage}
+        onEndReached={loadNextPage}
         onEndReachedThreshold={0.4}
         ListEmptyComponent={EmptyState}
         contentContainerStyle={{ paddingTop, paddingBottom }}
@@ -339,5 +394,17 @@ const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
+  },
+  centered: {
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  errorText: {
+    fontSize: 15,
+    marginBottom: 16,
+  },
+  retryBtn: {
+    paddingHorizontal: 20,
+    paddingVertical: 8,
   },
 }));

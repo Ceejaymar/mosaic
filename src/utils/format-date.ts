@@ -1,45 +1,36 @@
-const MONTHS = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-];
+import { formatTime } from '@/src/features/check-in/utils/format-time';
+import i18n from '@/src/i18n';
 
 /**
  * Returns a human-readable day label for a dateKey ("YYYY-MM-DD"):
- *   - "Today" / "Yesterday" for the two most recent days
- *   - "Month D" (e.g. "September 26") for everything older
+ *   - i18n "Today" / "Yesterday" for the two most recent days
+ *   - Locale-aware "Month D" (or "Month D, YYYY" for past years) for everything older
  */
 export function formatDayLabel(dateKey: string): string {
-  const [_y, m, d] = dateKey.split('-').map(Number);
+  const [y, m, d] = dateKey.split('-').map(Number);
   const now = new Date();
   const pad = (n: number) => String(n).padStart(2, '0');
   const todayKey = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
   const yd = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
   const yKey = `${yd.getFullYear()}-${pad(yd.getMonth() + 1)}-${pad(yd.getDate())}`;
-  if (dateKey === todayKey) return 'Today';
-  if (dateKey === yKey) return 'Yesterday';
-  return `${MONTHS[m - 1]} ${d}`;
+  if (dateKey === todayKey) return i18n.t('common.today');
+  if (dateKey === yKey) return i18n.t('common.yesterday');
+  const date = new Date(y, m - 1, d);
+  const options: Intl.DateTimeFormatOptions =
+    y !== now.getFullYear()
+      ? { month: 'long', day: 'numeric', year: 'numeric' }
+      : { month: 'long', day: 'numeric' };
+  return date.toLocaleDateString(i18n.language, options);
 }
 
 /**
  * Returns relative time ("2 mins ago") for entries logged today,
  * or an absolute time string for older entries.
- *
- * Absolute format passes `undefined` as the locale so the device's
- * system locale is used — this automatically honours the user's
- * 24-hour clock preference set in iOS/Android Settings.
+ * Delegates absolute formatting to formatTime (NaN guard + honours 24h preference).
  */
 export function formatEntryTime(occurredAt: string): string {
   const date = new Date(occurredAt);
+  if (Number.isNaN(date.getTime())) return '';
   const now = new Date();
   const isToday = date.toDateString() === now.toDateString();
 
@@ -52,8 +43,8 @@ export function formatEntryTime(occurredAt: string): string {
     return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
   }
 
-  // Older entries: absolute time, honours device 24h preference
-  return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+  // Older entries: delegate to shared formatTime (NaN guard + i18n.language + 24h)
+  return formatTime(occurredAt);
 }
 
 export const formatDate = (date: Date, locale = 'en-US') => {
