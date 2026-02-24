@@ -284,7 +284,7 @@ export default function Journal() {
   const isLoadingRef = useRef(false);
   const hasMoreRef = useRef(true);
   const offsetRef = useRef(0);
-  const hasLoadedOnceRef = useRef(false);
+  const entriesRef = useRef<MoodEntry[]>([]);
 
   const toggleNotesOnly = useCallback(() => setNotesOnly((v) => !v), []);
 
@@ -294,29 +294,42 @@ export default function Journal() {
     });
   }, [navigation, notesOnly, toggleNotesOnly]);
 
-  // Full reset + first page — called on focus and for retry
+  // Refresh + first page — called on focus and for retry.
+  // When entries already exist, fetches silently and only updates state if data changed.
+  // On error, preserves existing entries.
   const refreshEntries = useCallback(async () => {
+    const current = entriesRef.current;
+    const hasData = current.length > 0;
+
+    // Reset pagination cursors; also resets isLoadingRef so any in-flight loadNextPage is superseded
     isLoadingRef.current = false;
     hasMoreRef.current = true;
     offsetRef.current = 0;
-    const isFirstLoad = !hasLoadedOnceRef.current;
-    if (isFirstLoad) {
-      setEntries([]);
+
+    if (!hasData) {
       setError(false);
       setIsLoading(true);
     }
+
     isLoadingRef.current = true;
     try {
       const page = await fetchMoodEntriesPage(0, PAGE_SIZE);
       if (page.length < PAGE_SIZE) hasMoreRef.current = false;
       offsetRef.current = page.length;
-      setEntries(page);
-      hasLoadedOnceRef.current = true;
+
+      // For a silent background refresh, skip the state update when nothing changed
+      const changed =
+        !hasData || page.length !== current.length || page.some((e, i) => e.id !== current[i]?.id);
+
+      if (changed) {
+        entriesRef.current = page;
+        setEntries(page);
+      }
     } catch {
       setError(true);
     } finally {
       isLoadingRef.current = false;
-      setIsLoading(false);
+      if (!hasData) setIsLoading(false);
     }
   }, []);
 
@@ -332,7 +345,11 @@ export default function Journal() {
         const page = await fetchMoodEntriesPage(offsetRef.current, PAGE_SIZE);
         if (page.length < PAGE_SIZE) hasMoreRef.current = false;
         offsetRef.current += page.length;
-        setEntries((prev) => [...prev, ...page]);
+        setEntries((prev) => {
+          const next = [...prev, ...page];
+          entriesRef.current = next;
+          return next;
+        });
         addedVisible = notesOnly
           ? page.some((e) => (e.note ?? '').trim().length > 0)
           : page.length > 0;
