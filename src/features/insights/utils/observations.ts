@@ -1,5 +1,5 @@
+import type { InsightEntry, Observation } from '@/src/features/insights/types';
 import { uuid } from '@/src/lib/uuid';
-import type { InsightEntry, Observation } from '../types';
 
 export function generateObservations(entries: InsightEntry[]): Observation[] {
   if (entries.length < 3) return []; // Blank slate guardrail

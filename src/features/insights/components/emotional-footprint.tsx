@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
-import type { InsightEntry } from '../types';
+import type { InsightEntry } from '@/src/features/insights/types';
 
 type Props = { entries: InsightEntry[] };
 

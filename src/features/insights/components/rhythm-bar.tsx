@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Text, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
-import type { InsightEntry } from '../types';
+import type { InsightEntry } from '@/src/features/insights/types';
 
 type Props = { entries: InsightEntry[] };
 
@@ -86,10 +86,10 @@ const styles = StyleSheet.create((theme) => ({
   barContainer: {
     flexDirection: 'row',
     width: '100%',
-    gap: 6, // This creates the crisp visual separator between the 4 time blocks
+    gap: 8,
   },
   timeColumn: {
-    flex: 1, // Ensures all 4 columns stay exactly 25% wide
+    flex: 1,
     alignItems: 'center',
     gap: 8,
   },
@@ -97,8 +97,8 @@ const styles = StyleSheet.create((theme) => ({
     flexDirection: 'row',
     width: '100%',
     height: 40,
-    borderRadius: 20,
-    overflow: 'hidden', // Keeps the color slivers contained within the rounded edges
+    borderRadius: 10,
+    overflow: 'hidden',
   },
   segment: {
     height: '100%',

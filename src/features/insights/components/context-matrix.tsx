@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
-import type { InsightEntry } from '../types';
+import type { InsightEntry } from '@/src/features/insights/types';
 
 type Category = 'activities' | 'people' | 'places';
 type Props = { entries: InsightEntry[]; category: Category; title: string };
