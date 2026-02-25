@@ -6,6 +6,7 @@ import Animated, {
   FadeOut,
   useAnimatedProps,
   useAnimatedStyle,
+  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 import { StyleSheet } from 'react-native-unistyles';
@@ -37,16 +38,14 @@ export function FocusGroup({
   onSelectNode,
 }: Props) {
   const groupPalette = getGroupPalette(group.id);
-
-  // Dusty, muted version of the group color for the idle state
   const mutedBackground = muteColor(group.color);
 
   const headerAnimStyle = useAnimatedStyle(() => ({
     backgroundColor: withTiming(isFocused ? group.color : mutedBackground, { duration: 250 }),
-    transform: [{ scale: withTiming(isFocused ? 1.02 : 1, { duration: 250 }) }],
+    // Fixed: Scale now uses withSpring for a subtler, snappier bounce
+    transform: [{ scale: withSpring(isFocused ? 1.02 : 1, { damping: 15, stiffness: 200 }) }],
   }));
 
-  // High-contrast transition: Bright white (unselected) -> Solid black (selected)
   const textAnimStyle = useAnimatedStyle(() => ({
     color: withTiming(isFocused ? '#000000' : '#FFFFFF', { duration: 250 }),
     opacity: withTiming(isFocused ? 1 : 0.95, { duration: 250 }),

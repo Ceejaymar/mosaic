@@ -2,12 +2,11 @@ import { useRef } from 'react';
 import { ScrollView, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
 import { StyleSheet } from 'react-native-unistyles';
-
-import { EMOTIONS_CONTENT } from '../content';
-import type { EmotionGroupId, EmotionNode } from '../types';
-import { getEmotionNode } from '../utils/emotion-utils';
-import { FocusGroup } from './focus-group';
-import SelectionModal from './selection-modal';
+import { FocusGroup } from '@/src/features/emotion-accordion/components/focus-group';
+import SelectionModal from '@/src/features/emotion-accordion/components/selection-modal';
+import { EMOTIONS_CONTENT } from '@/src/features/emotion-accordion/content';
+import type { EmotionGroupId, EmotionNode } from '@/src/features/emotion-accordion/types';
+import { getEmotionNode } from '@/src/features/emotion-accordion/utils/emotion-utils';
 
 const nodesByGroup = EMOTIONS_CONTENT.nodes.reduce<Record<string, EmotionNode[]>>((acc, node) => {
   if (node.level === 0) return acc;

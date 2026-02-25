@@ -23,10 +23,10 @@ export default function SelectionModal({ selectedNode, onPress, style }: Props) 
 
   return (
     <Animated.View
-      // Entrance animation: slides up from 20px below with a spring
-      entering={FadeInDown.springify().damping(20).stiffness(150)}
-      // Exit animation: fades and slides down smoothly
-      exiting={FadeOutDown.duration(200)}
+      // Faster, more aggressive spring entrance
+      entering={FadeInDown.springify().mass(1.5).damping(25).stiffness(200)}
+      // Rapid exit
+      exiting={FadeOutDown.duration(150)}
       style={[styles.wrapper, { bottom }, style]}
     >
       <Pressable
@@ -60,7 +60,6 @@ const styles = StyleSheet.create((theme) => ({
     right: 20,
     backgroundColor: theme.colors.surface,
     borderRadius: 16,
-    // Add shadow to make it feel like it's floating above the grid
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.2,
