@@ -19,11 +19,12 @@ const DOW_CONFIG = [
 export function MicroGrid({ entries }: Props) {
   const { theme } = useUnistyles();
 
-  const days = useMemo(() => {
+  const { dayColors, weekIds } = useMemo(() => {
     const dayColors: Record<string, string[]> = {};
+    const weekSet = new Set<number>();
 
     const sortedEntries = [...entries].sort((a, b) => a.date.localeCompare(b.date));
-    if (sortedEntries.length === 0) return {};
+    if (sortedEntries.length === 0) return { dayColors: {}, weekIds: [] };
 
     // FIX: Parse into separate variables to avoid constructor overload error
     const firstParts = sortedEntries[0].date.split('-').map(Number);
@@ -42,6 +43,7 @@ export function MicroGrid({ entries }: Props) {
       const weekIndex = Math.floor(diffInDays / 7);
       const dow = date.getDay();
 
+      weekSet.add(weekIndex);
       const key = `${weekIndex}-${dow}`;
 
       if (!dayColors[key]) dayColors[key] = [];
@@ -49,7 +51,8 @@ export function MicroGrid({ entries }: Props) {
       const uniqueColors = Array.from(new Set(entry.emotions));
       dayColors[key] = Array.from(new Set([...dayColors[key], ...uniqueColors])).slice(0, 4);
     }
-    return dayColors;
+    const weekIds = Array.from(weekSet).sort((a, b) => a - b);
+    return { dayColors, weekIds };
   }, [entries]);
 
   const renderMiniTile = (colors: string[]) => {
@@ -84,20 +87,26 @@ export function MicroGrid({ entries }: Props) {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>The Week</Text>
+
+      {/* We removed the weekIds.map() loop so it forces exactly 1 row */}
       <View style={styles.grid}>
         {DOW_CONFIG.map(({ id, label, dayIndex }) => {
-          // Identify the most recent entry for this specific day of the week
-          const keys = Object.keys(days).filter((k) => k.endsWith(`-${dayIndex}`));
+          // 1. Find all entries for this specific day of the week (e.g., all Mondays)
+          const keys = Object.keys(dayColors).filter((k) => k.endsWith(`-${dayIndex}`));
+
+          // 2. Sort them to grab the most recent week's data
           const latestKey = keys.sort((a, b) => {
             const weekA = parseInt(a.split('-')[0], 10);
             const weekB = parseInt(b.split('-')[0], 10);
             return weekB - weekA;
           })[0];
 
+          const colors = latestKey ? dayColors[latestKey] : [];
+
           return (
             <View key={id} style={styles.col}>
               <Text style={[styles.label, { color: theme.colors.textMuted }]}>{label}</Text>
-              {renderMiniTile(latestKey ? days[latestKey] : [])}
+              {renderMiniTile(colors)}
             </View>
           );
         })}
@@ -119,6 +128,7 @@ const styles = StyleSheet.create((theme) => ({
     letterSpacing: -0.4,
     marginBottom: 16,
   },
+  // weekRow removed from styles
   grid: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 16 },
   col: { alignItems: 'center', gap: 8 },
   label: { fontSize: 11, fontWeight: '600', fontFamily: 'SpaceMono' },

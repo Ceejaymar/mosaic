@@ -43,10 +43,10 @@ export function generateObservations(entries: InsightEntry[]): Observation[] {
   let topActivityColor = '';
   let maxCount = 0;
 
-  for (const activity in activityCorrelations) {
-    for (const color in activityCorrelations[activity]) {
-      if (activityCorrelations[activity][color] > maxCount) {
-        maxCount = activityCorrelations[activity][color];
+  for (const [activity, colors] of Object.entries(activityCorrelations)) {
+    for (const [color, count] of Object.entries(colors)) {
+      if (count > maxCount) {
+        maxCount = count;
         topActivity = activity;
         topActivityColor = color;
       }

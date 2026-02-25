@@ -26,8 +26,7 @@ export function RhythmBar({ entries }: Props) {
       // 2. Tally the core colors
       for (const entry of timeEntries) {
         for (const rawColor of entry.emotions) {
-          const coreColor = rawColor;
-          colorCounts[coreColor] = (colorCounts[coreColor] || 0) + 1;
+          colorCounts[rawColor] = (colorCounts[rawColor] || 0) + 1;
           totalCount++;
         }
       }
@@ -97,7 +96,7 @@ const styles = StyleSheet.create((theme) => ({
     flexDirection: 'row',
     width: '100%',
     height: 40,
-    borderRadius: 10,
+    borderRadius: 12,
     overflow: 'hidden',
   },
   segment: {

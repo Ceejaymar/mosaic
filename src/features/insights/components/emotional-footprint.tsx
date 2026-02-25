@@ -1,7 +1,7 @@
 import { Canvas, Circle, Group, LinearGradient, vec } from '@shopify/react-native-skia';
 import { router } from 'expo-router';
 import { useMemo } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, Text, useWindowDimensions, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import type { InsightEntry } from '@/src/features/insights/types';
@@ -18,6 +18,10 @@ const CLUSTER_POSITIONS = [
 
 export function EmotionalFootprint({ entries }: Props) {
   const { theme } = useUnistyles();
+  const { width: screenWidth } = useWindowDimensions();
+  const CANVAS_W = screenWidth - 48; // account for paddingHorizontal: 24 × 2
+  const CANVAS_H = Math.round(CANVAS_W * (260 / 320));
+  const scale = CANVAS_W / 320;
 
   const bubbles = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -61,49 +65,59 @@ export function EmotionalFootprint({ entries }: Props) {
         style={({ pressed }) => [styles.wrapper, pressed && { opacity: 0.9 }]}
       >
         {/* The Exact Size Box: This guarantees the Canvas and Text overlays perfectly align */}
-        <View style={styles.canvasBox}>
-          <Canvas style={styles.canvas}>
-            {bubbles.map((bubble, i) => (
-              <Group key={`group-${bubble.color}-${i}`}>
-                {/* 1. The Solid Base: 100% opaque, rich vibrant color */}
-                <Circle cx={bubble.cx} cy={bubble.cy} r={bubble.r} color={bubble.color} />
+        <View style={[styles.canvasBox, { width: CANVAS_W, height: CANVAS_H }]}>
+          <Canvas style={[styles.canvas, { width: CANVAS_W, height: CANVAS_H }]}>
+            {bubbles.map((bubble, i) => {
+              const cx = bubble.cx * scale;
+              const cy = bubble.cy * scale;
+              const r = bubble.r * scale;
+              return (
+                <Group key={`group-${bubble.color}-${i}`}>
+                  {/* 1. The Solid Base: 100% opaque, rich vibrant color */}
+                  <Circle cx={cx} cy={cy} r={r} color={bubble.color} />
 
-                {/* 2. The Gradient Sheen: Adds a subtle light-to-dark gradient over the solid color */}
-                <Circle cx={bubble.cx} cy={bubble.cy} r={bubble.r}>
-                  <LinearGradient
-                    start={vec(bubble.cx - bubble.r, bubble.cy - bubble.r)}
-                    end={vec(bubble.cx + bubble.r, bubble.cy + bubble.r)}
-                    colors={['rgba(255,255,255,0.25)', 'rgba(0,0,0,0.1)']}
-                  />
-                </Circle>
-              </Group>
-            ))}
+                  {/* 2. The Gradient Sheen: Adds a subtle light-to-dark gradient over the solid color */}
+                  <Circle cx={cx} cy={cy} r={r}>
+                    <LinearGradient
+                      start={vec(cx - r, cy - r)}
+                      end={vec(cx + r, cy + r)}
+                      colors={['rgba(255,255,255,0.25)', 'rgba(0,0,0,0.1)']}
+                    />
+                  </Circle>
+                </Group>
+              );
+            })}
           </Canvas>
 
           {/* Absolute Overlays locked exactly to the Canvas dimensions */}
-          {bubbles.map((bubble, i) => (
-            <View
-              key={`text-${bubble.color}-${i}`}
-              style={[
-                styles.pctOverlay,
-                {
-                  left: bubble.cx - bubble.r,
-                  top: bubble.cy - bubble.r,
-                  width: bubble.r * 2,
-                  height: bubble.r * 2,
-                },
-              ]}
-            >
-              <Text
+          {bubbles.map((bubble, i) => {
+            const cx = bubble.cx * scale;
+            const cy = bubble.cy * scale;
+            const r = bubble.r * scale;
+            return (
+              <View
+                key={`text-${bubble.color}-${i}`}
                 style={[
-                  styles.pctText,
-                  { fontSize: Math.max(14, bubble.r * 0.35), color: theme.colors.background },
+                  styles.pctOverlay,
+                  {
+                    left: cx - r,
+                    top: cy - r,
+                    width: r * 2,
+                    height: r * 2,
+                  },
                 ]}
               >
-                {bubble.pctString}
-              </Text>
-            </View>
-          ))}
+                <Text
+                  style={[
+                    styles.pctText,
+                    { fontSize: Math.max(14, r * 0.35), color: theme.colors.background },
+                  ]}
+                >
+                  {bubble.pctString}
+                </Text>
+              </View>
+            );
+          })}
         </View>
       </Pressable>
     </View>
@@ -126,13 +140,9 @@ const styles = StyleSheet.create((theme) => ({
     width: '100%',
   },
   canvasBox: {
-    width: 320,
-    height: 260,
     position: 'relative',
   },
-  canvas: {
-    flex: 1,
-  },
+  canvas: {},
   pctOverlay: {
     position: 'absolute',
     alignItems: 'center',
