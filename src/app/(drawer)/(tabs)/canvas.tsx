@@ -180,7 +180,6 @@ export default function CanvasScreen() {
         styles.screen,
         {
           paddingTop: insets.top,
-          paddingBottom: LAYOUT.TAB_BAR_HEIGHT + insets.bottom,
         },
       ]}
     >
@@ -221,7 +220,10 @@ export default function CanvasScreen() {
               )}
               getItemLayout={getItemLayout}
               initialScrollIndex={monthList.length - 1}
-              contentContainerStyle={{ paddingTop: verticalPadding, paddingBottom: 0 }}
+              contentContainerStyle={{
+                paddingTop: verticalPadding,
+                paddingBottom: LAYOUT.TAB_BAR_HEIGHT + insets.bottom,
+              }}
               snapToInterval={itemHeight}
               decelerationRate="fast"
               showsVerticalScrollIndicator={false}
