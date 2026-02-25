@@ -1,8 +1,8 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { FlashList } from '@shopify/flash-list';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router, useNavigation } from 'expo-router';
-import { memo, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { router } from 'expo-router';
+import { memo, useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -17,7 +17,6 @@ import { formatDayLabel, formatEntryTime } from '@/src/utils/format-date';
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const PAGE_SIZE = 30;
-const NAV_BAR_HEIGHT = 44;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -271,7 +270,6 @@ const keyExtractor = (item: ListItem) => item.id;
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function Journal() {
-  const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { theme } = useUnistyles();
   const {
@@ -443,7 +441,7 @@ const styles = StyleSheet.create((theme) => ({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 24,
-    paddingVertical: 12,
+    paddingTop: 12,
     paddingBottom: 16,
   },
   pageTitle: {

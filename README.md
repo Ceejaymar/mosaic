@@ -13,10 +13,10 @@ A high-performance, local-first mood tracker designed for clarity and emotional 
 </p>
 </div>
 
-📌 About Mosaic
+## 📌 About Mosaic
 Mosaic is a privacy-first mobile application built with React Native. It moves away from complex journaling and focuses on high-density visual feedback. By utilizing a "Contribution-style" calendar, Mosaic helps users identify emotional patterns across months and years with zero friction.
 
-✨ Key Features
+## ✨ Key Features
 📊 High-Density Mood Calendar — A custom-engineered visualization allowing for up to 4 mood entries per day, providing a granular look at emotional shifts.
 
 ⚡ Performance Optimized — Built with a local-first architecture for near-instant interactions and offline reliability.
@@ -27,7 +27,7 @@ Mosaic is a privacy-first mobile application built with React Native. It moves a
 
 🔒 Data Sovereignty — All emotional data remains on-device. No tracking, no third-party analytics, no compromise.
 
-🛠️ Architecture & Tech Stack
+## 🛠️ Architecture & Tech Stack
 The engineering focus of Mosaic is on speed and type safety.
 
 - **Framework:** Expo (SDK 50+) with TypeScript
@@ -40,7 +40,7 @@ The engineering focus of Mosaic is on speed and type safety.
 
 - **Styling**: Unistyles for a performant, runtime-based styling solution.
 
-🗺️ Roadmap
+## 🗺️ Roadmap
 - [x] High-performance local persistence layer
 
 - [x] Multi-entry daily mood logging
@@ -53,14 +53,14 @@ The engineering focus of Mosaic is on speed and type safety.
 
 - [ ] Localized push notifications for consistency
 
-🔐 Privacy
+## 🔐 Privacy
 Mosaic is built on the principle that your emotions aren't for sale.
 
 Zero Cloud by Default: Your database lives on your physical device.
 
 Secure Storage: System preferences and sensitive flags are handled via encrypted on-device storage.
 
-📬 Contact
+## 📬 Contact
 [Carlos — LinkedIn][linkedin-url]
 
 

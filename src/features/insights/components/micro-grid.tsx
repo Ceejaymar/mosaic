@@ -6,7 +6,6 @@ import type { InsightEntry } from '@/src/features/insights/types';
 
 type Props = { entries: InsightEntry[] };
 
-// Replaced simple array with explicit IDs and day indexes for stable mapping
 const DOW_CONFIG = [
   { id: 'sun', label: 'S', dayIndex: 0 },
   { id: 'mon', label: 'M', dayIndex: 1 },
@@ -21,23 +20,34 @@ export function MicroGrid({ entries }: Props) {
   const { theme } = useUnistyles();
 
   const days = useMemo(() => {
-    // Map entries to days of the week (0-6).
-    // In a real implementation, you'd match exact dates. Here we mock it by grouping.
-    const dayColors: Record<number, string[]> = { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] };
+    const dayColors: Record<string, string[]> = {};
+
+    const sortedEntries = [...entries].sort((a, b) => a.date.localeCompare(b.date));
+    if (sortedEntries.length === 0) return {};
+
+    // FIX: Parse into separate variables to avoid constructor overload error
+    const firstParts = sortedEntries[0].date.split('-').map(Number);
+    // JS Months are 0-indexed (Jan = 0)
+    const firstDate = new Date(firstParts[0], firstParts[1] - 1, firstParts[2]);
+
+    // Normalize baseline to the start of its week (Sunday)
+    firstDate.setDate(firstDate.getDate() - firstDate.getDay());
 
     for (const entry of entries) {
-      // 1. Split the string 'YYYY-MM-DD' into an array of numbers
-      const [year, month, day] = entry.date.split('-').map(Number);
+      const [y, m, d] = entry.date.split('-').map(Number);
+      // FIX: Construct local date to avoid UTC timezone shifting check-ins to the previous day
+      const date = new Date(y, m - 1, d);
 
-      // 2. Construct a local date (Month is 0-indexed in JS, so we do month - 1)
-      const date = new Date(year, month - 1, day);
+      const diffInDays = Math.floor((date.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24));
+      const weekIndex = Math.floor(diffInDays / 7);
+      const dow = date.getDay();
 
-      const dow = date.getDay(); // Now accurately reflects your local timezone!
+      const key = `${weekIndex}-${dow}`;
 
-      if (!Number.isNaN(dow)) {
-        const uniqueColors = Array.from(new Set(entry.emotions));
-        dayColors[dow] = Array.from(new Set([...dayColors[dow], ...uniqueColors])).slice(0, 4);
-      }
+      if (!dayColors[key]) dayColors[key] = [];
+
+      const uniqueColors = Array.from(new Set(entry.emotions));
+      dayColors[key] = Array.from(new Set([...dayColors[key], ...uniqueColors])).slice(0, 4);
     }
     return dayColors;
   }, [entries]);
@@ -75,12 +85,22 @@ export function MicroGrid({ entries }: Props) {
     <View style={styles.container}>
       <Text style={styles.title}>The Week</Text>
       <View style={styles.grid}>
-        {DOW_CONFIG.map(({ id, label, dayIndex }) => (
-          <View key={id} style={styles.col}>
-            <Text style={[styles.label, { color: theme.colors.textMuted }]}>{label}</Text>
-            {renderMiniTile(days[dayIndex] || [])}
-          </View>
-        ))}
+        {DOW_CONFIG.map(({ id, label, dayIndex }) => {
+          // Identify the most recent entry for this specific day of the week
+          const keys = Object.keys(days).filter((k) => k.endsWith(`-${dayIndex}`));
+          const latestKey = keys.sort((a, b) => {
+            const weekA = parseInt(a.split('-')[0], 10);
+            const weekB = parseInt(b.split('-')[0], 10);
+            return weekB - weekA;
+          })[0];
+
+          return (
+            <View key={id} style={styles.col}>
+              <Text style={[styles.label, { color: theme.colors.textMuted }]}>{label}</Text>
+              {renderMiniTile(latestKey ? days[latestKey] : [])}
+            </View>
+          );
+        })}
       </View>
     </View>
   );
