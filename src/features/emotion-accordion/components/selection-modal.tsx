@@ -1,5 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Pressable, type StyleProp, Text, View, type ViewStyle } from 'react-native';
+import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
 
@@ -21,46 +22,57 @@ export default function SelectionModal({ selectedNode, onPress, style }: Props) 
   const bottom = Math.max(insets.bottom, 16) + 8;
 
   return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [styles.wrapper, { bottom }, style, pressed && { opacity: 0.82 }]}
-      accessibilityRole="button"
-      accessibilityLabel={`Continue with ${selectedNode.label}`}
+    <Animated.View
+      // Faster, more aggressive spring entrance
+      entering={FadeInDown.springify().mass(1.5).damping(25).stiffness(200)}
+      // Rapid exit
+      exiting={FadeOutDown.duration(150)}
+      style={[styles.wrapper, { bottom }, style]}
     >
-      <View style={styles.container}>
-        <Text style={[styles.value, { color }]}>{selectedNode.label}</Text>
+      <Pressable
+        onPress={onPress}
+        style={({ pressed }) => [styles.pressable, pressed && { opacity: 0.82 }]}
+        accessibilityRole="button"
+        accessibilityLabel={`Continue with ${selectedNode.label}`}
+      >
+        <View style={styles.container}>
+          <Text style={[styles.value, { color }]}>{selectedNode.label}</Text>
 
-        <Text style={styles.synonyms}>{selectedNode.synonyms.join(' · ')}</Text>
+          <Text style={styles.synonyms}>{selectedNode.synonyms.join(' · ')}</Text>
 
-        {selectedNode.description && (
-          <Text style={styles.description}>{selectedNode.description}</Text>
-        )}
-      </View>
+          {selectedNode.description && (
+            <Text style={styles.description}>{selectedNode.description}</Text>
+          )}
+        </View>
 
-      <View style={[styles.arrowContainer, { backgroundColor: `${color}22` }]}>
-        <Ionicons name="arrow-forward" size={28} color={color} />
-      </View>
-    </Pressable>
+        <View style={[styles.arrowContainer, { backgroundColor: `${color}22` }]}>
+          <Ionicons name="arrow-forward" size={28} color={color} />
+        </View>
+      </Pressable>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create((theme) => ({
   wrapper: {
     position: 'absolute',
+    left: 20,
+    right: 20,
+    backgroundColor: theme.colors.surface,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 10,
+    overflow: 'hidden',
+  },
+  pressable: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 12,
-    left: 20,
-    right: 20,
     padding: 20,
-    backgroundColor: theme.colors.surface,
-    borderRadius: 16,
-    shadowColor: theme.colors.typography,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 15,
-    elevation: 10,
   },
   container: { flex: 1 },
   value: { fontSize: 28, fontWeight: '700', fontFamily: 'Fraunces' },
