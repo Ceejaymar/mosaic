@@ -1,4 +1,3 @@
-import { useHeaderHeight } from '@react-navigation/elements';
 import { memo, useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Pressable, Text, useWindowDimensions, View } from 'react-native';
@@ -109,7 +108,6 @@ const AnimatedMonth = memo(function AnimatedMonth({
 
 export default function CanvasScreen() {
   const insets = useSafeAreaInsets();
-  const headerHeight = useHeaderHeight();
   const { width: screenWidth } = useWindowDimensions();
   const { t } = useTranslation();
 
@@ -181,7 +179,7 @@ export default function CanvasScreen() {
       style={[
         styles.screen,
         {
-          paddingTop: Math.max(headerHeight, insets.top),
+          paddingTop: insets.top,
           paddingBottom: LAYOUT.TAB_BAR_HEIGHT + insets.bottom,
         },
       ]}

@@ -250,7 +250,7 @@ function FilterToggle({ notesOnly, onToggle }: FilterToggleProps) {
   return (
     <Pressable
       onPress={onToggle}
-      style={({ pressed }) => ({ marginRight: 16, opacity: pressed ? 0.4 : 1 })}
+      style={({ pressed }) => ({ opacity: pressed ? 0.4 : 1 })}
       accessibilityRole="button"
       accessibilityLabel={
         notesOnly ? t('journal.filter_a11y_show_all') : t('journal.filter_a11y_with_notes')
@@ -290,12 +290,6 @@ export default function Journal() {
   const entriesRef = useRef<MoodEntry[]>([]);
 
   const toggleNotesOnly = useCallback(() => setNotesOnly((v) => !v), []);
-
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => <FilterToggle notesOnly={notesOnly} onToggle={toggleNotesOnly} />,
-    });
-  }, [navigation, notesOnly, toggleNotesOnly]);
 
   // Refresh + first page — called on focus and for retry.
   // When entries already exist, fetches silently and only updates state if data changed.
@@ -389,7 +383,7 @@ export default function Journal() {
     [handleEntryPress],
   );
 
-  const paddingTop = insets.top + NAV_BAR_HEIGHT;
+  const paddingTop = insets.top;
   const paddingBottom = LAYOUT.TAB_BAR_HEIGHT + insets.bottom + 16;
 
   if (isLoading) {
@@ -419,7 +413,11 @@ export default function Journal() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop }]}>
+      <View style={styles.topBar}>
+        <Text style={styles.pageTitle}>{t('journal.title', 'Journal')}</Text>
+        <FilterToggle notesOnly={notesOnly} onToggle={toggleNotesOnly} />
+      </View>
       <FlashList
         data={listItems}
         keyExtractor={keyExtractor}
@@ -428,7 +426,7 @@ export default function Journal() {
         onEndReached={loadNextPage}
         onEndReachedThreshold={0.4}
         ListEmptyComponent={EmptyState}
-        contentContainerStyle={{ paddingTop, paddingBottom }}
+        contentContainerStyle={{ paddingBottom }}
         showsVerticalScrollIndicator={false}
       />
     </View>
@@ -439,6 +437,21 @@ const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
+  },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    paddingBottom: 16,
+  },
+  pageTitle: {
+    fontSize: 28,
+    fontFamily: 'Fraunces',
+    fontWeight: '700',
+    color: theme.colors.typography,
+    letterSpacing: -0.4,
   },
   centered: {
     alignItems: 'center' as const,

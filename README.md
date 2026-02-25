@@ -51,7 +51,7 @@ The engineering focus of Mosaic is on speed and type safety.
 
 - [ ] Dark mode + High-contrast accessibility overrides
 
-- [] Localized push notifications for consistency
+- [ ] Localized push notifications for consistency
 
 🔐 Privacy
 Mosaic is built on the principle that your emotions aren't for sale.

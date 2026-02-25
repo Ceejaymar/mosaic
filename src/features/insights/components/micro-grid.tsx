@@ -26,10 +26,15 @@ export function MicroGrid({ entries }: Props) {
     const dayColors: Record<number, string[]> = { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] };
 
     for (const entry of entries) {
-      const date = new Date(entry.date);
-      const dow = date.getDay(); // 0 = Sunday
+      // 1. Split the string 'YYYY-MM-DD' into an array of numbers
+      const [year, month, day] = entry.date.split('-').map(Number);
+
+      // 2. Construct a local date (Month is 0-indexed in JS, so we do month - 1)
+      const date = new Date(year, month - 1, day);
+
+      const dow = date.getDay(); // Now accurately reflects your local timezone!
+
       if (!Number.isNaN(dow)) {
-        // Collect up to 4 unique colors per day
         const uniqueColors = Array.from(new Set(entry.emotions));
         dayColors[dow] = Array.from(new Set([...dayColors[dow], ...uniqueColors])).slice(0, 4);
       }

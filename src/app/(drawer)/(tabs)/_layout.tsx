@@ -37,7 +37,7 @@ export default function TabLayout() {
       <Tabs
         screenListeners={{ tabPress: () => hapticLight() }}
         screenOptions={{
-          headerShown: true,
+          headerShown: false,
           headerLeft: () => <DrawerToggleButton tintColor={theme.colors.typography} />,
           headerTransparent: true,
           tabBarActiveTintColor: theme.colors.mosaicGold,
@@ -76,6 +76,7 @@ export default function TabLayout() {
           name="index"
           options={{
             title: 'Today',
+            headerShown: true,
             headerTitle: '',
             tabBarIcon: ({ color, focused }) => (
               <Ionicons name={focused ? 'home' : 'home-outline'} size={22} color={color} />

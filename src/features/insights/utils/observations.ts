@@ -69,12 +69,18 @@ export function generateObservations(entries: InsightEntry[]): Observation[] {
     }
   }
 
-  const dominantTotalColor = Object.keys(totalCounts).sort(
+  // Sort all colors by frequency descending
+  const sortedTotalColors = Object.keys(totalCounts).sort(
     (a, b) => totalCounts[b] - totalCounts[a],
-  )[0];
+  );
 
-  // Avoid repeating the morning color if possible
-  if (dominantTotalColor && dominantTotalColor !== dominantMorningColor) {
+  if (sortedTotalColors.length > 0) {
+    // Find the most frequent color that ISN'T the morning color
+    const alternativeColor = sortedTotalColors.find((color) => color !== dominantMorningColor);
+
+    // Fall back to the absolute top color only if they literally just logged 1 color all week
+    const dominantTotalColor = alternativeColor || sortedTotalColors[0];
+
     observations.push({
       id: uuid(),
       text: 'This was a prominent recurring emotion for you during this timeframe.',

@@ -1,4 +1,3 @@
-import { useHeaderHeight } from '@react-navigation/elements';
 import { router } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
@@ -69,7 +68,6 @@ const pagerStyles = StyleSheet.create({
 
 export default function InsightsScreen() {
   const insets = useSafeAreaInsets();
-  const headerHeight = useHeaderHeight();
   const { theme } = useUnistyles();
 
   const [timeFrame, setTimeFrame] = useState<TimeFrame>('week');
@@ -100,7 +98,7 @@ export default function InsightsScreen() {
       style={[
         styles.container,
         {
-          paddingTop: Math.max(headerHeight, insets.top),
+          paddingTop: insets.top,
           paddingBottom: LAYOUT.TAB_BAR_HEIGHT + insets.bottom,
         },
       ]}
@@ -113,7 +111,11 @@ export default function InsightsScreen() {
             <Pressable
               key={tf}
               onPress={() => handleTimeFrameChange(tf)}
-              style={[styles.segment, isActive && { backgroundColor: theme.colors.surface }]}
+              style={({ pressed }) => [
+                styles.segment,
+                isActive && { backgroundColor: theme.colors.surface },
+                pressed && { opacity: 0.6 },
+              ]}
             >
               <Text
                 style={[
