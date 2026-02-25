@@ -40,22 +40,14 @@ export async function prefetchMonth(year: number, month: number): Promise<void> 
 
 /**
  * Fetches real mood entries from the DB for a given month/year and returns
- * them shaped as CanvasDay[]. Skips the fetch when `enabled` is false.
- * Results are cached so re-visiting a month is instant.
+ * them shaped as CanvasDay[]. Results are cached so re-visiting a month is instant.
  */
-export function useCanvasDbData(month: number, year: number, enabled: boolean): CanvasDbState {
+export function useCanvasDbData(month: number, year: number): CanvasDbState {
   const [days, setDays] = useState<CanvasDay[]>(() => _cache.get(`${year}-${month}`) ?? []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<unknown>(null);
 
   useEffect(() => {
-    if (!enabled) {
-      setDays([]);
-      setLoading(false);
-      setError(null);
-      return;
-    }
-
     const key = `${year}-${month}`;
     const cached = _cache.get(key);
     if (cached) {
@@ -85,7 +77,7 @@ export function useCanvasDbData(month: number, year: number, enabled: boolean): 
     return () => {
       cancelled = true;
     };
-  }, [month, year, enabled]);
+  }, [month, year]);
 
   return { days, loading, error };
 }

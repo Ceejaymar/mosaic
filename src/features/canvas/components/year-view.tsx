@@ -13,7 +13,6 @@ import { FlatList, Pressable, Text, View, type ViewToken } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { fetchMoodEntriesForMonth } from '@/src/db/repos/moodRepo';
-import { computeMockCanvasDays } from '@/src/features/canvas/hooks/useCanvasData';
 import { buildCanvasDays } from '@/src/features/canvas/utils/buildCanvasDays';
 
 // ─── Context ──────────────────────────────────────────────────────────────────
@@ -163,13 +162,11 @@ type FlatDay = {
 
 const SingleYearBlock = memo(function SingleYearBlock({
   year,
-  demoMode,
   viewportHeight,
   contentWidth,
   onDayPress,
 }: {
   year: number;
-  demoMode: boolean;
   viewportHeight: number;
   contentWidth: number;
   onDayPress: (date: string) => void;
@@ -194,18 +191,6 @@ const SingleYearBlock = memo(function SingleYearBlock({
     const months = Array.from({ length: 12 }, (_, m) => m);
     const now = new Date();
     const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-
-    if (demoMode) {
-      const result: FlatDay[] = [];
-      for (const month of months) {
-        for (const d of computeMockCanvasDays(month, year)) {
-          result.push({ dateKey: d.date, month, entries: d.entries, isFuture: d.date > todayKey });
-        }
-      }
-      setFlatDays(result);
-      setLiveLoading(false);
-      return;
-    }
 
     Promise.all(
       months.map((month) =>
@@ -241,7 +226,7 @@ const SingleYearBlock = memo(function SingleYearBlock({
     return () => {
       cancelled = true;
     };
-  }, [demoMode, year, shouldRender]);
+  }, [year, shouldRender]);
 
   const memoizedTiles = useMemo(
     () =>
@@ -275,18 +260,11 @@ const SingleYearBlock = memo(function SingleYearBlock({
 type Props = {
   onDayPress: (date: string) => void;
   contentWidth: number;
-  demoMode: boolean;
   onYearChange: (year: number) => void;
   viewportHeight: number;
 };
 
-export function YearView({
-  onDayPress,
-  contentWidth,
-  demoMode,
-  onYearChange,
-  viewportHeight,
-}: Props) {
+export function YearView({ onDayPress, contentWidth, onYearChange, viewportHeight }: Props) {
   // Inverted FlatList: data[0] renders at the bottom. Current year first = bottom.
   const [yearsList, setYearsList] = useState<number[]>([CURRENT_YEAR]);
   const [visibleYear, setVisibleYear] = useState(CURRENT_YEAR);
@@ -321,13 +299,12 @@ export function YearView({
     ({ item }: { item: number }) => (
       <SingleYearBlock
         year={item}
-        demoMode={demoMode}
         viewportHeight={viewportHeight}
         contentWidth={contentWidth}
         onDayPress={onDayPress}
       />
     ),
-    [demoMode, viewportHeight, contentWidth, onDayPress],
+    [viewportHeight, contentWidth, onDayPress],
   );
 
   return (
