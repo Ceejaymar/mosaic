@@ -22,6 +22,7 @@ export default function TabLayout() {
       <Tabs
         screenListeners={{ tabPress: () => hapticLight() }}
         screenOptions={{
+          animation: 'shift',
           headerShown: false,
           headerLeft: () => <DrawerToggleButton tintColor={theme.colors.typography} />,
           headerTransparent: true,
@@ -45,7 +46,7 @@ export default function TabLayout() {
                 bottom: 0,
                 left: 0,
                 right: 0,
-                height: tabBarHeight + 0,
+                height: tabBarHeight + 20,
               }}
               pointerEvents="none"
             >
