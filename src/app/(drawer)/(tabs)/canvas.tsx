@@ -1,3 +1,4 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { memo, useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Pressable, Text, useWindowDimensions, View } from 'react-native';
@@ -11,7 +12,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { StyleSheet } from 'react-native-unistyles';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { TopFade } from '@/src/components/top-fade';
 import { LAYOUT } from '@/src/constants/layout';
@@ -103,8 +104,10 @@ export default function CanvasScreen() {
   const insets = useSafeAreaInsets();
   const { width: screenWidth } = useWindowDimensions();
   const { t } = useTranslation();
+  const { theme } = useUnistyles();
 
   const [viewMode, setViewMode] = useState<'month' | 'year'>('month');
+  const [isCompact, setIsCompact] = useState(false);
   const [hideEmpty, setHideEmpty] = useState(false);
   const [containerHeight, setContainerHeight] = useState(0);
   const [isYearMounted, setIsYearMounted] = useState(false);
@@ -169,6 +172,22 @@ export default function CanvasScreen() {
       <View style={[styles.topBar, { top: insets.top, paddingHorizontal: TOPBAR_H_PAD }]}>
         <Text style={styles.pageTitle}>Canvas</Text>
         <View style={styles.controls}>
+          {viewMode === 'year' && (
+            <Pressable
+              onPress={() => setIsCompact(!isCompact)}
+              style={({ pressed }) => [
+                styles.iconBtn,
+                pressed && { opacity: 0.5 },
+                { marginRight: 8 },
+              ]}
+            >
+              <Ionicons
+                name={isCompact ? 'apps' : 'apps-outline'}
+                size={22}
+                color={theme.colors.typography}
+              />
+            </Pressable>
+          )}
           <Text style={styles.headerLabel}>
             {viewMode === 'year' ? overviewYear.toString() : ''}
           </Text>
@@ -227,7 +246,6 @@ export default function CanvasScreen() {
                       data={[]}
                       tileSize={tileSize}
                       tileGap={TILE_GAP}
-                      hideEmpty={hideEmpty}
                       onDayPress={() => {}}
                     />
                   </View>
@@ -255,7 +273,11 @@ export default function CanvasScreen() {
                 onDayPress={handleDayPress}
                 contentWidth={screenWidth}
                 onYearChange={setOverviewYear}
-                viewportHeight={containerHeight - (insets.top + 60)}
+                viewportHeight={
+                  containerHeight - (insets.top + 60) - (LAYOUT.TAB_BAR_HEIGHT + insets.bottom)
+                }
+                isCompact={isCompact}
+                maxTileSize={tileSize * 1.5}
               />
             </View>
           )}

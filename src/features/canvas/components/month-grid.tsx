@@ -13,7 +13,6 @@ type Props = {
   data: CanvasDay[];
   tileSize: number;
   tileGap: number;
-  hideEmpty: boolean;
   onDayPress: (date: string) => void;
 };
 
@@ -23,7 +22,6 @@ export const MonthGrid = memo(function MonthGrid({
   data,
   tileSize,
   tileGap,
-  hideEmpty,
   onDayPress,
 }: Props) {
   const firstDow = new Date(year, month, 1).getDay();
@@ -48,9 +46,6 @@ export const MonthGrid = memo(function MonthGrid({
 
         const dayData = dayMap.get(day);
         const colors = dayData?.entries ?? [];
-
-        if (hideEmpty && colors.length === 0) return <View key={key} style={cellSize} />;
-
         const hasData = colors.length > 0;
 
         return (

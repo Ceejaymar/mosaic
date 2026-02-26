@@ -18,6 +18,8 @@ const lightTheme = {
     destructive: '#FF3B30',
     headerGradient: ['rgba(255,255,255,0.9)', 'rgba(255,255,255,0.1)'],
     tabBarGradient: ['rgba(255,255,255,0)', 'rgba(255,255,255,0.9)'],
+    /** Tab bar label/icon when not selected (light background) */
+    tabInactive: 'rgba(0,0,0,0.45)',
   },
 };
 
@@ -41,6 +43,8 @@ const darkTheme = {
     destructive: '#FF3B30',
     headerGradient: ['rgba(0,0,0,0.9)', 'rgba(0,0,0,0.1)'],
     tabBarGradient: ['rgba(0,0,0,0)', 'rgba(0,0,0,0.9)'],
+    /** Tab bar label/icon when not selected (dark background) */
+    tabInactive: 'rgba(255,255,255,0.45)',
   },
 };
 

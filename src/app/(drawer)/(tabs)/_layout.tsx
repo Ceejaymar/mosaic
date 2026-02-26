@@ -56,7 +56,7 @@ export default function TabLayout() {
           headerLeft: CustomDrawerButton, // Using stable reference
           headerTransparent: true,
           tabBarActiveTintColor: theme.colors.mosaicGold,
-          tabBarInactiveTintColor: 'rgba(255,255,255,0.45)',
+          tabBarInactiveTintColor: theme.colors.tabInactive,
           tabBarLabelStyle: { fontSize: 10, fontWeight: '700', marginTop: 4 },
           tabBarStyle: {
             position: 'absolute',
