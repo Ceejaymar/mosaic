@@ -10,6 +10,35 @@ import { MainFab } from '@/src/components/fab';
 import { LAYOUT } from '@/src/constants/layout';
 import { hapticLight } from '@/src/lib/haptics/haptics';
 
+// 1. STABLE REFERENCE: Spacer Button
+// By moving this outside, React never unmounts/remounts it during tab switches.
+const SpacerButton = () => <View style={{ width: 84 }} pointerEvents="none" />;
+
+// 2. STABLE REFERENCE: Tab Bar Background
+// Prevents the gradient bridge from recalculating on every render.
+function TabBarOverlay({ height, colors }: { height: number; colors: [string, string, string] }) {
+  return (
+    <View
+      style={{
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height,
+      }}
+      pointerEvents="none"
+    >
+      <LinearGradient colors={colors} locations={[0, 0.6, 1]} style={StyleSheet.absoluteFill} />
+    </View>
+  );
+}
+
+// 3. STABLE REFERENCE: Drawer Button
+// Avoids rebuilding the header on every state change.
+const CustomDrawerButton = ({ tintColor }: { tintColor?: string }) => (
+  <DrawerToggleButton tintColor={tintColor} />
+);
+
 export default function TabLayout() {
   const { theme } = useUnistyles();
   const insets = useSafeAreaInsets();
@@ -24,7 +53,7 @@ export default function TabLayout() {
         screenOptions={{
           animation: 'shift',
           headerShown: false,
-          headerLeft: () => <DrawerToggleButton tintColor={theme.colors.typography} />,
+          headerLeft: CustomDrawerButton, // Using stable reference
           headerTransparent: true,
           tabBarActiveTintColor: theme.colors.mosaicGold,
           tabBarInactiveTintColor: 'rgba(255,255,255,0.45)',
@@ -38,24 +67,11 @@ export default function TabLayout() {
             paddingTop: 12,
             paddingBottom: safeBottom,
           },
-
           tabBarBackground: () => (
-            <View
-              style={{
-                position: 'absolute',
-                bottom: 0,
-                left: 0,
-                right: 0,
-                height: tabBarHeight + 20,
-              }}
-              pointerEvents="none"
-            >
-              <LinearGradient
-                colors={['transparent', theme.colors.background, theme.colors.background]}
-                locations={[0, 0.6, 1]}
-                style={StyleSheet.absoluteFill}
-              />
-            </View>
+            <TabBarOverlay
+              height={tabBarHeight + 20}
+              colors={['transparent', theme.colors.background, theme.colors.background]}
+            />
           ),
         }}
       >
@@ -79,7 +95,7 @@ export default function TabLayout() {
           }}
         />
 
-        {/* THE GHOST TAB: Separates the center icons */}
+        {/* THE GHOST TAB: Now heavily optimized */}
         <Tabs.Screen
           name="spacer"
           options={{
@@ -87,7 +103,7 @@ export default function TabLayout() {
             tabBarIcon: () => null,
             tabBarLabel: () => null,
             tabBarItemStyle: { width: 84, flexBasis: 84, flexGrow: 0, flexShrink: 0 },
-            tabBarButton: () => <View style={{ width: 84 }} pointerEvents="none" />,
+            tabBarButton: SpacerButton, // Using stable reference
           }}
         />
 
