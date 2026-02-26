@@ -347,7 +347,7 @@ export default function Journal() {
     }, [refreshEntries]),
   );
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: language re-runs formatDayLabel (reads i18n.language internally)
   const listItems = useMemo(
     () => buildListItems(entries, notesOnly),
     [entries, notesOnly, language],

@@ -43,7 +43,6 @@ const AnimatedMonth = memo(function AnimatedMonth({
   scrollY,
   itemHeight,
   tileSize,
-  hideEmpty,
   onDayPress,
 }: {
   item: MonthItem;
@@ -51,7 +50,6 @@ const AnimatedMonth = memo(function AnimatedMonth({
   scrollY: SharedValue<number>;
   itemHeight: number;
   tileSize: number;
-  hideEmpty: boolean;
   onDayPress: (date: string) => void;
 }) {
   const { i18n } = useTranslation();
@@ -92,7 +90,6 @@ const AnimatedMonth = memo(function AnimatedMonth({
           data={data}
           tileSize={tileSize}
           tileGap={TILE_GAP}
-          hideEmpty={hideEmpty}
           onDayPress={onDayPress}
         />
       </Animated.View>
@@ -108,7 +105,6 @@ export default function CanvasScreen() {
 
   const [viewMode, setViewMode] = useState<'month' | 'year'>('month');
   const [isCompact, setIsCompact] = useState(false);
-  const [hideEmpty, setHideEmpty] = useState(false);
   const [containerHeight, setContainerHeight] = useState(0);
   const [isYearMounted, setIsYearMounted] = useState(false);
   const [overviewYear, setOverviewYear] = useState(new Date().getFullYear());
@@ -221,7 +217,6 @@ export default function CanvasScreen() {
                   scrollY={scrollY}
                   itemHeight={itemHeight}
                   tileSize={tileSize}
-                  hideEmpty={hideEmpty}
                   onDayPress={handleDayPress}
                 />
               )}

@@ -12,7 +12,7 @@ import { hapticLight } from '@/src/lib/haptics/haptics';
 
 // 1. STABLE REFERENCE: Spacer Button
 // By moving this outside, React never unmounts/remounts it during tab switches.
-const SpacerButton = () => <View style={{ width: 84 }} pointerEvents="none" />;
+const SpacerButton = () => <View style={{ width: LAYOUT.TAB_SPACER_WIDTH }} pointerEvents="none" />;
 
 // 2. STABLE REFERENCE: Tab Bar Background
 // Prevents the gradient bridge from recalculating on every render.
@@ -102,7 +102,12 @@ export default function TabLayout() {
             title: '',
             tabBarIcon: () => null,
             tabBarLabel: () => null,
-            tabBarItemStyle: { width: 84, flexBasis: 84, flexGrow: 0, flexShrink: 0 },
+            tabBarItemStyle: {
+              width: LAYOUT.TAB_SPACER_WIDTH,
+              flexBasis: LAYOUT.TAB_SPACER_WIDTH,
+              flexGrow: 0,
+              flexShrink: 0,
+            },
             tabBarButton: SpacerButton, // Using stable reference
           }}
         />
