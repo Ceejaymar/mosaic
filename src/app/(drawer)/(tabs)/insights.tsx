@@ -261,17 +261,7 @@ export default function InsightsScreen() {
   return (
     <View style={styles.container}>
       {/* THE UNIFIED HEADER */}
-      <View
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 10,
-          backgroundColor: theme.colors.background,
-          paddingTop: insets.top,
-        }}
-      >
+      <View style={[styles.headerOverlay, { paddingTop: insets.top }]}>
         <View style={styles.topBar}>
           <Text style={styles.pageTitle}>Insights</Text>
           <TimeFrameDropdown value={timeFrame} onChange={handleTimeFrameChange} />
@@ -280,10 +270,7 @@ export default function InsightsScreen() {
         <DateSnapper timeFrame={timeFrame} currentOffset={offset} onChange={setOffset} />
 
         {/* THE SHORT FADE */}
-        <View
-          style={{ position: 'absolute', bottom: -15, left: 0, right: 0, height: 15 }}
-          pointerEvents="none"
-        >
+        <View style={styles.shortFadeContainer} pointerEvents="none">
           <LinearGradient
             colors={[theme.colors.background, 'transparent']}
             style={StyleSheet.absoluteFill}
@@ -365,6 +352,21 @@ export default function InsightsScreen() {
 
 const styles = StyleSheet.create((theme) => ({
   container: { flex: 1, backgroundColor: theme.colors.background },
+  headerOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+    backgroundColor: theme.colors.background,
+  },
+  shortFadeContainer: {
+    position: 'absolute',
+    bottom: -15,
+    left: 0,
+    right: 0,
+    height: 15,
+  },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',

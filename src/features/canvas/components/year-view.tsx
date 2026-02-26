@@ -75,9 +75,9 @@ type YearTileProps = {
   isEvenMonth: boolean;
   isFuture: boolean;
   onPress: (dateKey: string) => void;
-  // Dynamic sizing for Compact Mode
-  width: number | string;
-  height: number | string;
+  // Dynamic sizing for Compact Mode (Fixed to DimensionValue!)
+  width: DimensionValue;
+  height: DimensionValue;
 };
 
 const YearTile = memo(function YearTile({
