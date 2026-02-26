@@ -1,12 +1,21 @@
+import { DrawerToggleButton } from '@react-navigation/drawer';
+import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Text, View } from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
+import Animated, {
+  Extrapolation,
+  interpolate,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useSharedValue,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { PillButton } from '@/src/components/pill-button';
+import { TopFade } from '@/src/components/top-fade';
 import { LAYOUT } from '@/src/constants/layout';
 import { onOpenCheckInSheet } from '@/src/features/check-in/check-in-sheet-events';
 import { CheckInHistory } from '@/src/features/check-in/components/check-in-history';
@@ -65,7 +74,6 @@ export default function CheckInScreen() {
 
   const handleEntryPress = useCallback((id: string) => router.push(`/check-in/${id}`), [router]);
 
-  // Open the sheet when the global FAB fires the event
   useEffect(() => {
     return onOpenCheckInSheet(handleOpenSheet);
   }, [handleOpenSheet]);
@@ -89,9 +97,35 @@ export default function CheckInScreen() {
       });
   }, [todayEntries]);
 
+  // --- Scroll Tracking for the Hamburger Background ---
+  const scrollY = useSharedValue(0);
+  const scrollHandler = useAnimatedScrollHandler((event) => {
+    scrollY.value = event.contentOffset.y;
+  });
+
+  const hamburgerBgStyle = useAnimatedStyle(() => {
+    // Fades in between 20px and 70px of scrolling
+    const opacity = interpolate(scrollY.value, [20, 70], [0, 1], Extrapolation.CLAMP);
+    return { opacity };
+  });
+
   return (
     <View style={styles.container}>
-      <ScrollView
+      {/* 1. THE TOP FADE */}
+      <TopFade height={insets.top + 60} />
+
+      {/* 2. THE FLOATING HAMBURGER MENU */}
+      <View style={[styles.floatingMenu, { top: insets.top + 8 }]}>
+        <Animated.View style={[styles.hamburgerSquircle, hamburgerBgStyle]}>
+          <BlurView intensity={75} tint="dark" style={StyleSheet.absoluteFill} />
+        </Animated.View>
+        <DrawerToggleButton tintColor={theme.colors.typography} />
+      </View>
+
+      {/* 3. SCROLL CONTENT */}
+      <Animated.ScrollView
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
         contentContainerStyle={{
           paddingTop: insets.top + 72,
           paddingBottom: LAYOUT.TAB_BAR_HEIGHT + insets.bottom + 20,
@@ -130,11 +164,9 @@ export default function CheckInScreen() {
           )}
         </View>
 
-        {/* TODO: compute real streak from cross-day DB query */}
         <DailyStatsRow entriesCount={todayEntries.length} streakCount={1} />
-
         <CheckInHistory entries={todayEntries} onEntryPress={handleEntryPress} />
-      </ScrollView>
+      </Animated.ScrollView>
 
       <CheckInSheet visible={sheetVisible} onClose={handleCloseSheet} onSave={handleSave} />
     </View>
@@ -143,6 +175,22 @@ export default function CheckInScreen() {
 
 const styles = StyleSheet.create((theme) => ({
   container: { flex: 1, backgroundColor: theme.colors.background },
+  floatingMenu: {
+    position: 'absolute',
+    left: 8,
+    zIndex: 100,
+    width: 48,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  hamburgerSquircle: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
   greeting: {
     fontSize: 34,
     fontFamily: 'Fraunces',

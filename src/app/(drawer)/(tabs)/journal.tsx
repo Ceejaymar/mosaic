@@ -8,6 +8,7 @@ import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
+import { TopFade } from '@/src/components/top-fade';
 import { LAYOUT } from '@/src/constants/layout';
 import { fetchMoodEntriesPage, type MoodEntry } from '@/src/db/repos/moodRepo';
 import { parseStoredTags } from '@/src/features/check-in/utils/parse-tags';
@@ -26,7 +27,6 @@ type ListItem = DayHeader | EntryItem;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-/** Appends a 2-digit hex alpha to a #RRGGBB color string. */
 function hexAlpha(hex: string, a: number): string {
   return `${hex}${Math.round(a * 255)
     .toString(16)
@@ -87,7 +87,6 @@ const EntryCard = memo(function EntryCard({ entry, onPress }: EntryCardProps) {
 
   const handlePress = useCallback(() => onPress(entry.id), [entry.id, onPress]);
 
-  // Gradient: subtle emotion-color wash from top-left to transparent
   const gradientColors = [hexAlpha(accentColor, 0.1), hexAlpha(accentColor, 0)] as const;
 
   return (
@@ -102,7 +101,6 @@ const EntryCard = memo(function EntryCard({ entry, onPress }: EntryCardProps) {
         },
       ]}
     >
-      {/* Emotion-tinted gradient overlay, borderRadius matches card */}
       <LinearGradient
         colors={gradientColors}
         start={{ x: 0, y: 0 }}
@@ -111,7 +109,6 @@ const EntryCard = memo(function EntryCard({ entry, onPress }: EntryCardProps) {
       />
 
       <View style={cardStyles.body}>
-        {/* Emotion headline */}
         <View style={cardStyles.headlineRow}>
           <Text style={[cardStyles.iAmFeeling, { color: theme.colors.textMuted }]}>
             {t('journal.im_feeling')}
@@ -119,7 +116,6 @@ const EntryCard = memo(function EntryCard({ entry, onPress }: EntryCardProps) {
           <Text style={[cardStyles.emotion, { color: accentColor }]}>{label}</Text>
         </View>
 
-        {/* Note — visual priority */}
         {entry.note ? (
           <Text
             style={[cardStyles.note, { color: theme.colors.typography }]}
@@ -130,7 +126,6 @@ const EntryCard = memo(function EntryCard({ entry, onPress }: EntryCardProps) {
           </Text>
         ) : null}
 
-        {/* Tags */}
         {tags.length > 0 && (
           <View style={cardStyles.tagRow}>
             {tags.map((tag) => (
@@ -141,7 +136,6 @@ const EntryCard = memo(function EntryCard({ entry, onPress }: EntryCardProps) {
           </View>
         )}
 
-        {/* Time at bottom */}
         <Text style={[cardStyles.time, { color: theme.colors.textMuted }]}>
           {formatEntryTime(entry.occurredAt)}
         </Text>
@@ -289,14 +283,10 @@ export default function Journal() {
 
   const toggleNotesOnly = useCallback(() => setNotesOnly((v) => !v), []);
 
-  // Refresh + first page — called on focus and for retry.
-  // When entries already exist, fetches silently and only updates state if data changed.
-  // On error, preserves existing entries.
   const refreshEntries = useCallback(async () => {
     const current = entriesRef.current;
     const hasData = current.length > 0;
 
-    // Reset pagination cursors; also resets isLoadingRef so any in-flight loadNextPage is superseded
     isLoadingRef.current = false;
     hasMoreRef.current = true;
     offsetRef.current = 0;
@@ -312,7 +302,6 @@ export default function Journal() {
       if (page.length < PAGE_SIZE) hasMoreRef.current = false;
       offsetRef.current = page.length;
 
-      // For a silent background refresh, skip the state update when nothing changed
       const changed =
         !hasData || page.length !== current.length || page.some((e, i) => e.id !== current[i]?.id);
 
@@ -328,9 +317,6 @@ export default function Journal() {
     }
   }, []);
 
-  // Pagination — appends the next page; errors are silent (list already visible).
-  // When notesOnly=true, loops until at least one notes entry is found or data is exhausted,
-  // since onEndReached can't re-fire on a list that never grew.
   const loadNextPage = useCallback(async () => {
     if (isLoadingRef.current || !hasMoreRef.current) return;
     isLoadingRef.current = true;
@@ -355,14 +341,13 @@ export default function Journal() {
     }
   }, [notesOnly]);
 
-  // Refresh whenever the screen comes into focus (picks up new check-ins)
   useFocusEffect(
     useCallback(() => {
       refreshEntries();
     }, [refreshEntries]),
   );
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: language re-runs formatDayLabel (reads i18n.language internally)
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   const listItems = useMemo(
     () => buildListItems(entries, notesOnly),
     [entries, notesOnly, language],
@@ -381,12 +366,11 @@ export default function Journal() {
     [handleEntryPress],
   );
 
-  const paddingTop = insets.top;
   const paddingBottom = LAYOUT.TAB_BAR_HEIGHT + insets.bottom + 16;
 
   if (isLoading) {
     return (
-      <View style={[styles.container, styles.centered, { paddingTop }]}>
+      <View style={[styles.container, styles.centered, { paddingTop: insets.top }]}>
         <ActivityIndicator color={theme.colors.mosaicGold} />
       </View>
     );
@@ -394,7 +378,7 @@ export default function Journal() {
 
   if (error) {
     return (
-      <View style={[styles.container, styles.centered, { paddingTop }]}>
+      <View style={[styles.container, styles.centered, { paddingTop: insets.top }]}>
         <Text style={[styles.errorText, { color: theme.colors.textMuted }]}>
           {t('journal.error_message')}
         </Text>
@@ -411,11 +395,14 @@ export default function Journal() {
   }
 
   return (
-    <View style={[styles.container, { paddingTop }]}>
-      <View style={styles.topBar}>
+    <View style={styles.container}>
+      <TopFade height={insets.top + 80} />
+
+      <View style={[styles.topBar, { top: insets.top }]}>
         <Text style={styles.pageTitle}>{t('journal.title', 'Journal')}</Text>
         <FilterToggle notesOnly={notesOnly} onToggle={toggleNotesOnly} />
       </View>
+
       <FlashList
         data={listItems}
         keyExtractor={keyExtractor}
@@ -424,7 +411,10 @@ export default function Journal() {
         onEndReached={loadNextPage}
         onEndReachedThreshold={0.4}
         ListEmptyComponent={EmptyState}
-        contentContainerStyle={{ paddingBottom }}
+        contentContainerStyle={{
+          paddingBottom,
+          paddingTop: insets.top + 60, // Pushed down past the absolute header
+        }}
         showsVerticalScrollIndicator={false}
       />
     </View>
@@ -437,6 +427,10 @@ const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.background,
   },
   topBar: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    zIndex: 10,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',

@@ -79,7 +79,7 @@ export default function TabLayout() {
           name="index"
           options={{
             title: 'Today',
-            headerShown: true,
+            headerShown: false,
             tabBarIcon: ({ color, focused }) => (
               <Ionicons name={focused ? 'home' : 'home-outline'} size={26} color={color} />
             ),

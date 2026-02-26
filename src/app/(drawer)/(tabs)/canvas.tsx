@@ -13,6 +13,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
 
+import { TopFade } from '@/src/components/top-fade';
 import { LAYOUT } from '@/src/constants/layout';
 import { MonthGrid } from '@/src/features/canvas/components/month-grid';
 import { YearView } from '@/src/features/canvas/components/year-view';
@@ -35,8 +36,6 @@ function buildMonthList(count: number): MonthItem[] {
   });
 }
 
-// ─── AnimatedMonth ────────────────────────────────────────────────────────────
-
 const AnimatedMonth = memo(function AnimatedMonth({
   item,
   index,
@@ -58,14 +57,12 @@ const AnimatedMonth = memo(function AnimatedMonth({
   const { days: data } = useCanvasDbData(item.month, item.year);
   const dowLabels = getDowLabels(i18n.language);
 
-  // 1. GRID FADE: Fades to 0.15 smoothly across the whole height
   const gridAnimStyle = useAnimatedStyle(() => {
     const distance = Math.abs(scrollY.value - index * itemHeight);
     const opacity = interpolate(distance, [0, itemHeight], [1, 0.15], Extrapolation.CLAMP);
     return { opacity };
   });
 
-  // 2. TEXT FADE: Fades to ZERO twice as fast, vanishing before overlapping the next month
   const textAnimStyle = useAnimatedStyle(() => {
     const distance = Math.abs(scrollY.value - index * itemHeight);
     const opacity = interpolate(distance, [0, itemHeight * 0.4], [1, 0], Extrapolation.CLAMP);
@@ -74,7 +71,6 @@ const AnimatedMonth = memo(function AnimatedMonth({
 
   return (
     <View style={{ height: itemHeight, paddingHorizontal: GRID_H_PAD, justifyContent: 'center' }}>
-      {/* Header Block: Month Label + Day Letters */}
       <Animated.View style={[{ marginBottom: 12 }, textAnimStyle]}>
         <Text style={styles.monthPageLabel}>
           {getMonthName(item.month, 'long', i18n.language)} {item.year}
@@ -88,7 +84,6 @@ const AnimatedMonth = memo(function AnimatedMonth({
         </View>
       </Animated.View>
 
-      {/* Grid Block */}
       <Animated.View style={gridAnimStyle}>
         <MonthGrid
           month={item.month}
@@ -104,8 +99,6 @@ const AnimatedMonth = memo(function AnimatedMonth({
   );
 });
 
-// ─── Screen ───────────────────────────────────────────────────────────────────
-
 export default function CanvasScreen() {
   const insets = useSafeAreaInsets();
   const { width: screenWidth } = useWindowDimensions();
@@ -117,19 +110,16 @@ export default function CanvasScreen() {
   const [isYearMounted, setIsYearMounted] = useState(false);
   const [overviewYear, setOverviewYear] = useState(new Date().getFullYear());
 
-  // Use useMemo here to avoid an unused state setter warning
   const monthList = useMemo(() => buildMonthList(MONTHS_BACK), []);
 
   const gridContentWidth = screenWidth - GRID_H_PAD * 2;
   const tileSize = (gridContentWidth - 6 * TILE_GAP) / 7;
 
-  // The Header block roughly takes up ~66px (Label + Gaps + DoW Letters)
   const gridH = GRID_ROWS * tileSize + (GRID_ROWS - 1) * TILE_GAP;
   const itemHeight = 66 + gridH;
 
   const verticalPadding = containerHeight > 0 ? Math.max(0, (containerHeight - itemHeight) / 2) : 0;
 
-  // Compute the Future Month for the footer peek safely (avoids December rollover bug)
   const futureDate = useMemo(() => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth() + 1, 1);
@@ -143,7 +133,7 @@ export default function CanvasScreen() {
   const getItemLayout = useCallback(
     (_: unknown, index: number) => ({
       length: itemHeight,
-      offset: verticalPadding + index * itemHeight,
+      offset: verticalPadding + 40 + index * itemHeight,
       index,
     }),
     [itemHeight, verticalPadding],
@@ -159,8 +149,6 @@ export default function CanvasScreen() {
   }, []);
 
   const toggleViewMode = useCallback(() => {
-    // Lazy-mount on first open; keep mounted while on this screen so re-opening
-    // is instant. The component unmounts automatically when navigating away.
     setIsYearMounted(true);
     setViewMode((prev) => {
       if (prev === 'month') {
@@ -175,24 +163,24 @@ export default function CanvasScreen() {
   }, [monthOpacity, yearOpacity]);
 
   return (
-    <View
-      style={[
-        styles.screen,
-        {
-          paddingTop: insets.top,
-        },
-      ]}
-    >
-      <View style={[styles.topBar, { paddingHorizontal: TOPBAR_H_PAD }]}>
-        <Text style={styles.headerLabel}>{viewMode === 'year' ? overviewYear.toString() : ''}</Text>
-        <Pressable
-          onPress={toggleViewMode}
-          style={({ pressed }) => [styles.toggleBtn, pressed && { opacity: 0.5 }]}
-        >
-          <Text style={styles.toggleLabel}>
-            {viewMode === 'month' ? t('canvas.year') : t('canvas.month')}
+    <View style={styles.screen}>
+      <TopFade height={insets.top + 60} />
+
+      <View style={[styles.topBar, { top: insets.top, paddingHorizontal: TOPBAR_H_PAD }]}>
+        <Text style={styles.pageTitle}>Canvas</Text>
+        <View style={styles.controls}>
+          <Text style={styles.headerLabel}>
+            {viewMode === 'year' ? overviewYear.toString() : ''}
           </Text>
-        </Pressable>
+          <Pressable
+            onPress={toggleViewMode}
+            style={({ pressed }) => [styles.toggleBtn, pressed && { opacity: 0.5 }]}
+          >
+            <Text style={styles.toggleLabel}>
+              {viewMode === 'month' ? t('canvas.year') : t('canvas.month')}
+            </Text>
+          </Pressable>
+        </View>
       </View>
 
       <View
@@ -221,7 +209,7 @@ export default function CanvasScreen() {
               getItemLayout={getItemLayout}
               initialScrollIndex={monthList.length - 1}
               contentContainerStyle={{
-                paddingTop: verticalPadding,
+                paddingTop: verticalPadding + 40,
                 paddingBottom: LAYOUT.TAB_BAR_HEIGHT + insets.bottom,
               }}
               snapToInterval={itemHeight}
@@ -254,12 +242,20 @@ export default function CanvasScreen() {
           style={[styles.absoluteFill, yearAnimStyle]}
         >
           {isYearMounted && containerHeight > 0 && (
-            <View style={styles.fill}>
+            <View
+              style={[
+                styles.fill,
+                {
+                  paddingTop: insets.top + 60,
+                  paddingBottom: LAYOUT.TAB_BAR_HEIGHT + insets.bottom,
+                },
+              ]}
+            >
               <YearView
                 onDayPress={handleDayPress}
                 contentWidth={screenWidth}
                 onYearChange={setOverviewYear}
-                viewportHeight={containerHeight}
+                viewportHeight={containerHeight - (insets.top + 60)}
               />
             </View>
           )}
@@ -272,20 +268,31 @@ export default function CanvasScreen() {
 const styles = StyleSheet.create((theme) => ({
   screen: { flex: 1, backgroundColor: theme.colors.background },
   topBar: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    zIndex: 10,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 8,
-    paddingBottom: 12,
+    paddingTop: 12,
+    paddingBottom: 4,
   },
-  headerLabel: {
-    fontSize: 20,
-    fontWeight: '700',
+  pageTitle: {
+    fontSize: 28,
     fontFamily: 'Fraunces',
+    fontWeight: '700',
     color: theme.colors.typography,
     letterSpacing: -0.4,
   },
-  controls: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  headerLabel: {
+    fontSize: 16,
+    fontWeight: '700',
+    fontFamily: 'Fraunces',
+    color: theme.colors.typography,
+    marginRight: 8,
+  },
+  controls: { flexDirection: 'row', alignItems: 'center' },
   chip: {
     height: 28,
     paddingHorizontal: 8,
