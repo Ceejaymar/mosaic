@@ -236,7 +236,6 @@ export default function InsightsScreen() {
         styles.container,
         {
           paddingTop: insets.top,
-          paddingBottom: LAYOUT.TAB_BAR_HEIGHT + insets.bottom,
         },
       ]}
     >
@@ -249,7 +248,13 @@ export default function InsightsScreen() {
       {/* The Horizontal Date Snapper */}
       <DateSnapper timeFrame={timeFrame} currentOffset={offset} onChange={setOffset} />
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: LAYOUT.TAB_BAR_HEIGHT + insets.bottom },
+        ]}
+      >
         {hasEnoughData ? (
           <>
             {observations.length > 0 && (

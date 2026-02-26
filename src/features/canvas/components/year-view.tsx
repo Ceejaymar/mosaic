@@ -9,7 +9,7 @@ import {
   useState,
 } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, Pressable, Text, View, type ViewToken } from 'react-native';
+import { type DimensionValue, FlatList, Pressable, Text, View, type ViewToken } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { fetchMoodEntriesForMonth } from '@/src/db/repos/moodRepo';
@@ -28,11 +28,11 @@ const COLUMNS = 14;
 const MAX_ROWS = 27;
 const VIEWABILITY_CONFIG = { itemVisiblePercentThreshold: 50 };
 
-// Pre-calculate exact percentage strings so Yoga handles the sub-pixel math perfectly.
-const TILE_W = `${100 / COLUMNS}%` as const;
-const TILE_H = `${100 / MAX_ROWS}%` as const;
+// Pre-calculate exact percentage strings for strict grid mode
+const TILE_W_STRICT = `${100 / COLUMNS}%` as const;
+const TILE_H_STRICT = `${100 / MAX_ROWS}%` as const;
 
-// Static absolute positions using 50% — no per-tile JS math required.
+// Static absolute positions for multi-color mosaic tiles
 const PANELS = {
   left: { position: 'absolute' as const, top: 0, bottom: 0, left: 0, width: '50%' as const },
   right: { position: 'absolute' as const, top: 0, bottom: 0, left: '50%' as const, right: 0 },
@@ -75,6 +75,9 @@ type YearTileProps = {
   isEvenMonth: boolean;
   isFuture: boolean;
   onPress: (dateKey: string) => void;
+  // Dynamic sizing for Compact Mode
+  width: number | string;
+  height: number | string;
 };
 
 const YearTile = memo(function YearTile({
@@ -83,18 +86,20 @@ const YearTile = memo(function YearTile({
   isEvenMonth,
   isFuture,
   onPress,
+  width,
+  height,
 }: YearTileProps) {
   const { theme } = useUnistyles();
   const emptyBg = isEvenMonth ? theme.colors.surface : 'transparent';
   const opacity = isFuture ? 0.25 : 1;
 
   const flatStyle = {
-    width: TILE_W,
-    height: TILE_H,
+    width,
+    height,
     opacity,
     backgroundColor: colors.length === 0 ? emptyBg : colors[0],
   };
-  const containerStyle = { width: TILE_W, height: TILE_H, overflow: 'hidden' as const, opacity };
+  const containerStyle = { width, height, overflow: 'hidden' as const, opacity };
   const hasData = colors.length > 0;
 
   if (colors.length <= 1) {
@@ -164,18 +169,21 @@ const SingleYearBlock = memo(function SingleYearBlock({
   year,
   viewportHeight,
   contentWidth,
+  isCompact,
+  maxTileSize,
   onDayPress,
 }: {
   year: number;
   viewportHeight: number;
   contentWidth: number;
+  isCompact: boolean;
+  maxTileSize: number;
   onDayPress: (date: string) => void;
 }) {
   const { t } = useTranslation();
   const visibleYear = useContext(VisibleYearContext);
   const isViewable = year === visibleYear;
-  // Gate tile rendering: skip until this block is scrolled into view.
-  // Once rendered, keep rendered to avoid remounting on scroll.
+
   const hasBeenVisible = useRef(false);
   if (isViewable) hasBeenVisible.current = true;
   const shouldRender = isViewable || hasBeenVisible.current;
@@ -228,25 +236,59 @@ const SingleYearBlock = memo(function SingleYearBlock({
     };
   }, [year, shouldRender]);
 
-  const memoizedTiles = useMemo(
-    () =>
-      flatDays.map((day) => (
-        <YearTile
-          key={day.dateKey}
-          dateKey={day.dateKey}
-          colors={day.entries}
-          isEvenMonth={day.month % 2 === 0}
-          isFuture={day.isFuture}
-          onPress={onDayPress}
-        />
-      )),
-    [flatDays, onDayPress],
-  );
+  // --- Dynamic Layout Calculation ---
+  const memoizedTiles = useMemo(() => {
+    let daysToRender = flatDays;
+
+    // 1. Filter out empty days if Compact Mode is ON
+    if (isCompact) {
+      daysToRender = flatDays.filter((d) => d.entries.length > 0);
+    }
+
+    // 2. Calculate dynamic size based on remaining days
+    let dynamicW: DimensionValue = TILE_W_STRICT;
+    let dynamicH: DimensionValue = TILE_H_STRICT;
+
+    if (isCompact && daysToRender.length > 0) {
+      // Area math: Total Screen Area / Number of items = Area per item.
+      // Square root of that area gives us the ideal side length of a perfectly square tile.
+      const totalArea = contentWidth * viewportHeight;
+      const areaPerTile = totalArea / daysToRender.length;
+      let idealSide = Math.floor(Math.sqrt(areaPerTile));
+
+      // Cap the size so 3 check-ins don't create gigantic squares
+      idealSide = Math.min(idealSide, maxTileSize);
+
+      dynamicW = idealSide;
+      dynamicH = idealSide;
+    }
+
+    return daysToRender.map((day) => (
+      <YearTile
+        key={day.dateKey}
+        dateKey={day.dateKey}
+        colors={day.entries}
+        isEvenMonth={day.month % 2 === 0}
+        isFuture={day.isFuture}
+        onPress={onDayPress}
+        width={dynamicW}
+        height={dynamicH}
+      />
+    ));
+  }, [flatDays, isCompact, contentWidth, viewportHeight, maxTileSize, onDayPress]);
 
   return (
     <View style={[styles.yearBlock, { height: viewportHeight }]}>
       {shouldRender && (
-        <View style={[styles.grid, { width: contentWidth, height: viewportHeight }]}>
+        <View
+          style={[
+            styles.grid,
+            { width: contentWidth, height: viewportHeight },
+            // If we are compacted and have hard pixel sizes, flex-start helps them wrap naturally from top-left.
+            // If not compacted, percentages will naturally fill the space exactly.
+            isCompact ? { alignContent: 'flex-start', justifyContent: 'flex-start' } : {},
+          ]}
+        >
           {memoizedTiles}
         </View>
       )}
@@ -262,15 +304,22 @@ type Props = {
   contentWidth: number;
   onYearChange: (year: number) => void;
   viewportHeight: number;
+  // --- NEW PROPS FOR COMPACT MODE ---
+  isCompact: boolean;
+  maxTileSize: number;
 };
 
-export function YearView({ onDayPress, contentWidth, onYearChange, viewportHeight }: Props) {
-  // Inverted FlatList: data[0] renders at the bottom. Current year first = bottom.
+export function YearView({
+  onDayPress,
+  contentWidth,
+  onYearChange,
+  viewportHeight,
+  isCompact,
+  maxTileSize,
+}: Props) {
   const [yearsList, setYearsList] = useState<number[]>([CURRENT_YEAR]);
   const [visibleYear, setVisibleYear] = useState(CURRENT_YEAR);
 
-  // With inverted=true, onEndReached fires when the user scrolls UP to the oldest year.
-  // Append the next older year to the END of the array so it renders above the current top.
   const loadPreviousYear = useCallback(() => {
     setYearsList((prev) => {
       const oldest = prev[prev.length - 1];
@@ -278,7 +327,6 @@ export function YearView({ onDayPress, contentWidth, onYearChange, viewportHeigh
     });
   }, []);
 
-  // Keep a fresh ref so the stable onViewableItemsChanged callback never reads a stale onYearChange.
   const latestOnYearChangeRef = useRef(onYearChange);
   useEffect(() => {
     latestOnYearChangeRef.current = onYearChange;
@@ -302,9 +350,11 @@ export function YearView({ onDayPress, contentWidth, onYearChange, viewportHeigh
         viewportHeight={viewportHeight}
         contentWidth={contentWidth}
         onDayPress={onDayPress}
+        isCompact={isCompact}
+        maxTileSize={maxTileSize}
       />
     ),
-    [viewportHeight, contentWidth, onDayPress],
+    [viewportHeight, contentWidth, onDayPress, isCompact, maxTileSize],
   );
 
   return (
@@ -343,6 +393,7 @@ const styles = StyleSheet.create((theme) => ({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    // Default strict grid settings:
     justifyContent: 'center',
     alignContent: 'flex-start',
     gap: 0,
