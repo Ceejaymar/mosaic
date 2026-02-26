@@ -189,11 +189,8 @@ function DateSnapper({
   const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
-    // Reading timeFrame satisfies the exhaustive-deps rule while correctly
-    // triggering the scroll reset when the user changes tabs.
-    if (timeFrame) {
-      flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
-    }
+    void timeFrame; // re-run when tab changes to reset scroll
+    flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
   }, [timeFrame]);
 
   const scrollHandler = useAnimatedScrollHandler({
@@ -202,18 +199,17 @@ function DateSnapper({
     },
   });
 
+  const offsets = useMemo(() => Array.from({ length: 52 }, (_, i) => -i), []);
+
   const handleMomentumEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const x = e.nativeEvent.contentOffset.x;
     const index = Math.round(x / itemWidth);
-    const offsets = Array.from({ length: 52 }, (_, i) => -i);
 
     if (offsets[index] !== undefined && offsets[index] !== currentOffset) {
       hapticSelection();
       onChange(offsets[index]);
     }
   };
-
-  const offsets = useMemo(() => Array.from({ length: 52 }, (_, i) => -i), []);
 
   return (
     <View style={styles.snapperContainer}>
