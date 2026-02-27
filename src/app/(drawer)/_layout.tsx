@@ -1,5 +1,8 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { DrawerContentScrollView } from '@react-navigation/drawer';
+import {
+  type DrawerContentComponentProps,
+  DrawerContentScrollView,
+} from '@react-navigation/drawer';
 import { type Href, useRouter } from 'expo-router';
 import { Drawer } from 'expo-router/drawer';
 import { Linking, Pressable, Text, View } from 'react-native';
@@ -38,7 +41,7 @@ function DrawerRow({
 
 // ─── Custom Drawer Content ────────────────────────────────────────────────────
 
-function CustomDrawerContent(props: any) {
+function CustomDrawerContent(props: DrawerContentComponentProps) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { theme } = useUnistyles();
