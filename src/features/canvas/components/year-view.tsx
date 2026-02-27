@@ -14,6 +14,8 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { fetchMoodEntriesForMonth } from '@/src/db/repos/moodRepo';
 import { buildCanvasDays } from '@/src/features/canvas/utils/buildCanvasDays';
+import { getDemoEntriesForMonth } from '@/src/features/demo/generateDemoData';
+import { useAppStore } from '@/src/store/useApp';
 
 // ─── Context ──────────────────────────────────────────────────────────────────
 
@@ -188,6 +190,7 @@ const SingleYearBlock = memo(function SingleYearBlock({
   if (isViewable) hasBeenVisible.current = true;
   const shouldRender = isViewable || hasBeenVisible.current;
 
+  const isDemoMode = useAppStore((s) => s.isDemoMode);
   const [flatDays, setFlatDays] = useState<FlatDay[]>([]);
   const [liveLoading, setLiveLoading] = useState(false);
 
@@ -200,14 +203,20 @@ const SingleYearBlock = memo(function SingleYearBlock({
     const now = new Date();
     const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
-    Promise.all(
-      months.map((month) =>
-        fetchMoodEntriesForMonth(year, month).then((entries) => ({
+    const fetchMonth = (month: number) => {
+      if (isDemoMode) {
+        return Promise.resolve({
           month,
-          data: buildCanvasDays(entries, year, month),
-        })),
-      ),
-    )
+          data: buildCanvasDays(getDemoEntriesForMonth(year, month), year, month),
+        });
+      }
+      return fetchMoodEntriesForMonth(year, month).then((entries) => ({
+        month,
+        data: buildCanvasDays(entries, year, month),
+      }));
+    };
+
+    Promise.all(months.map(fetchMonth))
       .then((results) => {
         if (cancelled) return;
         const result: FlatDay[] = [];
@@ -234,7 +243,7 @@ const SingleYearBlock = memo(function SingleYearBlock({
     return () => {
       cancelled = true;
     };
-  }, [year, shouldRender]);
+  }, [year, shouldRender, isDemoMode]);
 
   // --- Dynamic Layout Calculation ---
   const memoizedTiles = useMemo(() => {

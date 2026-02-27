@@ -5,6 +5,7 @@ export type State = {
   hasOnboarded: boolean;
   language: Language;
   accessibility: AccessibilitySettings;
+  isDemoMode: boolean;
 };
 
 export type Actions = {
@@ -12,6 +13,7 @@ export type Actions = {
   setHasOnboarded: (hasOnboarded: boolean) => void;
   setLanguage: (language: Language) => void;
   setAccessibilitySetting: (key: keyof AccessibilitySettings, value: boolean) => void;
+  toggleDemoMode: () => void;
 };
 
 export type Language = 'en' | 'es';

@@ -48,7 +48,7 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
 
   const handleHomePress = () => {
     props.navigation.closeDrawer();
-    router.navigate('/(tabs)/today' as Href);
+    router.navigate('/(tabs)/' as Href);
   };
 
   const openSurvey = () => {
@@ -65,10 +65,9 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {/* 1. HEADER */}
       <View style={[styles.header, { marginTop: insets.top }]}>
-        <Pressable onPress={() => props.navigation.closeDrawer()} style={styles.iconBtn}>
-          <Ionicons name="close" size={28} color={theme.colors.typography} />
-        </Pressable>
-        <Text style={[styles.headerTitle, { color: theme.colors.typography }]}>Settings</Text>
+        <View style={styles.headerLeft}>
+          <Text style={[styles.headerTitle, { color: theme.colors.typography }]}>Settings</Text>
+        </View>
         <Pressable onPress={handleHomePress} style={styles.iconBtn}>
           <Ionicons name="home-outline" size={24} color={theme.colors.typography} />
         </Pressable>
@@ -169,14 +168,19 @@ export default function Layout() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create((theme) => ({
+const styles = StyleSheet.create({
   container: { flex: 1 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    // paddingHorizontal: 16,
-    paddingBottom: 16,
+    paddingBottom: 8,
+    paddingLeft: 16,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   iconBtn: { padding: 8 },
   headerTitle: {
@@ -185,7 +189,7 @@ const styles = StyleSheet.create((theme) => ({
     fontWeight: '700',
     letterSpacing: -0.5,
   },
-  scrollContent: { paddingTop: 8, paddingBottom: 40 },
+  scrollContent: { paddingTop: 8, paddingBottom: 24 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -193,12 +197,11 @@ const styles = StyleSheet.create((theme) => ({
     paddingVertical: 8,
   },
   rowLeft: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  rowLabel: { fontSize: 16, fontFamily: 'SpaceMono', fontWeight: '500' },
+  rowLabel: { fontSize: 16, fontWeight: '500' },
   divider: { height: 1, marginHorizontal: 24, marginVertical: 12, opacity: 0.5 },
   sectionTitle: {
     fontSize: 13,
     fontFamily: 'SpaceMono',
-    fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     paddingHorizontal: 24,
@@ -206,11 +209,9 @@ const styles = StyleSheet.create((theme) => ({
     marginBottom: 4,
   },
   footer: {
-    paddingHorizontal: 24,
-    paddingTop: 20,
+    paddingHorizontal: 16,
+    paddingTop: 10,
     borderTopWidth: 1,
-    alignItems: 'center',
-    gap: 12,
   },
   versionText: { fontSize: 12, fontFamily: 'SpaceMono' },
-}));
+});

@@ -22,12 +22,13 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
+import { DemoBadge } from '@/src/components/demo-badge';
 import { LAYOUT } from '@/src/constants/layout';
 import { ContextMatrix } from '@/src/features/insights/components/context-matrix';
 import { EmotionalFootprint } from '@/src/features/insights/components/emotional-footprint';
 import { MicroGrid } from '@/src/features/insights/components/micro-grid';
 import { RhythmBar } from '@/src/features/insights/components/rhythm-bar';
-import { useInsightsData } from '@/src/features/insights/hooks/useInsightsMockData';
+import { useInsightsData } from '@/src/features/insights/hooks/useInsightsData';
 import type { TimeFrame } from '@/src/features/insights/types';
 import { generateObservations } from '@/src/features/insights/utils/observations';
 import { hapticSelection } from '@/src/lib/haptics/haptics';
@@ -263,7 +264,10 @@ export default function InsightsScreen() {
       {/* THE UNIFIED HEADER */}
       <View style={[styles.headerOverlay, { paddingTop: insets.top }]}>
         <View style={styles.topBar}>
-          <Text style={styles.pageTitle}>Insights</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Text style={styles.pageTitle}>Insights</Text>
+            <DemoBadge />
+          </View>
           <TimeFrameDropdown value={timeFrame} onChange={handleTimeFrameChange} />
         </View>
 

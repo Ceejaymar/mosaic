@@ -40,6 +40,9 @@ export const useAppStore = create<State & Actions>()(
       },
       setAccessibilitySetting: (key: keyof AccessibilitySettings, value: boolean) =>
         set({ accessibility: { ...get().accessibility, [key]: value } }),
+
+      isDemoMode: false,
+      toggleDemoMode: () => set((s) => ({ isDemoMode: !s.isDemoMode })),
     }),
     {
       name: 'app-storage',
