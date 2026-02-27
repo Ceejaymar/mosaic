@@ -2,7 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { DrawerContentScrollView } from '@react-navigation/drawer';
 import { type Href, useRouter } from 'expo-router';
 import { Drawer } from 'expo-router/drawer';
-import { Pressable, Text, View } from 'react-native';
+import { Linking, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
@@ -45,13 +45,17 @@ function CustomDrawerContent(props: any) {
 
   const handleHomePress = () => {
     props.navigation.closeDrawer();
-    router.push('/(tabs)' as Href);
+    router.navigate('/(tabs)/today' as Href);
   };
 
-  const openFeedbackSheet = () => {
+  const openSurvey = () => {
     props.navigation.closeDrawer();
-    // TODO: We will trigger your custom Sentry Feedback Bottom Sheet here!
-    console.log('Open Feedback Sheet');
+
+    const SURVEY_URL = 'https://tally.so/r/your-custom-link';
+
+    Linking.openURL(SURVEY_URL).catch((err) => {
+      console.error('Failed to open URL:', err);
+    });
   };
 
   return (
@@ -98,17 +102,17 @@ function CustomDrawerContent(props: any) {
         <DrawerRow
           icon="rocket-outline"
           label="Upcoming features"
-          onPress={() => router.push('/app/roadmap')}
+          onPress={() => router.push('/pages/roadmap')}
         />
         <DrawerRow
           icon="document-text-outline"
           label="Change log"
-          onPress={() => router.push('/app/changelog')}
+          onPress={() => router.push('/pages/changelog')}
         />
         <DrawerRow
           icon="help-circle-outline"
           label="FAQs"
-          onPress={() => router.push('/app/faq')}
+          onPress={() => router.push('/pages/faq')}
         />
 
         <View style={[styles.divider, { backgroundColor: theme.colors.divider }]} />
@@ -118,13 +122,14 @@ function CustomDrawerContent(props: any) {
         <DrawerRow
           icon="heart-half-outline"
           label="Mental health hotlines"
-          onPress={() => router.push('/app/resources')}
+          onPress={() => router.push('/pages/resources')}
         />
         <DrawerRow
           icon="chatbubble-ellipses-outline"
-          label="Send feedback"
-          onPress={openFeedbackSheet}
+          label="Share your feedback"
+          onPress={openSurvey}
         />
+
         <DrawerRow icon="star-outline" label="Rate Mosaic" onPress={() => {}} />
         <DrawerRow icon="share-outline" label="Share with a friend" onPress={() => {}} />
       </DrawerContentScrollView>
@@ -148,16 +153,13 @@ function CustomDrawerContent(props: any) {
 export default function Layout() {
   return (
     <Drawer
-      drawerContent={(props) => <CustomDrawerContent {...props} />}
+      drawerContent={CustomDrawerContent} // <-- FIX: Pass the reference directly! No arrow function.
       screenOptions={{
         headerShown: false,
-        drawerStyle: { width: '85%' }, // Makes the drawer nice and wide like the reference
+        drawerStyle: { width: '85%' },
       }}
     >
       <Drawer.Screen name="(tabs)" />
-      {/* You don't need to define every single internal page here!
-        Just define the tabs, and let Expo Router handle the /app/ paths automatically.
-      */}
     </Drawer>
   );
 }
