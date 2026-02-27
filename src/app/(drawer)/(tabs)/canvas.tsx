@@ -14,6 +14,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
+import { DemoBadge } from '@/src/components/demo-badge';
 import { TopFade } from '@/src/components/top-fade';
 import { LAYOUT } from '@/src/constants/layout';
 import { MonthGrid } from '@/src/features/canvas/components/month-grid';
@@ -166,7 +167,10 @@ export default function CanvasScreen() {
       <TopFade height={insets.top + 60} />
 
       <View style={[styles.topBar, { top: insets.top, paddingHorizontal: TOPBAR_H_PAD }]}>
-        <Text style={styles.pageTitle}>Canvas</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Text style={styles.pageTitle}>Canvas</Text>
+          <DemoBadge />
+        </View>
         <View style={styles.controls}>
           {viewMode === 'year' && (
             <Pressable

@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 
 import { fetchMoodEntriesForMonth } from '@/src/db/repos/moodRepo';
+import { getDemoEntriesForMonth } from '@/src/features/demo/generateDemoData';
+import { useAppStore } from '@/src/store/useApp';
 
 import { buildCanvasDays } from '../utils/buildCanvasDays';
 import type { CanvasDay } from './useCanvasData';
@@ -43,11 +45,20 @@ export async function prefetchMonth(year: number, month: number): Promise<void> 
  * them shaped as CanvasDay[]. Results are cached so re-visiting a month is instant.
  */
 export function useCanvasDbData(month: number, year: number): CanvasDbState {
+  const isDemoMode = useAppStore((s) => s.isDemoMode);
   const [days, setDays] = useState<CanvasDay[]>(() => _cache.get(`${year}-${month}`) ?? []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<unknown>(null);
 
   useEffect(() => {
+    if (isDemoMode) {
+      const demoEntries = getDemoEntriesForMonth(year, month);
+      setDays(buildCanvasDays(demoEntries, year, month));
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
     const key = `${year}-${month}`;
     const cached = _cache.get(key);
     if (cached) {
@@ -77,7 +88,7 @@ export function useCanvasDbData(month: number, year: number): CanvasDbState {
     return () => {
       cancelled = true;
     };
-  }, [month, year]);
+  }, [month, year, isDemoMode]);
 
   return { days, loading, error };
 }

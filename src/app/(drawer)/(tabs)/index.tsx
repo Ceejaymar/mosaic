@@ -14,6 +14,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
+import { DemoBadge } from '@/src/components/demo-badge';
 import { PillButton } from '@/src/components/pill-button';
 import { TopFade } from '@/src/components/top-fade';
 import { LAYOUT } from '@/src/constants/layout';
@@ -138,7 +139,10 @@ export default function CheckInScreen() {
           {t(`dashboard.time_of_day.${currentSlot}`)}?
         </Text>
 
-        <Text style={styles.dateLabel}>{getFormattedDateLabel()}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Text style={styles.dateLabel}>{getFormattedDateLabel()}</Text>
+          <DemoBadge />
+        </View>
 
         <View style={styles.mosaicWrapper}>
           {isLoading && todayEntries.length === 0 ? (

@@ -8,7 +8,9 @@ import {
   type NewMoodEntry,
 } from '@/src/db/repos/moodRepo';
 import { invalidateMonthCache } from '@/src/features/canvas/hooks/useCanvasDbData';
+import { getDemoEntriesForDate } from '@/src/features/demo/generateDemoData';
 import { uuid } from '@/src/lib/uuid';
+import { useAppStore } from '@/src/store/useApp';
 import { triggerSpringLayoutAnimation } from '@/src/utils/animations';
 
 /**
@@ -30,11 +32,18 @@ function buildMoodEntryFromNew(entry: NewMoodEntry): MoodEntry {
 }
 
 export function useTodayCheckIns() {
+  const isDemoMode = useAppStore((s) => s.isDemoMode);
   const [todayEntries, setTodayEntries] = useState<MoodEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState<Error | null>(null);
 
   const loadTodayEntries = useCallback(async () => {
+    if (isDemoMode) {
+      setTodayEntries(getDemoEntriesForDate(dateToKey()));
+      setIsLoading(false);
+      setLoadError(null);
+      return;
+    }
     setIsLoading(true);
     try {
       const entries = await fetchMoodEntriesForDate(dateToKey());
@@ -46,7 +55,7 @@ export function useTodayCheckIns() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [isDemoMode]);
 
   // Initial load
   useEffect(() => {
@@ -63,34 +72,38 @@ export function useTodayCheckIns() {
     return () => subscription.remove();
   }, [loadTodayEntries]);
 
-  const saveEntry = useCallback(async (nodeId: string, note?: string, tags?: string[]) => {
-    const now = new Date();
-    const newEntry: NewMoodEntry = {
-      id: uuid(),
-      dateKey: dateToKey(now),
-      primaryMood: nodeId,
-      note: note ?? null,
-      tags: tags && tags.length > 0 ? JSON.stringify(tags) : null,
-      occurredAt: now.toISOString(),
-      createdAt: now.toISOString(),
-      updatedAt: now.toISOString(),
-    };
+  const saveEntry = useCallback(
+    async (nodeId: string, note?: string, tags?: string[]) => {
+      if (isDemoMode) return;
+      const now = new Date();
+      const newEntry: NewMoodEntry = {
+        id: uuid(),
+        dateKey: dateToKey(now),
+        primaryMood: nodeId,
+        note: note ?? null,
+        tags: tags && tags.length > 0 ? JSON.stringify(tags) : null,
+        occurredAt: now.toISOString(),
+        createdAt: now.toISOString(),
+        updatedAt: now.toISOString(),
+      };
 
-    triggerSpringLayoutAnimation();
+      triggerSpringLayoutAnimation();
 
-    // Optimistic update using explicit helper instead of a cast
-    setTodayEntries((prev) => [buildMoodEntryFromNew(newEntry), ...prev]);
+      // Optimistic update using explicit helper instead of a cast
+      setTodayEntries((prev) => [buildMoodEntryFromNew(newEntry), ...prev]);
 
-    try {
-      await insertMoodEntry(newEntry);
-      const [yearStr, monthStr] = newEntry.dateKey.split('-');
-      invalidateMonthCache(parseInt(yearStr, 10), parseInt(monthStr, 10) - 1);
-    } catch (error) {
-      console.error('Failed to persist mood entry', error);
-      setTodayEntries((prev) => prev.filter((e) => e.id !== newEntry.id));
-      // TODO: surface an error toast/snackbar
-    }
-  }, []);
+      try {
+        await insertMoodEntry(newEntry);
+        const [yearStr, monthStr] = newEntry.dateKey.split('-');
+        invalidateMonthCache(parseInt(yearStr, 10), parseInt(monthStr, 10) - 1);
+      } catch (error) {
+        console.error('Failed to persist mood entry', error);
+        setTodayEntries((prev) => prev.filter((e) => e.id !== newEntry.id));
+        // TODO: surface an error toast/snackbar
+      }
+    },
+    [isDemoMode],
+  );
 
   return { todayEntries, isLoading, loadError, saveEntry, refresh: loadTodayEntries };
 }

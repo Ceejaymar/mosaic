@@ -8,11 +8,14 @@ import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
+import { DemoBadge } from '@/src/components/demo-badge';
 import { TopFade } from '@/src/components/top-fade';
 import { LAYOUT } from '@/src/constants/layout';
 import { fetchMoodEntriesPage, type MoodEntry } from '@/src/db/repos/moodRepo';
 import { parseStoredTags } from '@/src/features/check-in/utils/parse-tags';
+import { getDemoEntriesPage } from '@/src/features/demo/generateDemoData';
 import { getMoodDisplayInfo } from '@/src/features/emotion-accordion/utils/mood-display';
+import { useAppStore } from '@/src/store/useApp';
 import { formatDayLabel, formatEntryTime } from '@/src/utils/format-date';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -270,6 +273,7 @@ export default function Journal() {
     t,
     i18n: { language },
   } = useTranslation();
+  const isDemoMode = useAppStore((s) => s.isDemoMode);
 
   const [entries, setEntries] = useState<MoodEntry[]>([]);
   const [notesOnly, setNotesOnly] = useState(true);
@@ -284,6 +288,17 @@ export default function Journal() {
   const toggleNotesOnly = useCallback(() => setNotesOnly((v) => !v), []);
 
   const refreshEntries = useCallback(async () => {
+    if (isDemoMode) {
+      const page = getDemoEntriesPage(0, PAGE_SIZE);
+      entriesRef.current = page;
+      hasMoreRef.current = true;
+      offsetRef.current = page.length;
+      setEntries(page);
+      setIsLoading(false);
+      setError(false);
+      return;
+    }
+
     const current = entriesRef.current;
     const hasData = current.length > 0;
 
@@ -315,7 +330,7 @@ export default function Journal() {
       isLoadingRef.current = false;
       if (!hasData) setIsLoading(false);
     }
-  }, []);
+  }, [isDemoMode]);
 
   const loadNextPage = useCallback(async () => {
     if (isLoadingRef.current || !hasMoreRef.current) return;
@@ -323,7 +338,8 @@ export default function Journal() {
     try {
       let addedVisible = false;
       while (!addedVisible && hasMoreRef.current) {
-        const page = await fetchMoodEntriesPage(offsetRef.current, PAGE_SIZE);
+        const fetchPage = isDemoMode ? getDemoEntriesPage : fetchMoodEntriesPage;
+        const page = await fetchPage(offsetRef.current, PAGE_SIZE);
         if (page.length < PAGE_SIZE) hasMoreRef.current = false;
         offsetRef.current += page.length;
         setEntries((prev) => {
@@ -339,7 +355,7 @@ export default function Journal() {
     } finally {
       isLoadingRef.current = false;
     }
-  }, [notesOnly]);
+  }, [notesOnly, isDemoMode]);
 
   useFocusEffect(
     useCallback(() => {
@@ -399,7 +415,10 @@ export default function Journal() {
       <TopFade height={insets.top + 80} />
 
       <View style={[styles.topBar, { top: insets.top }]}>
-        <Text style={styles.pageTitle}>{t('journal.title', 'Journal')}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Text style={styles.pageTitle}>{t('journal.title', 'Journal')}</Text>
+          <DemoBadge />
+        </View>
         <FilterToggle notesOnly={notesOnly} onToggle={toggleNotesOnly} />
       </View>
 
