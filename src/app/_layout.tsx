@@ -83,7 +83,7 @@ function RootLayout() {
 
     Sentry.setUser({
       id: `anon_${deviceModel}_${sessionId}`,
-      username: 'Anonymous User',
+      username: 'Anon',
     });
   }, []);
 
