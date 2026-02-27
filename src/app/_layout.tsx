@@ -17,18 +17,23 @@ import '@/src/i18n/index';
 
 Sentry.init({
   dsn: 'https://06641ea19a9965be5f3dcbdb6b3d04e5@o4510953598222336.ingest.us.sentry.io/4510953601236992',
+  sendDefaultPii: false,
 
-  // Adds more context data to events (IP address, cookies, user, etc.)
-  // For more information, visit: https://docs.sentry.io/platforms/react-native/data-management/data-collected/
-  sendDefaultPii: true,
+  tracesSampleRate: 1.0, // 1.0 captures 100% of transactions for testing, Adjust this down later to save quota
+  enableAutoPerformanceTracing: true, // This enables the automatic tracing
 
-  // Enable Logs
-  enableLogs: true,
+  // The "Scrubber" - ensures journal text never leaves the phone
+  beforeSend(event) {
+    if (event.user) delete event.user.ip_address;
 
-  // Configure Session Replay
-  replaysSessionSampleRate: 0.1,
-  replaysOnErrorSampleRate: 1,
-  integrations: [Sentry.mobileReplayIntegration()],
+    // Scrub potential journal text from logs/breadcrumbs
+    if (event.breadcrumbs) {
+      event.breadcrumbs = event.breadcrumbs.filter(
+        (b) => b.category !== 'console' && b.category !== 'input',
+      );
+    }
+    return event;
+  },
 
   // uncomment the line below to enable Spotlight (https://spotlightjs.com)
   // spotlight: __DEV__,
