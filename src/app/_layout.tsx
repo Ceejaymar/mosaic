@@ -3,17 +3,23 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import * as Sentry from '@sentry/react-native';
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
+import * as Device from 'expo-device';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Stack, useNavigationContainerRef } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { SystemBars } from 'react-native-edge-to-edge';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useUnistyles } from 'react-native-unistyles';
+
 import migrations from '@/drizzle/migrations';
 
 import { db } from '@/src/db/client';
 import '@/src/i18n/index';
+
+const navigationIntegration = Sentry.reactNavigationIntegration({
+  enableTimeToInitialDisplay: true, // drop-off tracking
+});
 
 Sentry.init({
   dsn: 'https://06641ea19a9965be5f3dcbdb6b3d04e5@o4510953598222336.ingest.us.sentry.io/4510953601236992',
@@ -21,6 +27,8 @@ Sentry.init({
 
   tracesSampleRate: 1.0, // 1.0 captures 100% of transactions for testing, Adjust this down later to save quota
   enableAutoPerformanceTracing: true, // This enables the automatic tracing
+
+  integrations: [navigationIntegration],
 
   // The "Scrubber" - ensures journal text never leaves the phone
   beforeSend(event) {
@@ -32,6 +40,7 @@ Sentry.init({
         (b) => b.category !== 'console' && b.category !== 'input',
       );
     }
+
     return event;
   },
 
@@ -57,6 +66,26 @@ function RootLayout() {
   });
 
   const { success: migrationSuccess, error: migrationError } = useMigrations(db, migrations);
+
+  const navigationRef = useNavigationContainerRef();
+
+  useEffect(() => {
+    if (navigationRef) {
+      // This tells Sentry: "Watch these specific route changes"
+      navigationIntegration.registerNavigationContainer(navigationRef);
+    }
+  }, [navigationRef]);
+
+  useEffect(() => {
+    const sessionId = Math.random().toString(36).substring(7);
+
+    const deviceModel = Device.modelName || 'unknown_device';
+
+    Sentry.setUser({
+      id: `anon_${deviceModel}_${sessionId}`,
+      username: 'Anonymous User',
+    });
+  }, []);
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
