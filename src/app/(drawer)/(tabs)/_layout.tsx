@@ -49,6 +49,7 @@ export default function TabLayout() {
   return (
     <View style={styles.root}>
       <Tabs
+        detachInactiveScreens={false}
         screenListeners={{ tabPress: () => hapticLight() }}
         screenOptions={{
           animation: 'shift',
