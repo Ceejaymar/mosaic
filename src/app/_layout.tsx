@@ -15,6 +15,7 @@ import { useUnistyles } from 'react-native-unistyles';
 import migrations from '@/drizzle/migrations';
 
 import { db } from '@/src/db/client';
+import { storage } from '@/src/services/storage/mmkv';
 import '@/src/i18n/index';
 
 const navigationIntegration = Sentry.reactNavigationIntegration({
@@ -77,12 +78,18 @@ function RootLayout() {
   }, [navigationRef]);
 
   useEffect(() => {
-    const sessionId = Math.random().toString(36).substring(7);
+    const ANON_ID_KEY = 'mosaic-anon-id';
+    let persistentId = storage.getString(ANON_ID_KEY);
+
+    if (!persistentId) {
+      persistentId = Math.random().toString(36).substring(2) + Date.now().toString(36);
+      storage.set(ANON_ID_KEY, persistentId);
+    }
 
     const deviceModel = Device.modelName || 'unknown_device';
 
     Sentry.setUser({
-      id: `anon_${deviceModel}_${sessionId}`,
+      id: `anon_${deviceModel}_${persistentId}`,
       username: 'Anon',
     });
   }, []);
