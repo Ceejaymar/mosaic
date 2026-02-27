@@ -1,5 +1,6 @@
-import { TouchableOpacity, View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { Pressable, View } from 'react-native';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { useAppStore } from '@/src/store/useApp';
 import type { Theme } from '@/src/types/types';
@@ -7,74 +8,97 @@ import { ThemedText } from './themed-text';
 
 export default function ThemeToggle() {
   const { theme, setTheme } = useAppStore();
+  const { theme: unistylesTheme } = useUnistyles();
 
-  const options = [
-    { label: 'Light', value: 'light' },
-    { label: 'Dark', value: 'dark' },
-    { label: 'System', value: 'system' },
+  const options: { label: string; value: Theme; icon: keyof typeof Ionicons.glyphMap }[] = [
+    { label: 'Light', value: 'light', icon: 'sunny-outline' },
+    { label: 'System', value: 'system', icon: 'phone-portrait-outline' },
+    { label: 'Dark', value: 'dark', icon: 'moon-outline' },
   ];
 
   return (
     <View style={styles.container}>
-      <ThemedText style={styles.label}>Appearance</ThemedText>
-
-      <View style={styles.toggleContainer}>
+      {/* Sleek Pill Container */}
+      <View style={[styles.pillContainer, { backgroundColor: unistylesTheme.colors.surface }]}>
         {options.map((option) => {
           const isActive = theme === option.value;
 
           return (
-            <TouchableOpacity
+            <Pressable
               key={option.value}
-              onPress={() => setTheme(option.value as Theme)}
-              style={[styles.button, isActive && styles.activeButton]}
+              onPress={() => setTheme(option.value)}
+              style={[
+                styles.segment,
+                isActive && [
+                  styles.activeSegment,
+                  { backgroundColor: unistylesTheme.colors.background },
+                ],
+              ]}
             >
-              <ThemedText style={[styles.buttonText, isActive && styles.activeButtonText]}>
+              <Ionicons
+                name={option.icon}
+                size={16}
+                color={
+                  isActive ? unistylesTheme.colors.typography : unistylesTheme.colors.textMuted
+                }
+                style={{ marginBottom: 4 }}
+              />
+              <ThemedText
+                style={[
+                  styles.segmentText,
+                  {
+                    color: isActive
+                      ? unistylesTheme.colors.typography
+                      : unistylesTheme.colors.textMuted,
+                  },
+                  isActive && styles.activeSegmentText,
+                ]}
+              >
                 {option.label}
               </ThemedText>
-            </TouchableOpacity>
+            </Pressable>
           );
         })}
       </View>
-
-      {theme === 'system' && (
-        <ThemedText style={styles.helperText}>
-          We'll adjust your look based on your device settings.
-        </ThemedText>
-      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create((theme) => ({
   container: {
+    width: '100%',
+    alignItems: 'center',
+    marginVertical: 12,
+  },
+  pillContainer: {
+    flexDirection: 'row',
+    width: '100%',
+    padding: 4,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: theme.colors.divider,
+  },
+  segment: {
     flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: 12,
   },
-  label: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: theme.colors.typography,
+  activeSegment: {
+    // Elevates the active segment so it looks like a physical button
+    shadowColor: theme.colors.typography,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  toggleContainer: {
-    marginTop: 8,
-    marginLeft: 4,
-  },
-  button: {
-    padding: 8,
-    borderRadius: 8,
-    backgroundColor: theme.colors.lightGrey,
-  },
-  buttonText: {
+  segmentText: {
     fontSize: 12,
-    color: theme.colors.typography,
+    fontFamily: 'SpaceMono', // or your preferred clean font
+    fontWeight: '500',
   },
-  activeButton: {
-    backgroundColor: theme.colors.typography,
-  },
-  activeButtonText: {
-    color: theme.colors.lightGrey,
-  },
-  helperText: {
-    fontSize: 12,
-    color: theme.colors.typography,
+  activeSegmentText: {
+    fontWeight: '700',
   },
 }));
