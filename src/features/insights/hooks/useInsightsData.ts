@@ -101,12 +101,13 @@ async function fetchRealEntries(timeFrame: TimeFrame, offset: number): Promise<M
   if (timeFrame === 'week') {
     // Fetch the broader month(s) and filter to the week range
     const { start, end } = getDateRange(timeFrame, offset);
-    const startDate = new Date(start);
-    const endDate = new Date(end);
+    // Parse YYYY-MM-DD manually to avoid UTC-midnight timezone shifts
+    const [sY, sM] = start.split('-').map(Number);
+    const [eY, eM] = end.split('-').map(Number);
 
     const months = new Set<string>();
-    months.add(`${startDate.getFullYear()}-${startDate.getMonth()}`);
-    months.add(`${endDate.getFullYear()}-${endDate.getMonth()}`);
+    months.add(`${sY}-${sM - 1}`);
+    months.add(`${eY}-${eM - 1}`);
 
     const allEntries: MoodEntry[] = [];
     for (const key of months) {
