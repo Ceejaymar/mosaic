@@ -25,7 +25,7 @@ Mosaic is a privacy-first mobile application built with React Native. It moves a
 
 🌑 Adaptive Theming — Deep integration with system-level appearance settings using a robust styling engine.
 
-🔒 Data Sovereignty — All emotional data remains on-device. No tracking, no third-party analytics, no compromise.
+🔒 Data Sovereignty — All emotional data remains on-device.
 
 ## 🛠️ Architecture & Tech Stack
 The engineering focus of Mosaic is on speed and type safety.
