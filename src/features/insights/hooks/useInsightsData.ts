@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 
-import type { MoodEntry } from '@/src/db/repos/moodRepo';
-import { fetchMoodEntriesForMonth, fetchRecentMoodEntries } from '@/src/db/repos/moodRepo';
+import { dateToKey, fetchMoodEntriesForMonth, type MoodEntry } from '@/src/db/repos/moodRepo';
 import {
   ACTIVITY_TAGS,
   LOCATION_TAGS,
@@ -71,25 +70,18 @@ function getDateRange(timeFrame: TimeFrame, offset: number): { start: string; en
       startDate.getMonth(),
       startDate.getDate() + 6,
     );
-    return { start: toKey(startDate), end: toKey(endDate) };
+    return { start: dateToKey(startDate), end: dateToKey(endDate) };
   }
 
   if (timeFrame === 'month') {
     const target = new Date(now.getFullYear(), now.getMonth() + offset, 1);
     const lastDay = new Date(target.getFullYear(), target.getMonth() + 1, 0);
-    return { start: toKey(target), end: toKey(lastDay) };
+    return { start: dateToKey(target), end: dateToKey(lastDay) };
   }
 
   // year
   const targetYear = now.getFullYear() + offset;
   return { start: `${targetYear}-01-01`, end: `${targetYear}-12-31` };
-}
-
-function toKey(date: Date): string {
-  const yyyy = date.getFullYear();
-  const mm = String(date.getMonth() + 1).padStart(2, '0');
-  const dd = String(date.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
 }
 
 // ─── Demo Mode: Filter from Pre-generated Data ──────────────────────────────
@@ -131,8 +123,13 @@ async function fetchRealEntries(timeFrame: TimeFrame, offset: number): Promise<M
     return fetchMoodEntriesForMonth(target.getFullYear(), target.getMonth());
   }
 
-  // year — fetch recent entries (capped for performance)
-  return fetchRecentMoodEntries(2000);
+  // year — fetch all 12 months for the target year
+  const targetYear = now.getFullYear() + offset;
+  const monthFetches = Array.from({ length: 12 }, (_, m) =>
+    fetchMoodEntriesForMonth(targetYear, m),
+  );
+  const results = await Promise.all(monthFetches);
+  return results.flat();
 }
 
 // ─── Hook ────────────────────────────────────────────────────────────────────
