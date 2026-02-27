@@ -42,6 +42,7 @@
     "@expo/vector-icons": "^15.0.2",
     "@react-navigation/drawer": "^7.5.9",
     "@react-navigation/native": "^7.1.6",
+    "@sentry/react-native": "^8.2.0",
     "@shopify/flash-list": "2.0.2",
     "@shopify/react-native-skia": "^2.4.21",
     "drizzle-orm": "^0.45.1",
