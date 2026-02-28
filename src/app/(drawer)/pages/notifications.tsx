@@ -85,13 +85,8 @@ export default function NotificationsScreen() {
   // ─── Handlers ──────────────────────────────────────────────────────
 
   const handleBackToDrawer = useCallback(() => {
-    // Pop the stack to go back to Home
-    router.back();
-    // Use a tiny timeout to allow the screen transition to start, then fire the drawer animation
-    setTimeout(() => {
-      navigation.dispatch(DrawerActions.openDrawer());
-    }, 100);
-  }, [router, navigation]);
+    navigation.dispatch(DrawerActions.openDrawer());
+  }, [navigation]);
 
   const handleToggle = useCallback(async () => {
     if (!isEnabled) {
