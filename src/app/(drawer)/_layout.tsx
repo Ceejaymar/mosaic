@@ -3,14 +3,13 @@ import {
   type DrawerContentComponentProps,
   DrawerContentScrollView,
 } from '@react-navigation/drawer';
+import * as Device from 'expo-device';
+import * as MailComposer from 'expo-mail-composer';
 import { type Href, useRouter } from 'expo-router';
 import { Drawer } from 'expo-router/drawer';
-import { Linking, Pressable, Text, View } from 'react-native';
+import { Linking, Platform, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
-
-// Make sure you have this component, or we can build it next!
-// import ThemeToggle from '@/src/components/theme-toggle';
 
 // ─── Reusable Drawer Row Component ────────────────────────────────────────────
 
@@ -31,10 +30,10 @@ function DrawerRow({
       style={({ pressed }) => [styles.row, pressed && { backgroundColor: theme.colors.surface }]}
     >
       <View style={styles.rowLeft}>
-        <Ionicons name={icon} size={22} color={theme.colors.typography} />
+        <Ionicons name={icon} size={24} color={theme.colors.typography} style={{ opacity: 0.4 }} />
         <Text style={[styles.rowLabel, { color: theme.colors.typography }]}>{label}</Text>
       </View>
-      <Ionicons name="arrow-forward" size={20} color={theme.colors.textMuted} />
+      {/* <Ionicons name="arrow-forward" size={20} color={theme.colors.textMuted} /> */}
     </Pressable>
   );
 }
@@ -51,100 +50,140 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
     router.navigate('/(tabs)/' as Href);
   };
 
-  const openSurvey = () => {
-    props.navigation.closeDrawer();
+  const openSupportEmail = async () => {
+    const os = Device.osName ?? Platform.OS;
+    const osVersion = Device.osVersion ?? 'Unknown';
+    const model = Device.modelName ?? 'Unknown';
+    const appVersion = '1.0.0';
 
+    const email = 'support@marceedigital.com';
+    const subject = 'Mosaic Support Request';
+    const body = `Please describe your issue or question below:\n\n\nDiagnostic Info (Please leave this for the developer):\nApp Version: ${appVersion}\nDevice: ${model}\nOS: ${os} ${osVersion}`;
+
+    try {
+      const isAvailable = await MailComposer.isAvailableAsync();
+      if (isAvailable) {
+        await MailComposer.composeAsync({ recipients: [email], subject, body });
+      } else {
+        const mailto = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        await Linking.openURL(mailto);
+      }
+    } catch (err) {
+      console.error('Failed to open email client:', err);
+    } finally {
+      props.navigation.closeDrawer();
+    }
+  };
+
+  const openSurvey = async () => {
     const SURVEY_URL = 'https://tally.so/r/XxeY6z';
 
-    Linking.openURL(SURVEY_URL).catch((err) => {
+    try {
+      await Linking.openURL(SURVEY_URL);
+    } catch (err) {
       console.error('Failed to open URL:', err);
-    });
+    } finally {
+      props.navigation.closeDrawer();
+    }
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      {/* 1. HEADER */}
-      <View style={[styles.header, { marginTop: insets.top }]}>
-        <View style={styles.headerLeft}>
-          <Text style={[styles.headerTitle, { color: theme.colors.typography }]}>Settings</Text>
-        </View>
-        <Pressable onPress={handleHomePress} style={styles.iconBtn}>
-          <Ionicons name="home-outline" size={24} color={theme.colors.typography} />
-        </Pressable>
-      </View>
-
-      {/* 2. SCROLLING LINKS */}
-      <DrawerContentScrollView {...props} contentContainerStyle={styles.scrollContent}>
-        {/* Group 1: Preferences */}
-        <DrawerRow
-          icon="person-outline"
-          label="Account"
-          onPress={() => router.push('/pages/account')}
-        />
-        <DrawerRow
-          icon="notifications-outline"
-          label="Notifications"
-          onPress={() => router.push('/pages/notifications')}
-        />
-        <DrawerRow
-          icon="lock-closed-outline"
-          label="Security & data"
-          onPress={() => router.push('/pages/security')}
-        />
-        <DrawerRow
-          icon="accessibility-outline"
-          label="Accessibility"
-          onPress={() => router.push('/pages/accessibility')}
-        />
-
-        <View style={[styles.divider, { backgroundColor: theme.colors.divider }]} />
-
-        {/* Group 2: About */}
-        <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>About Mosaic</Text>
-        <DrawerRow
-          icon="rocket-outline"
-          label="Upcoming features"
-          onPress={() => router.push('/pages/roadmap')}
-        />
-        <DrawerRow
-          icon="document-text-outline"
-          label="Change log"
-          onPress={() => router.push('/pages/changelog')}
-        />
-        <DrawerRow
-          icon="help-circle-outline"
-          label="FAQs"
-          onPress={() => router.push('/pages/faq')}
-        />
-
-        <View style={[styles.divider, { backgroundColor: theme.colors.divider }]} />
-
-        {/* Group 3: Resources */}
-        <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>Resources</Text>
-        <DrawerRow
-          icon="heart-half-outline"
-          label="Mental health hotlines"
-          onPress={() => router.push('/pages/resources')}
-        />
-        <DrawerRow
-          icon="chatbubble-ellipses-outline"
-          label="Share your feedback"
-          onPress={openSurvey}
-        />
-
-        <DrawerRow icon="star-outline" label="Rate Mosaic" onPress={() => {}} />
-        <DrawerRow icon="share-outline" label="Share with a friend" onPress={() => {}} />
-      </DrawerContentScrollView>
-
-      {/* 3. FOOTER */}
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: theme.colors.background, paddingTop: insets.top },
+      ]}
+    >
       <View
         style={[
-          styles.footer,
-          { paddingBottom: insets.bottom + 20, borderTopColor: theme.colors.divider },
+          styles.innerContainer,
+          { borderRightWidth: 1, borderRightColor: theme.colors.divider },
         ]}
       >
-        {/* <ThemeToggle /> */}
-        <Text style={[styles.versionText, { color: theme.colors.textMuted }]}>v1.0.0</Text>
+        {/* 1. HEADER */}
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <Text style={[styles.headerTitle, { color: theme.colors.typography }]}>Settings</Text>
+          </View>
+          <Pressable onPress={handleHomePress} style={styles.iconBtn}>
+            <Ionicons name="home-outline" size={24} color={theme.colors.typography} />
+          </Pressable>
+        </View>
+
+        {/* 2. SCROLLING LINKS */}
+        <DrawerContentScrollView {...props} contentContainerStyle={styles.scrollContent}>
+          {/* Group 1: Preferences */}
+          <DrawerRow
+            icon="person-outline"
+            label="Account"
+            onPress={() => router.push('/pages/account')}
+          />
+          <DrawerRow
+            icon="notifications-outline"
+            label="Notifications"
+            onPress={() => router.push('/pages/notifications')}
+          />
+          <DrawerRow
+            icon="lock-closed-outline"
+            label="Security & data"
+            onPress={() => router.push('/pages/security')}
+          />
+          <DrawerRow
+            icon="accessibility-outline"
+            label="Accessibility"
+            onPress={() => router.push('/pages/accessibility')}
+          />
+
+          <View style={[styles.divider, { backgroundColor: theme.colors.divider }]} />
+
+          {/* Group 2: About */}
+          <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>About Mosaic</Text>
+          <DrawerRow
+            icon="rocket-outline"
+            label="Upcoming features"
+            onPress={() => router.push('/pages/roadmap')}
+          />
+          <DrawerRow
+            icon="document-text-outline"
+            label="Change log"
+            onPress={() => router.push('/pages/changelog')}
+          />
+          <DrawerRow
+            icon="help-circle-outline"
+            label="FAQs"
+            onPress={() => router.push('/pages/faq')}
+          />
+
+          <View style={[styles.divider, { backgroundColor: theme.colors.divider }]} />
+
+          {/* Group 3: Resources */}
+          <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>Resources</Text>
+          <DrawerRow
+            icon="heart-half-outline"
+            label="Mental health hotlines"
+            onPress={() => router.push('/pages/resources')}
+          />
+          <DrawerRow
+            icon="chatbubble-ellipses-outline"
+            label="Share your feedback"
+            onPress={openSurvey}
+          />
+          <DrawerRow icon="mail-outline" label="Contact support" onPress={openSupportEmail} />
+
+          <DrawerRow icon="star-outline" label="Rate Mosaic" onPress={() => {}} />
+          <DrawerRow icon="share-outline" label="Share with a friend" onPress={() => {}} />
+        </DrawerContentScrollView>
+
+        {/* 3. FOOTER */}
+        <View
+          style={[
+            styles.footer,
+            { paddingBottom: insets.bottom + 20, borderTopColor: theme.colors.divider },
+          ]}
+        >
+          <Text style={[styles.versionText, { color: theme.colors.textMuted }]}>Mosaic</Text>
+          <Text style={[styles.versionText, { color: theme.colors.textMuted }]}>v1.0.0</Text>
+        </View>
       </View>
     </View>
   );
@@ -170,6 +209,7 @@ export default function Layout() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  innerContainer: { flex: 1 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -182,7 +222,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  iconBtn: { padding: 8 },
+  iconBtn: { padding: 16 },
   headerTitle: {
     fontSize: 28,
     fontFamily: 'Fraunces',
@@ -197,21 +237,23 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   rowLeft: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  rowLabel: { fontSize: 16, fontWeight: '500' },
-  divider: { height: 1, marginHorizontal: 24, marginVertical: 12, opacity: 0.5 },
+  rowLabel: { fontSize: 18, fontWeight: '500' },
+  divider: { height: 1, marginRight: 16, marginVertical: 12 },
   sectionTitle: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'SpaceMono',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    paddingHorizontal: 24,
-    marginTop: 12,
+    marginTop: 8,
     marginBottom: 4,
   },
   footer: {
     paddingHorizontal: 16,
-    paddingTop: 10,
+    paddingTop: 8,
     borderTopWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   versionText: { fontSize: 12, fontFamily: 'SpaceMono' },
 });
