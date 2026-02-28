@@ -4,6 +4,7 @@ import {
   DrawerContentScrollView,
 } from '@react-navigation/drawer';
 import * as Device from 'expo-device';
+import * as MailComposer from 'expo-mail-composer';
 import { type Href, useRouter } from 'expo-router';
 import { Drawer } from 'expo-router/drawer';
 import { Linking, Platform, Pressable, Text, View } from 'react-native';
@@ -50,34 +51,43 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
   };
 
   const openSupportEmail = async () => {
-    props.navigation.closeDrawer();
-
     const os = Device.osName ?? Platform.OS;
     const osVersion = Device.osVersion ?? 'Unknown';
     const model = Device.modelName ?? 'Unknown';
     const appVersion = '1.0.0';
 
+    const email = 'support@marceedigital.com';
+    const subject = 'Mosaic Support Request';
     const body = `Please describe your issue or question below:\n\n\nDiagnostic Info (Please leave this for the developer):\nApp Version: ${appVersion}\nDevice: ${model}\nOS: ${os} ${osVersion}`;
 
-    const subject = encodeURIComponent('Mosaic Support Request');
-    const encodedBody = encodeURIComponent(body);
-    const mailto = `mailto:support@marceedigital.com?subject=${subject}&body=${encodedBody}`;
+    const isAvailable = await MailComposer.isAvailableAsync();
 
-    try {
-      await Linking.openURL(mailto);
-    } catch (err) {
-      console.error('Failed to open email client:', err);
+    if (isAvailable) {
+      MailComposer.composeAsync({ recipients: [email], subject, body });
+      setTimeout(() => {
+        props.navigation.closeDrawer();
+      }, 500);
+    } else {
+      try {
+        const mailto = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        Linking.openURL(mailto);
+        setTimeout(() => props.navigation.closeDrawer(), 500);
+      } catch (err) {
+        console.error('Failed to open email client:', err);
+      }
     }
   };
 
   const openSurvey = () => {
-    props.navigation.closeDrawer();
-
     const SURVEY_URL = 'https://tally.so/r/XxeY6z';
 
     Linking.openURL(SURVEY_URL).catch((err) => {
       console.error('Failed to open URL:', err);
     });
+
+    setTimeout(() => {
+      props.navigation.closeDrawer();
+    }, 500);
   };
 
   return (
