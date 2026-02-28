@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Picker } from '@react-native-picker/picker';
 import { DrawerActions } from '@react-navigation/native';
-import { getLocales } from 'expo-localization';
+import { getCalendars } from 'expo-localization';
 import { useNavigation, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Linking, Modal, Pressable, ScrollView, Switch, Text, View } from 'react-native';
@@ -17,7 +17,7 @@ import { useAppStore } from '@/src/store/useApp';
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 // Asking the native device directly, bypassing Hermes JS engine limitations
-const is24Hour = getLocales()[0]?.uses24HourClock ?? false;
+const is24Hour = getCalendars()[0]?.uses24hourClock ?? false;
 
 function formatTimeForDevice(time24: string): string {
   const [h, m] = time24.split(':').map(Number);
