@@ -1,8 +1,10 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import { useRouter } from 'expo-router';
+import { Picker } from '@react-native-picker/picker';
+import { DrawerActions } from '@react-navigation/native';
+import { getLocales } from 'expo-localization';
+import { useNavigation, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Linking, Platform, Pressable, ScrollView, Switch, Text, View } from 'react-native';
+import { Linking, Modal, Pressable, ScrollView, Switch, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
@@ -14,29 +16,36 @@ import { useAppStore } from '@/src/store/useApp';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+// Asking the native device directly, bypassing Hermes JS engine limitations
+const is24Hour = getLocales()[0]?.uses24HourClock ?? false;
+
 function formatTimeForDevice(time24: string): string {
   const [h, m] = time24.split(':').map(Number);
   const date = new Date(2000, 0, 1, h, m);
+
+  // If the device uses a 24-hour clock, force it to format as HH:mm
+  if (is24Hour) {
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  }
+
+  // Otherwise, use the standard 12-hour format (e.g., 2:00 PM)
   return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 }
 
-function timeToDate(time24: string): Date {
+function parse24ToComponents(time24: string): { hour24: number; minute: number } {
   const [h, m] = time24.split(':').map(Number);
-  return new Date(2000, 0, 1, h, m);
+  return { hour24: h, minute: m };
 }
 
-function dateToTime24(date: Date): string {
-  const h = String(date.getHours()).padStart(2, '0');
-  const m = String(date.getMinutes()).padStart(2, '0');
-  return `${h}:${m}`;
+function componentsTo24(hour24: number, minute: number): string {
+  return `${String(hour24).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
 }
-
-const is24Hour = !new Intl.DateTimeFormat([], { hour: 'numeric' }).resolvedOptions().hour12;
 
 // ─── Screen ──────────────────────────────────────────────────────────────────
 
 export default function NotificationsScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { theme } = useUnistyles();
 
@@ -48,7 +57,41 @@ export default function NotificationsScreen() {
   const updateReminderTime = useAppStore((s) => s.updateReminderTime);
 
   const [permissionDenied, setPermissionDenied] = useState(false);
-  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+
+  // Bottom sheet state (We now store everything relative to standard 24-hour time)
+  const [isSheetVisible, setIsSheetVisible] = useState(false);
+  const [activeEditingIndex, setActiveEditingIndex] = useState<number | null>(null);
+  const [tempHour24, setTempHour24] = useState(12);
+  const [tempMinute, setTempMinute] = useState(0);
+  const [collisionWarning, setCollisionWarning] = useState(false);
+
+  // ─── Deriving 12-Hour Display Values ─────────────────────────────────
+
+  const displayHour12 = tempHour24 % 12 === 0 ? 12 : tempHour24 % 12;
+  const displayPeriod = tempHour24 >= 12 ? 'PM' : 'AM';
+
+  const handleHour12Change = (val: number) => {
+    const isPM = tempHour24 >= 12;
+    let newH24 = val === 12 ? 0 : val;
+    if (isPM) newH24 += 12;
+    setTempHour24(newH24);
+  };
+
+  const handlePeriodChange = (val: 'AM' | 'PM') => {
+    if (val === 'PM' && tempHour24 < 12) setTempHour24(tempHour24 + 12);
+    else if (val === 'AM' && tempHour24 >= 12) setTempHour24(tempHour24 - 12);
+  };
+
+  // ─── Handlers ──────────────────────────────────────────────────────
+
+  const handleBackToDrawer = useCallback(() => {
+    // Pop the stack to go back to Home
+    router.back();
+    // Use a tiny timeout to allow the screen transition to start, then fire the drawer animation
+    setTimeout(() => {
+      navigation.dispatch(DrawerActions.openDrawer());
+    }, 100);
+  }, [router, navigation]);
 
   const handleToggle = useCallback(async () => {
     if (!isEnabled) {
@@ -63,98 +106,137 @@ export default function NotificationsScreen() {
     } else {
       toggleNotifications();
       await rescheduleAllNotifications(reminderTimes, false);
-      setExpandedIndex(null);
     }
   }, [isEnabled, reminderTimes, toggleNotifications]);
 
-  const handleRowPress = useCallback((index: number) => {
-    setExpandedIndex((prev) => (prev === index ? null : index));
+  const openSheetForEdit = useCallback(
+    (index: number) => {
+      const { hour24, minute } = parse24ToComponents(reminderTimes[index]);
+      setTempHour24(hour24);
+      setTempMinute(minute);
+      setActiveEditingIndex(index);
+      setCollisionWarning(false);
+      setIsSheetVisible(true);
+    },
+    [reminderTimes],
+  );
+
+  const openSheetForAdd = useCallback(() => {
+    setTempHour24(12);
+    setTempMinute(0);
+    setActiveEditingIndex(null);
+    setCollisionWarning(false);
+    setIsSheetVisible(true);
   }, []);
 
-  const handleIOSPickerChange = useCallback(
-    async (_event: DateTimePickerEvent, date?: Date) => {
-      if (!date || expandedIndex === null) return;
+  const closeSheet = useCallback(() => {
+    setIsSheetVisible(false);
+    setCollisionWarning(false);
+  }, []);
 
-      const newTime = dateToTime24(date);
-      updateReminderTime(reminderTimes[expandedIndex], newTime);
-
-      const currentTimes = useAppStore.getState().reminderTimes;
-      await rescheduleAllNotifications(currentTimes, true);
-    },
-    [expandedIndex, reminderTimes, updateReminderTime],
-  );
-
-  const handleAndroidPickerChange = useCallback(
-    async (event: DateTimePickerEvent, date?: Date) => {
-      setExpandedIndex(null);
-
-      if (event.type === 'dismissed' || !date || expandedIndex === null) return;
-
-      const newTime = dateToTime24(date);
-      updateReminderTime(reminderTimes[expandedIndex], newTime);
-
-      const currentTimes = useAppStore.getState().reminderTimes;
-      await rescheduleAllNotifications(currentTimes, true);
-    },
-    [expandedIndex, reminderTimes, updateReminderTime],
-  );
-
-  const handleAddTime = useCallback(async () => {
-    if (reminderTimes.length >= 4) return;
-
-    addReminderTime('12:00');
+  const handleSave = useCallback(async () => {
+    const newTime = componentsTo24(tempHour24, tempMinute);
     const currentTimes = useAppStore.getState().reminderTimes;
-    const newIndex = currentTimes.indexOf('12:00');
-    setExpandedIndex(newIndex >= 0 ? newIndex : currentTimes.length - 1);
 
-    await rescheduleAllNotifications(currentTimes, true);
-  }, [reminderTimes, addReminderTime]);
+    const editingOldTime = activeEditingIndex !== null ? currentTimes[activeEditingIndex] : null;
+    const isDuplicate = currentTimes.some((t, i) => {
+      if (activeEditingIndex !== null && i === activeEditingIndex) return false;
+      return t === newTime;
+    });
+
+    if (isDuplicate) {
+      setCollisionWarning(true);
+      return;
+    }
+
+    if (activeEditingIndex !== null && editingOldTime) {
+      updateReminderTime(editingOldTime, newTime);
+    } else {
+      addReminderTime(newTime);
+    }
+
+    const updatedTimes = useAppStore.getState().reminderTimes;
+    await rescheduleAllNotifications(updatedTimes, true);
+    closeSheet();
+  }, [tempHour24, tempMinute, activeEditingIndex, updateReminderTime, addReminderTime, closeSheet]);
+
+  const handleSurpriseMe = useCallback(async () => {
+    // Random time between 08:00 (8 AM) and 22:00 (10 PM)
+    const randomHour = 8 + Math.floor(Math.random() * 15);
+    const randomMinute = Math.floor(Math.random() * 60);
+    const newTime = componentsTo24(randomHour, randomMinute);
+    const currentTimes = useAppStore.getState().reminderTimes;
+
+    const isDuplicate = currentTimes.some((t, i) =>
+      activeEditingIndex !== null && i === activeEditingIndex ? false : t === newTime,
+    );
+
+    if (!isDuplicate) {
+      if (activeEditingIndex !== null) {
+        updateReminderTime(currentTimes[activeEditingIndex], newTime);
+      } else {
+        addReminderTime(newTime);
+      }
+    }
+
+    const updatedTimes = useAppStore.getState().reminderTimes;
+    await rescheduleAllNotifications(updatedTimes, true);
+    closeSheet();
+  }, [activeEditingIndex, updateReminderTime, addReminderTime, closeSheet]);
 
   const handleRemoveTime = useCallback(
     async (time: string) => {
-      if (expandedIndex !== null) setExpandedIndex(null);
       removeReminderTime(time);
-
       const currentTimes = useAppStore.getState().reminderTimes;
       await rescheduleAllNotifications(currentTimes, true);
     },
-    [expandedIndex, removeReminderTime],
+    [removeReminderTime],
   );
+
+  // ─── Render Data ───────────────────────────────────────────────────
+
+  const HOURS_12 = Array.from({ length: 12 }, (_, i) => i + 1);
+  const HOURS_24 = Array.from({ length: 24 }, (_, i) => i);
+  const MINUTES = Array.from({ length: 60 }, (_, i) => i);
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      {/* Header */}
+      {/* ─── Stacked Header ─── */}
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color={theme.colors.typography} />
-        </Pressable>
+        <View style={styles.headerTop}>
+          <Pressable onPress={handleBackToDrawer} style={styles.iconBtn}>
+            <Ionicons name="arrow-back" size={24} color={theme.colors.typography} />
+          </Pressable>
+
+          <Pressable onPress={() => router.navigate('/(tabs)/')} style={styles.iconBtn}>
+            <Ionicons name="home-outline" size={24} color={theme.colors.typography} />
+          </Pressable>
+        </View>
         <Text style={[styles.title, { color: theme.colors.typography }]}>Notifications</Text>
       </View>
 
       <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}>
-        {/* Master Switch */}
-        <View style={[styles.card, { backgroundColor: theme.colors.surface }]}>
-          <View style={styles.switchRow}>
-            <View>
-              <Text style={[styles.switchLabel, { color: theme.colors.typography }]}>
-                Enable reminders
-              </Text>
-              <Text style={[styles.switchDescription, { color: theme.colors.textMuted }]}>
-                Get daily check-in prompts
-              </Text>
-            </View>
-            <Switch
-              value={isEnabled}
-              onValueChange={handleToggle}
-              trackColor={{ false: theme.colors.divider, true: theme.colors.mosaicGold }}
-              thumbColor="#ffffff"
-            />
+        {/* Master Switch row */}
+        <View style={[styles.row, { borderBottomColor: theme.colors.divider }]}>
+          <View>
+            <Text style={[styles.rowLabel, { color: theme.colors.typography }]}>
+              Enable reminders
+            </Text>
+            <Text style={[styles.rowSub, { color: theme.colors.textMuted }]}>
+              Daily check-in prompts
+            </Text>
           </View>
+          <Switch
+            value={isEnabled}
+            onValueChange={handleToggle}
+            trackColor={{ false: theme.colors.divider, true: theme.colors.mosaicGold }}
+            thumbColor="#ffffff"
+          />
         </View>
 
         {/* Permission Denied */}
         {permissionDenied ? (
-          <View style={[styles.card, { backgroundColor: theme.colors.surface }]}>
+          <View style={[styles.deniedBlock, { borderColor: theme.colors.divider }]}>
             <Ionicons
               name="notifications-off-outline"
               size={28}
@@ -162,35 +244,35 @@ export default function NotificationsScreen() {
               style={styles.deniedIcon}
             />
             <Text style={[styles.deniedText, { color: theme.colors.typography }]}>
-              Notifications are disabled in your device settings.
+              Notifications are disabled in Settings.
             </Text>
-            <Text style={[styles.deniedSubtext, { color: theme.colors.textMuted }]}>
-              To receive check-in reminders, enable notifications for Mosaic in Settings.
+            <Text style={[styles.deniedSub, { color: theme.colors.textMuted }]}>
+              Enable them for Mosaic to receive check-in reminders.
             </Text>
             <Pressable
               onPress={() => Linking.openSettings()}
               style={({ pressed }) => [
-                styles.settingsBtn,
+                styles.openSettingsBtn,
                 { backgroundColor: theme.colors.mosaicGold, opacity: pressed ? 0.8 : 1 },
               ]}
             >
-              <Text style={[styles.settingsBtnText, { color: theme.colors.onAccent }]}>
+              <Text style={[styles.openSettingsBtnText, { color: theme.colors.onAccent }]}>
                 Open Settings
               </Text>
             </Pressable>
           </View>
         ) : null}
 
-        {/* Reminder Times — always visible, dimmed when disabled */}
+        {/* Reminder times section */}
         <View
-          style={[styles.timesSection, !isEnabled && styles.disabledSection]}
+          style={[styles.timesSection, !isEnabled && styles.disabled]}
           pointerEvents={isEnabled ? 'auto' : 'none'}
         >
-          <Text style={[styles.sectionLabel, { color: theme.colors.textMuted }]}>
+          <Text style={[styles.sectionLabel, { color: theme.colors.typography }]}>
             Reminder times
           </Text>
 
-          <View style={[styles.card, { backgroundColor: theme.colors.surface }]}>
+          <View style={[styles.listBlock, { borderColor: theme.colors.divider }]}>
             {reminderTimes.map((time, index) => (
               <View key={time}>
                 {index > 0 && (
@@ -198,11 +280,11 @@ export default function NotificationsScreen() {
                 )}
                 <View style={styles.timeRow}>
                   <Pressable
-                    onPress={() => handleRowPress(index)}
-                    style={({ pressed }) => [styles.timeLabel, pressed && styles.pressed]}
+                    onPress={() => openSheetForEdit(index)}
+                    style={({ pressed }) => [styles.timeLeft, pressed && styles.pressed]}
                   >
                     <Ionicons
-                      name="time-outline"
+                      name="alarm-outline"
                       size={20}
                       color={theme.colors.typography}
                       style={styles.timeIcon}
@@ -210,65 +292,156 @@ export default function NotificationsScreen() {
                     <Text style={[styles.timeText, { color: theme.colors.typography }]}>
                       {formatTimeForDevice(time)}
                     </Text>
+
                     <Ionicons
-                      name={expandedIndex === index ? 'chevron-up' : 'chevron-down'}
-                      size={16}
-                      color={theme.colors.textMuted}
+                      name="pencil-outline"
+                      size={20}
+                      color={theme.colors.typography}
+                      style={{ opacity: 0.6 }}
                     />
                   </Pressable>
+
                   {reminderTimes.length > 1 && (
                     <Pressable
                       onPress={() => handleRemoveTime(time)}
                       style={({ pressed }) => [styles.deleteBtn, pressed && styles.pressed]}
                     >
-                      <Ionicons name="trash-outline" size={18} color={theme.colors.destructive} />
+                      <Ionicons name="trash-outline" size={20} color={theme.colors.destructive} />
                     </Pressable>
                   )}
                 </View>
-
-                {/* iOS inline picker — accordion style */}
-                {expandedIndex === index && Platform.OS === 'ios' && (
-                  <DateTimePicker
-                    value={timeToDate(time)}
-                    mode="time"
-                    display="spinner"
-                    is24Hour={is24Hour}
-                    onChange={handleIOSPickerChange}
-                    textColor={theme.colors.typography}
-                    style={styles.iosPicker}
-                  />
-                )}
               </View>
             ))}
           </View>
 
-          {/* Add Reminder */}
           {reminderTimes.length < 4 && (
             <Pressable
-              onPress={handleAddTime}
-              style={({ pressed }) => [
-                styles.addBtn,
-                { backgroundColor: theme.colors.surface, opacity: pressed ? 0.8 : 1 },
-              ]}
+              onPress={openSheetForAdd}
+              style={({ pressed }) => [styles.addBtnMain, pressed && styles.pressed]}
             >
               <Ionicons name="add-circle-outline" size={20} color={theme.colors.mosaicGold} />
-              <Text style={[styles.addBtnText, { color: theme.colors.mosaicGold }]}>
+              <Text style={[styles.addBtnMainText, { color: theme.colors.mosaicGold }]}>
                 Add reminder
               </Text>
             </Pressable>
           )}
         </View>
-
-        {/* Android modal picker — rendered at root level */}
-        {expandedIndex !== null && Platform.OS === 'android' && (
-          <DateTimePicker
-            value={timeToDate(reminderTimes[expandedIndex])}
-            mode="time"
-            is24Hour={is24Hour}
-            onChange={handleAndroidPickerChange}
-          />
-        )}
       </ScrollView>
+
+      {/* ─── Bottom Sheet Modal ──────────────────────────────────────── */}
+      <Modal visible={isSheetVisible} animationType="slide" transparent onRequestClose={closeSheet}>
+        <Pressable style={styles.overlay} onPress={closeSheet} />
+
+        <View
+          style={[
+            styles.sheet,
+            {
+              backgroundColor: theme.colors.surface,
+              paddingBottom: insets.bottom + 16,
+            },
+          ]}
+        >
+          <View style={[styles.handle, { backgroundColor: theme.colors.divider }]} />
+
+          <Text style={[styles.sheetTitle, { color: theme.colors.typography }]}>
+            {activeEditingIndex !== null ? 'Edit reminder' : 'Add reminder'}
+          </Text>
+
+          {/* Wheel pickers */}
+          <View style={styles.pickerRow}>
+            {/* Conditional Hour Picker (12 vs 24 format) */}
+            {is24Hour ? (
+              <View style={styles.pickerWrapper}>
+                <Text style={[styles.pickerLabel, { color: theme.colors.textMuted }]}>Hour</Text>
+                <Picker
+                  selectedValue={tempHour24}
+                  onValueChange={(v) => setTempHour24(v as number)}
+                  style={[styles.picker, { color: theme.colors.typography }]}
+                  itemStyle={{ color: theme.colors.typography }}
+                >
+                  {HOURS_24.map((h) => (
+                    <Picker.Item key={h} label={String(h).padStart(2, '0')} value={h} />
+                  ))}
+                </Picker>
+              </View>
+            ) : (
+              <View style={styles.pickerWrapper}>
+                <Text style={[styles.pickerLabel, { color: theme.colors.textMuted }]}>Hour</Text>
+                <Picker
+                  selectedValue={displayHour12}
+                  onValueChange={handleHour12Change}
+                  style={[styles.picker, { color: theme.colors.typography }]}
+                  itemStyle={{ color: theme.colors.typography }}
+                >
+                  {HOURS_12.map((h) => (
+                    <Picker.Item key={h} label={String(h)} value={h} />
+                  ))}
+                </Picker>
+              </View>
+            )}
+
+            {/* Minutes (Same for both) */}
+            <View style={styles.pickerWrapper}>
+              <Text style={[styles.pickerLabel, { color: theme.colors.textMuted }]}>Min</Text>
+              <Picker
+                selectedValue={tempMinute}
+                onValueChange={(v) => setTempMinute(v as number)}
+                style={[styles.picker, { color: theme.colors.typography }]}
+                itemStyle={{ color: theme.colors.typography }}
+              >
+                {MINUTES.map((m) => (
+                  <Picker.Item key={m} label={String(m).padStart(2, '0')} value={m} />
+                ))}
+              </Picker>
+            </View>
+
+            {/* Conditional AM/PM Period Picker (Only show if on 12-hour clock) */}
+            {!is24Hour && (
+              <View style={styles.pickerWrapper}>
+                <Text style={[styles.pickerLabel, { color: theme.colors.textMuted }]}>Period</Text>
+                <Picker
+                  selectedValue={displayPeriod}
+                  onValueChange={handlePeriodChange}
+                  style={[styles.picker, { color: theme.colors.typography }]}
+                  itemStyle={{ color: theme.colors.typography }}
+                >
+                  <Picker.Item label="AM" value="AM" />
+                  <Picker.Item label="PM" value="PM" />
+                </Picker>
+              </View>
+            )}
+          </View>
+
+          {/* Collision warning */}
+          {collisionWarning ? (
+            <Text style={[styles.collisionText, { color: theme.colors.destructive }]}>
+              You already have a reminder set for this time.
+            </Text>
+          ) : null}
+
+          {/* Save */}
+          <Pressable
+            onPress={handleSave}
+            style={({ pressed }) => [
+              styles.saveBtn,
+              { backgroundColor: theme.colors.mosaicGold, opacity: pressed ? 0.8 : 1 },
+            ]}
+          >
+            <Text style={[styles.saveBtnText, { color: theme.colors.onAccent }]}>Save</Text>
+          </Pressable>
+
+          {/* Surprise Me (Anytime) */}
+          <Pressable
+            onPress={handleSurpriseMe}
+            style={({ pressed }) => [styles.surpriseBtn, pressed && styles.pressed]}
+          >
+            <Ionicons name="shuffle-outline" size={16} color={theme.colors.textMuted} />
+            <Text style={[styles.surpriseBtnText, { color: theme.colors.textMuted }]}>
+              Surprise me
+            </Text>
+          </Pressable>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -278,100 +451,162 @@ export default function NotificationsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
     paddingHorizontal: 16,
     paddingBottom: 12,
-    gap: 12,
   },
-  backBtn: { padding: 4 },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8, // Space between the icons and the giant title below
+  },
+  iconBtn: {
+    padding: 8,
+    marginLeft: -8, // Optical alignment so the icon sits flush left
+  },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontFamily: 'Fraunces',
     fontWeight: '700',
     letterSpacing: -0.5,
   },
-  content: { paddingHorizontal: 16, gap: 16 },
-  card: {
-    borderRadius: 12,
-    padding: 16,
-  },
-  switchRow: {
+  content: { paddingHorizontal: 16, paddingTop: 8, gap: 24 },
+
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingVertical: 16,
+    borderBottomWidth: 1,
   },
-  switchLabel: {
-    fontSize: 17,
-    fontWeight: '600',
+  rowLabel: { fontSize: 17, fontWeight: '600' },
+  rowSub: { fontSize: 13, fontFamily: 'SpaceMono', marginTop: 2 },
+
+  deniedBlock: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 20,
+    alignItems: 'center',
   },
-  switchDescription: {
-    fontSize: 13,
-    fontFamily: 'SpaceMono',
-    marginTop: 2,
-  },
-  deniedIcon: { alignSelf: 'center', marginBottom: 12 },
+  deniedIcon: { marginBottom: 12 },
   deniedText: {
     fontSize: 16,
     fontWeight: '600',
     textAlign: 'center',
     marginBottom: 8,
   },
-  deniedSubtext: {
+  deniedSub: {
     fontSize: 14,
     textAlign: 'center',
     lineHeight: 20,
     marginBottom: 16,
   },
-  settingsBtn: {
-    alignSelf: 'center',
+  openSettingsBtn: {
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8,
   },
-  settingsBtnText: {
-    fontSize: 15,
+  openSettingsBtnText: { fontSize: 15, fontWeight: '600' },
+
+  timesSection: { gap: 12 },
+  disabled: { opacity: 0.4 },
+  sectionLabel: {
+    fontSize: 16,
     fontWeight: '600',
   },
-  timesSection: { gap: 16 },
-  disabledSection: { opacity: 0.4 },
-  sectionLabel: {
-    fontSize: 13,
-    fontFamily: 'SpaceMono',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+  listBlock: {
+    borderWidth: 1,
+    borderRadius: 12,
+    overflow: 'hidden',
   },
+  divider: { height: 1 },
   timeRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 8,
+    paddingLeft: 16,
+    paddingRight: 8,
   },
-  timeLabel: {
+  timeLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     flex: 1,
+    paddingVertical: 14,
+    paddingRight: 16,
   },
   timeIcon: { opacity: 0.4 },
-  timeText: {
-    fontSize: 18,
-    fontWeight: '500',
-  },
-  pressed: { opacity: 0.6 },
-  deleteBtn: { padding: 8 },
-  divider: { height: 1 },
-  iosPicker: { height: 160 },
-  addBtn: {
+  timeText: { fontSize: 18, fontWeight: '500', flex: 1 },
+  deleteBtn: { padding: 10, marginLeft: 8 },
+  addBtnMain: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
+    paddingVertical: 14,
+    marginTop: 8,
+    marginBottom: 24,
+  },
+  addBtnMainText: { fontSize: 15, fontWeight: '600' },
+  pressed: { opacity: 0.6 },
+
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  sheet: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+  },
+  handle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  sheetTitle: {
+    fontSize: 20,
+    fontFamily: 'Fraunces',
+    fontWeight: '700',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  pickerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  pickerWrapper: { flex: 1, alignItems: 'center' },
+  pickerLabel: {
+    fontSize: 12,
+    fontFamily: 'SpaceMono',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 4,
+  },
+  picker: { width: '100%' },
+  collisionText: {
+    fontSize: 13,
+    textAlign: 'center',
+    fontFamily: 'SpaceMono',
+    marginBottom: 8,
+  },
+  saveBtn: {
     borderRadius: 12,
     paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 16,
+    marginBottom: 12,
   },
-  addBtnText: {
-    fontSize: 15,
-    fontWeight: '600',
+  saveBtnText: { fontSize: 16, fontWeight: '700' },
+  surpriseBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
   },
+  surpriseBtnText: { fontSize: 14, fontFamily: 'SpaceMono' },
 });
