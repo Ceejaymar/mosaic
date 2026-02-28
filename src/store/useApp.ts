@@ -59,9 +59,11 @@ export const useAppStore = create<State & Actions>()(
           return { reminderTimes: s.reminderTimes.filter((t) => t !== time) };
         }),
       updateReminderTime: (oldTime: string, newTime: string) =>
-        set((s) => ({
-          reminderTimes: s.reminderTimes.map((t) => (t === oldTime ? newTime : t)).sort(),
-        })),
+        set((s) => {
+          if (newTime === oldTime) return s;
+          const filtered = s.reminderTimes.filter((t) => t !== oldTime && t !== newTime);
+          return { reminderTimes: [...filtered, newTime].sort() };
+        }),
     }),
     {
       name: 'app-storage',

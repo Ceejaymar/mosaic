@@ -97,10 +97,20 @@ export default function NotificationsScreen() {
       }
       setPermissionDenied(false);
       toggleNotifications();
-      await rescheduleAllNotifications(reminderTimes, true);
+      try {
+        await rescheduleAllNotifications(reminderTimes, true);
+      } catch (err) {
+        console.error('Failed to schedule notifications:', err);
+        toggleNotifications(); // revert
+      }
     } else {
       toggleNotifications();
-      await rescheduleAllNotifications(reminderTimes, false);
+      try {
+        await rescheduleAllNotifications(reminderTimes, false);
+      } catch (err) {
+        console.error('Failed to cancel notifications:', err);
+        toggleNotifications(); // revert
+      }
     }
   }, [isEnabled, reminderTimes, toggleNotifications]);
 
@@ -166,12 +176,15 @@ export default function NotificationsScreen() {
       activeEditingIndex !== null && i === activeEditingIndex ? false : t === newTime,
     );
 
-    if (!isDuplicate) {
-      if (activeEditingIndex !== null) {
-        updateReminderTime(currentTimes[activeEditingIndex], newTime);
-      } else {
-        addReminderTime(newTime);
-      }
+    if (isDuplicate) {
+      setCollisionWarning(true);
+      return;
+    }
+
+    if (activeEditingIndex !== null) {
+      updateReminderTime(currentTimes[activeEditingIndex], newTime);
+    } else {
+      addReminderTime(newTime);
     }
 
     const updatedTimes = useAppStore.getState().reminderTimes;

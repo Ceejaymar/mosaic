@@ -64,7 +64,10 @@ export async function rescheduleAllNotifications(
   if (!isEnabled) return;
 
   for (const time of times) {
-    const [hour, minute] = time.split(':').map(Number);
+    const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(time);
+    if (!match) continue;
+    const hour = Number(match[1]);
+    const minute = Number(match[2]);
     const message = getRandomMessage(hour);
 
     await Notifications.scheduleNotificationAsync({
