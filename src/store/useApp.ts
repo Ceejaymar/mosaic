@@ -37,6 +37,11 @@ export const useAppStore = create<State & Actions>()(
 
       accessibility: {
         disableLiquidGlass: false,
+        isDyslexicFont: false,
+        disableItalics: false,
+        highContrastText: false,
+        reduceMotion: false,
+        disableHaptics: false,
       },
       setAccessibilitySetting: (key: keyof AccessibilitySettings, value: boolean) =>
         set({ accessibility: { ...get().accessibility, [key]: value } }),

@@ -26,4 +26,9 @@ export type Language = 'en' | 'es';
 
 export interface AccessibilitySettings {
   disableLiquidGlass: boolean;
+  isDyslexicFont: boolean;
+  disableItalics: boolean;
+  highContrastText: boolean;
+  reduceMotion: boolean;
+  disableHaptics: boolean;
 }

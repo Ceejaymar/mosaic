@@ -1,6 +1,8 @@
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 
+import { useAppStore } from '@/src/store/useApp';
+
 let disabled = false;
 let lastSelectionAt = 0;
 let lastImpactAt = 0;
@@ -8,6 +10,7 @@ let lastImpactAt = 0;
 function canAttemptHaptics() {
   if (disabled) return false;
   if (Platform.OS === 'web') return false;
+  if (useAppStore.getState().accessibility.disableHaptics) return false;
   return true;
 }
 
@@ -26,19 +29,45 @@ async function safeCall<T>(fn: () => Promise<T>, label: string) {
 // Light impact (e.g. on press)
 export async function hapticLight() {
   const now = Date.now();
-  if (now - lastImpactAt < 50) return; // small cooldown
+  if (now - lastImpactAt < 50) return;
   lastImpactAt = now;
 
-  return safeCall(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light), 'impactAsync');
+  return safeCall(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light), 'light');
+}
+
+// Medium impact
+export async function hapticMedium() {
+  const now = Date.now();
+  if (now - lastImpactAt < 50) return;
+  lastImpactAt = now;
+
+  return safeCall(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium), 'medium');
+}
+
+// Heavy impact
+export async function hapticHeavy() {
+  const now = Date.now();
+  if (now - lastImpactAt < 50) return;
+  lastImpactAt = now;
+
+  return safeCall(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 'heavy');
+}
+
+// Success notification (e.g. save confirmed)
+export async function hapticSuccess() {
+  return safeCall(
+    () => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success),
+    'success',
+  );
 }
 
 // Selection tick (e.g. on hover change)
 export async function hapticSelection() {
   const now = Date.now();
-  if (now - lastSelectionAt < 35) return; // hover-safe cooldown
+  if (now - lastSelectionAt < 35) return;
   lastSelectionAt = now;
 
-  return safeCall(() => Haptics.selectionAsync(), 'selectionAsync');
+  return safeCall(() => Haptics.selectionAsync(), 'selection');
 }
 
 // Optional: let a settings screen re-enable attempts
