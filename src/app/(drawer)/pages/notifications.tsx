@@ -2,7 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Picker } from '@react-native-picker/picker';
 import { DrawerActions } from '@react-navigation/native';
 import { getCalendars } from 'expo-localization';
-import { useNavigation, useRouter } from 'expo-router';
+import { type Href, useNavigation, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Linking, Modal, Pressable, ScrollView, Switch, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -216,7 +216,7 @@ export default function NotificationsScreen() {
             <Ionicons name="arrow-back" size={24} color={theme.colors.typography} />
           </Pressable>
 
-          <Pressable onPress={() => router.navigate('/(tabs)/')} style={styles.iconBtn}>
+          <Pressable onPress={() => router.navigate('/(tabs)/' as Href)} style={styles.iconBtn}>
             <Ionicons name="home-outline" size={24} color={theme.colors.typography} />
           </Pressable>
         </View>
