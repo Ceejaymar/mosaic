@@ -43,6 +43,25 @@ export const useAppStore = create<State & Actions>()(
 
       isDemoMode: false,
       toggleDemoMode: () => set((s) => ({ isDemoMode: !s.isDemoMode })),
+
+      isNotificationsEnabled: false,
+      reminderTimes: ['09:00', '14:00', '20:00'],
+      toggleNotifications: () =>
+        set((s) => ({ isNotificationsEnabled: !s.isNotificationsEnabled })),
+      addReminderTime: (time: string) =>
+        set((s) => {
+          if (s.reminderTimes.length >= 4 || s.reminderTimes.includes(time)) return s;
+          return { reminderTimes: [...s.reminderTimes, time].sort() };
+        }),
+      removeReminderTime: (time: string) =>
+        set((s) => {
+          if (s.reminderTimes.length <= 1) return s;
+          return { reminderTimes: s.reminderTimes.filter((t) => t !== time) };
+        }),
+      updateReminderTime: (oldTime: string, newTime: string) =>
+        set((s) => ({
+          reminderTimes: s.reminderTimes.map((t) => (t === oldTime ? newTime : t)).sort(),
+        })),
     }),
     {
       name: 'app-storage',
@@ -52,6 +71,8 @@ export const useAppStore = create<State & Actions>()(
         hasOnboarded: state.hasOnboarded,
         language: state.language,
         accessibility: state.accessibility,
+        isNotificationsEnabled: state.isNotificationsEnabled,
+        reminderTimes: state.reminderTimes,
       }),
 
       onRehydrateStorage: () => (state) => {

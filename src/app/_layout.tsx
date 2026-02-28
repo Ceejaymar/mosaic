@@ -5,6 +5,7 @@ import * as Sentry from '@sentry/react-native';
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import * as Device from 'expo-device';
 import { useFonts } from 'expo-font';
+import * as Notifications from 'expo-notifications';
 import { Stack, useNavigationContainerRef } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
@@ -17,6 +18,16 @@ import migrations from '@/drizzle/migrations';
 import { db } from '@/src/db/client';
 import { storage } from '@/src/services/storage/mmkv';
 import '@/src/i18n/index';
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
 
 const navigationIntegration = Sentry.reactNavigationIntegration({
   enableTimeToInitialDisplay: true, // drop-off tracking
