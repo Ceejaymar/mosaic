@@ -54,7 +54,7 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
   const openSurvey = () => {
     props.navigation.closeDrawer();
 
-    const SURVEY_URL = 'https://tally.so/r/your-custom-link';
+    const SURVEY_URL = 'https://tally.so/r/XxeY6z';
 
     Linking.openURL(SURVEY_URL).catch((err) => {
       console.error('Failed to open URL:', err);
