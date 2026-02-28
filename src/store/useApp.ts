@@ -7,13 +7,21 @@ import { mmkvAdapter } from '@/src/services/storage/mmkv';
 import type { AccessibilitySettings, Actions, Language, State, Theme } from '@/src/types/types';
 import i18n from '../i18n';
 
-const applyTheme = (mode: Theme) => {
-  if (mode === 'system') {
-    UnistylesRuntime.setAdaptiveThemes(true);
-  } else {
-    UnistylesRuntime.setAdaptiveThemes(false);
-    UnistylesRuntime.setTheme(mode);
+const applyTheme = (mode: Theme, highContrast = false) => {
+  if (!highContrast) {
+    if (mode === 'system') {
+      UnistylesRuntime.setAdaptiveThemes(true);
+    } else {
+      UnistylesRuntime.setAdaptiveThemes(false);
+      UnistylesRuntime.setTheme(mode);
+    }
+    return;
   }
+
+  // High contrast: disable adaptive themes and pick the correct variant
+  UnistylesRuntime.setAdaptiveThemes(false);
+  const isDark = mode === 'dark' || (mode === 'system' && UnistylesRuntime.colorScheme === 'dark');
+  UnistylesRuntime.setTheme(isDark ? 'darkHighContrast' : 'lightHighContrast');
 };
 
 export const useAppStore = create<State & Actions>()(
@@ -28,8 +36,7 @@ export const useAppStore = create<State & Actions>()(
       theme: 'system',
       setTheme: (mode: Theme) => {
         set({ theme: mode });
-
-        applyTheme(mode);
+        applyTheme(mode, get().accessibility.highContrastText);
       },
 
       hasOnboarded: false,
@@ -43,8 +50,12 @@ export const useAppStore = create<State & Actions>()(
         reduceMotion: false,
         disableHaptics: false,
       },
-      setAccessibilitySetting: (key: keyof AccessibilitySettings, value: boolean) =>
-        set({ accessibility: { ...get().accessibility, [key]: value } }),
+      setAccessibilitySetting: (key: keyof AccessibilitySettings, value: boolean) => {
+        set({ accessibility: { ...get().accessibility, [key]: value } });
+        if (key === 'highContrastText') {
+          applyTheme(get().theme, value);
+        }
+      },
 
       isDemoMode: false,
       toggleDemoMode: () => set((s) => ({ isDemoMode: !s.isDemoMode })),
@@ -84,8 +95,7 @@ export const useAppStore = create<State & Actions>()(
 
       onRehydrateStorage: () => (state) => {
         if (!state) return;
-
-        applyTheme(state.theme);
+        applyTheme(state.theme, state.accessibility?.highContrastText ?? false);
       },
     },
   ),

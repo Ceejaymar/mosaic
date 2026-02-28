@@ -1,12 +1,18 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Pressable } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, {
+  ReduceMotion,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { LAYOUT } from '@/src/constants/layout';
 import { emitOpenCheckInSheet } from '@/src/features/check-in/check-in-sheet-events';
 import { hapticLight } from '@/src/lib/haptics/haptics';
+import { useAppStore } from '@/src/store/useApp';
 
 const FAB_SIZE = 60;
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -15,6 +21,8 @@ export function MainFab() {
   const { theme } = useUnistyles();
   const insets = useSafeAreaInsets();
   const scale = useSharedValue(1);
+  const reduceMotion = useAppStore((s) => s.accessibility.reduceMotion);
+  const rm = reduceMotion ? ReduceMotion.Always : ReduceMotion.System;
 
   const fabAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -33,10 +41,10 @@ export function MainFab() {
     <AnimatedPressable
       onPress={handlePress}
       onPressIn={() => {
-        scale.value = withSpring(0.92);
+        scale.value = withSpring(0.92, { reduceMotion: rm });
       }}
       onPressOut={() => {
-        scale.value = withSpring(1);
+        scale.value = withSpring(1, { reduceMotion: rm });
       }}
       style={[
         styles.fab,

@@ -5,6 +5,7 @@ import { Alert, Pressable, Text, useWindowDimensions, View } from 'react-native'
 import Animated, {
   Extrapolation,
   interpolate,
+  ReduceMotion,
   type SharedValue,
   useAnimatedScrollHandler,
   useAnimatedStyle,
@@ -21,6 +22,7 @@ import { MonthGrid } from '@/src/features/canvas/components/month-grid';
 import { YearView } from '@/src/features/canvas/components/year-view';
 import { useCanvasDbData } from '@/src/features/canvas/hooks/useCanvasDbData';
 import { getDowLabels, getMonthName } from '@/src/features/canvas/utils/date-labels';
+import { useAppStore } from '@/src/store/useApp';
 
 const TOPBAR_H_PAD = 24;
 const GRID_H_PAD = 8;
@@ -103,6 +105,8 @@ export default function CanvasScreen() {
   const { width: screenWidth } = useWindowDimensions();
   const { t } = useTranslation();
   const { theme } = useUnistyles();
+  const reduceMotion = useAppStore((s) => s.accessibility.reduceMotion);
+  const rm = reduceMotion ? ReduceMotion.Always : ReduceMotion.System;
 
   const [viewMode, setViewMode] = useState<'month' | 'year'>('month');
   const [isCompact, setIsCompact] = useState(false);
@@ -152,15 +156,15 @@ export default function CanvasScreen() {
     setIsYearMounted(true);
     setViewMode((prev) => {
       if (prev === 'month') {
-        monthOpacity.value = withTiming(0, { duration: 180 });
-        yearOpacity.value = withTiming(1, { duration: 180 });
+        monthOpacity.value = withTiming(0, { duration: 180, reduceMotion: rm });
+        yearOpacity.value = withTiming(1, { duration: 180, reduceMotion: rm });
         return 'year';
       }
-      yearOpacity.value = withTiming(0, { duration: 180 });
-      monthOpacity.value = withTiming(1, { duration: 180 });
+      yearOpacity.value = withTiming(0, { duration: 180, reduceMotion: rm });
+      monthOpacity.value = withTiming(1, { duration: 180, reduceMotion: rm });
       return 'month';
     });
-  }, [monthOpacity, yearOpacity]);
+  }, [monthOpacity, yearOpacity, rm]);
 
   return (
     <View style={styles.screen}>

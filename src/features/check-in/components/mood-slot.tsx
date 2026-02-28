@@ -1,6 +1,13 @@
 import { Pressable, Text, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, {
+  ReduceMotion,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+
+import { useAppStore } from '@/src/store/useApp';
 import type { TimeSlot } from '../utils/time-of-day';
 import { getTimeSlotLabel } from '../utils/time-of-day';
 
@@ -18,6 +25,8 @@ export function MoodSlot({ slot, isCurrentSlot, moodColor, moodLabel, onPress }:
   const { theme } = useUnistyles();
   const scale = useSharedValue(1);
   const isFilled = !!moodColor;
+  const reduceMotion = useAppStore((s) => s.accessibility.reduceMotion);
+  const rm = reduceMotion ? ReduceMotion.Always : ReduceMotion.System;
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -27,10 +36,10 @@ export function MoodSlot({ slot, isCurrentSlot, moodColor, moodLabel, onPress }:
     <AnimatedPressable
       onPress={onPress}
       onPressIn={() => {
-        scale.value = withSpring(0.95, { damping: 15, stiffness: 300 });
+        scale.value = withSpring(0.95, { damping: 15, stiffness: 300, reduceMotion: rm });
       }}
       onPressOut={() => {
-        scale.value = withSpring(1, { damping: 12, stiffness: 200 });
+        scale.value = withSpring(1, { damping: 12, stiffness: 200, reduceMotion: rm });
       }}
       style={[
         styles.tile,

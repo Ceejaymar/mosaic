@@ -5,12 +5,12 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  Text,
   TextInput,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import { AppText } from '@/src/components/app-text';
 
 import { PillButton } from '@/src/components/pill-button';
 import { TagSection } from '@/src/features/check-in/components/context-tags';
@@ -42,7 +42,7 @@ function CloseButton({ onPress }: { onPress: () => void }) {
       accessibilityRole="button"
       accessibilityLabel="Close"
     >
-      <Text style={styles.closeIcon}>✕</Text>
+      <AppText style={styles.closeIcon}>✕</AppText>
     </Pressable>
   );
 }
@@ -78,8 +78,12 @@ export const CheckInSheet = memo(function CheckInSheet({ visible, onClose, onSav
 
             <View style={styles.header}>
               <View style={styles.flex1}>
-                <Text style={styles.title}>What are you feeling?</Text>
-                <Text style={styles.subtitle}>{getTimeSubtitle()}</Text>
+                <AppText variant="heading" style={styles.title}>
+                  What are you feeling?
+                </AppText>
+                <AppText variant="mono" style={styles.subtitle}>
+                  {getTimeSubtitle()}
+                </AppText>
               </View>
               <CloseButton onPress={form.handleClose} />
             </View>
@@ -102,9 +106,11 @@ export const CheckInSheet = memo(function CheckInSheet({ visible, onClose, onSav
                 onPress={() => form.setStep('emotion')}
                 style={({ pressed }) => pressed && { opacity: 0.7 }}
               >
-                <Text style={[styles.backBtn, { color: selectedColor ?? theme.colors.typography }]}>
+                <AppText
+                  style={[styles.backBtn, { color: selectedColor ?? theme.colors.typography }]}
+                >
                   ← Back
-                </Text>
+                </AppText>
               </Pressable>
 
               <View style={styles.selectedEmotionPill}>
@@ -114,7 +120,9 @@ export const CheckInSheet = memo(function CheckInSheet({ visible, onClose, onSav
                     { backgroundColor: selectedColor ?? theme.colors.textMuted },
                   ]}
                 />
-                <Text style={styles.selectedEmotionText}>{selectedNode?.label}</Text>
+                <AppText variant="heading" style={styles.selectedEmotionText}>
+                  {selectedNode?.label}
+                </AppText>
               </View>
 
               <CloseButton onPress={form.handleClose} />
@@ -132,15 +140,23 @@ export const CheckInSheet = memo(function CheckInSheet({ visible, onClose, onSav
                   { backgroundColor: selectedColor ?? theme.colors.divider },
                 ]}
               >
-                <Text style={[styles.emotionBannerPre, { color: hexToRgba(bannerTextColor, 0.7) }]}>
+                <AppText
+                  variant="mono"
+                  style={[styles.emotionBannerPre, { color: hexToRgba(bannerTextColor, 0.7) }]}
+                >
                   I'm feeling
-                </Text>
-                <Text style={[styles.emotionBannerText, { color: bannerTextColor }]}>
+                </AppText>
+                <AppText
+                  variant="heading"
+                  style={[styles.emotionBannerText, { color: bannerTextColor }]}
+                >
                   {selectedNode?.label}
-                </Text>
+                </AppText>
               </View>
 
-              <Text style={styles.inputLabel}>What's on your mind?</Text>
+              <AppText variant="mono" style={styles.inputLabel}>
+                What's on your mind?
+              </AppText>
               <View style={styles.inputContainer}>
                 <TextInput
                   style={styles.textInput}
@@ -210,7 +226,6 @@ const styles = StyleSheet.create((theme) => ({
   title: {
     fontSize: 22,
     fontWeight: '700',
-    fontFamily: 'Fraunces',
     color: theme.colors.typography,
     letterSpacing: -0.66,
   },
@@ -248,7 +263,6 @@ const styles = StyleSheet.create((theme) => ({
   selectedEmotionText: {
     fontSize: 16,
     fontWeight: '700',
-    fontFamily: 'Fraunces',
     color: theme.colors.typography,
     textTransform: 'capitalize',
   },
@@ -263,7 +277,6 @@ const styles = StyleSheet.create((theme) => ({
   emotionBannerText: {
     fontSize: 36,
     fontWeight: '700',
-    fontFamily: 'Fraunces',
     textTransform: 'capitalize',
     lineHeight: 40,
     letterSpacing: -1.08,
