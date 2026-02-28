@@ -60,34 +60,31 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
     const subject = 'Mosaic Support Request';
     const body = `Please describe your issue or question below:\n\n\nDiagnostic Info (Please leave this for the developer):\nApp Version: ${appVersion}\nDevice: ${model}\nOS: ${os} ${osVersion}`;
 
-    const isAvailable = await MailComposer.isAvailableAsync();
-
-    if (isAvailable) {
-      MailComposer.composeAsync({ recipients: [email], subject, body });
-      setTimeout(() => {
-        props.navigation.closeDrawer();
-      }, 500);
-    } else {
-      try {
+    try {
+      const isAvailable = await MailComposer.isAvailableAsync();
+      if (isAvailable) {
+        await MailComposer.composeAsync({ recipients: [email], subject, body });
+      } else {
         const mailto = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-        Linking.openURL(mailto);
-        setTimeout(() => props.navigation.closeDrawer(), 500);
-      } catch (err) {
-        console.error('Failed to open email client:', err);
+        await Linking.openURL(mailto);
       }
+    } catch (err) {
+      console.error('Failed to open email client:', err);
+    } finally {
+      props.navigation.closeDrawer();
     }
   };
 
-  const openSurvey = () => {
+  const openSurvey = async () => {
     const SURVEY_URL = 'https://tally.so/r/XxeY6z';
 
-    Linking.openURL(SURVEY_URL).catch((err) => {
+    try {
+      await Linking.openURL(SURVEY_URL);
+    } catch (err) {
       console.error('Failed to open URL:', err);
-    });
-
-    setTimeout(() => {
+    } finally {
       props.navigation.closeDrawer();
-    }, 500);
+    }
   };
 
   return (
