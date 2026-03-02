@@ -1,5 +1,4 @@
 import { getLocales } from 'expo-localization';
-import { Appearance } from 'react-native';
 import { UnistylesRuntime } from 'react-native-unistyles';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
@@ -8,36 +7,13 @@ import { mmkvAdapter } from '@/src/services/storage/mmkv';
 import type { AccessibilitySettings, Actions, Language, State, Theme } from '@/src/types/types';
 import i18n from '../i18n';
 
-let hcSystemListener: ReturnType<typeof Appearance.addChangeListener> | null = null;
-let hcThemeTimer: ReturnType<typeof setTimeout> | null = null;
-
-const applyTheme = (mode: Theme, highContrast = false) => {
-  hcSystemListener?.remove();
-  hcSystemListener = null;
-
-  if (!highContrast) {
-    if (mode === 'system') {
-      UnistylesRuntime.setAdaptiveThemes(true);
-    } else {
-      UnistylesRuntime.setAdaptiveThemes(false);
-      UnistylesRuntime.setTheme(mode);
-    }
-    return;
+const applyTheme = (mode: Theme) => {
+  if (mode === 'system') {
+    UnistylesRuntime.setAdaptiveThemes(true);
+  } else {
+    UnistylesRuntime.setAdaptiveThemes(false);
+    UnistylesRuntime.setTheme(mode);
   }
-
-  UnistylesRuntime.setAdaptiveThemes(false);
-
-  if (mode !== 'system') {
-    UnistylesRuntime.setTheme(mode === 'dark' ? 'darkHighContrast' : 'lightHighContrast');
-    return;
-  }
-
-  // High contrast + system: apply immediately, then track OS changes
-  const applyHc = (scheme: string | null | undefined) => {
-    UnistylesRuntime.setTheme(scheme === 'dark' ? 'darkHighContrast' : 'lightHighContrast');
-  };
-  applyHc(Appearance.getColorScheme());
-  hcSystemListener = Appearance.addChangeListener(({ colorScheme }) => applyHc(colorScheme));
 };
 
 export const useAppStore = create<State & Actions>()(
@@ -52,7 +28,7 @@ export const useAppStore = create<State & Actions>()(
       theme: 'system',
       setTheme: (mode: Theme) => {
         set({ theme: mode });
-        applyTheme(mode, get().accessibility.highContrastText);
+        applyTheme(mode);
       },
 
       hasOnboarded: false,
@@ -68,17 +44,6 @@ export const useAppStore = create<State & Actions>()(
       },
       setAccessibilitySetting: (key: keyof AccessibilitySettings, value: boolean) => {
         set({ accessibility: { ...get().accessibility, [key]: value } });
-
-        if (key === 'highContrastText') {
-          // Debounce: cancel any pending timer before scheduling a new one.
-          // Defer applyTheme so the native Switch animation commits before
-          // Unistyles triggers a global re-render of all themed components.
-          if (hcThemeTimer !== null) clearTimeout(hcThemeTimer);
-          hcThemeTimer = setTimeout(() => {
-            hcThemeTimer = null;
-            applyTheme(get().theme, value);
-          }, 50);
-        }
       },
 
       isDemoMode: false,
@@ -130,7 +95,7 @@ export const useAppStore = create<State & Actions>()(
 
       onRehydrateStorage: () => (state) => {
         if (!state) return;
-        applyTheme(state.theme, state.accessibility?.highContrastText ?? false);
+        applyTheme(state.theme);
       },
     },
   ),

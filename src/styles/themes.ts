@@ -48,27 +48,7 @@ const darkTheme = {
   },
 };
 
-const lightHighContrastTheme = {
-  ...lightTheme,
-  colors: {
-    ...lightTheme.colors,
-    textMuted: '#333333',
-    divider: '#9A9A9A',
-  },
-};
-
-const darkHighContrastTheme = {
-  ...darkTheme,
-  colors: {
-    ...darkTheme.colors,
-    textMuted: '#E0E0E0',
-    divider: '#7A7A7F',
-  },
-};
-
 export const appThemes = {
   light: lightTheme,
   dark: darkTheme,
-  lightHighContrast: lightHighContrastTheme,
-  darkHighContrast: darkHighContrastTheme,
 };

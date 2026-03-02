@@ -132,7 +132,7 @@ function RootLayoutNav() {
   const { rt } = useUnistyles();
 
   const currentTheme = rt.themeName;
-  const isDarkTheme = currentTheme === 'dark' || currentTheme === 'darkHighContrast';
+  const isDarkTheme = currentTheme === 'dark';
 
   return (
     <>

@@ -1,5 +1,6 @@
 import { forwardRef } from 'react';
 import { Text, type TextProps } from 'react-native';
+import { useShallow } from 'zustand/react/shallow';
 
 import { useAppStore } from '@/src/store/useApp';
 import { getFontFamily } from '@/src/utils/typography';
@@ -12,8 +13,12 @@ export const AppText = forwardRef<Text, AppTextProps>(function AppText(
   { variant = 'body', style, ...rest },
   ref,
 ) {
-  const isDyslexicFont = useAppStore((s) => s.accessibility.isDyslexicFont);
-  const disableItalics = useAppStore((s) => s.accessibility.disableItalics);
+  const { isDyslexicFont, disableItalics } = useAppStore(
+    useShallow((s) => ({
+      isDyslexicFont: s.accessibility.isDyslexicFont,
+      disableItalics: s.accessibility.disableItalics,
+    })),
+  );
 
   const injected: { fontFamily?: string; fontStyle?: 'normal' | 'italic' } = {};
 
