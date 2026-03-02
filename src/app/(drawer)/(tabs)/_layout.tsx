@@ -43,8 +43,6 @@ const CustomDrawerButton = ({ tintColor }: { tintColor?: string }) => (
 export default function TabLayout() {
   const { theme } = useUnistyles();
   const insets = useSafeAreaInsets();
-  const reduceMotion = useAppStore((s) => s.accessibility.reduceMotion);
-
   const safeBottom = Math.max(insets.bottom, 12);
   const tabBarHeight = LAYOUT.TAB_BAR_HEIGHT + safeBottom;
 
@@ -53,8 +51,8 @@ export default function TabLayout() {
       <Tabs
         detachInactiveScreens={false}
         screenListeners={{ tabPress: () => hapticLight() }}
-        screenOptions={{
-          animation: reduceMotion ? 'none' : 'shift',
+        screenOptions={() => ({
+          animation: useAppStore.getState().accessibility.reduceMotion ? 'none' : 'shift',
           headerShown: false,
           headerLeft: CustomDrawerButton, // Using stable reference
           headerTransparent: true,
@@ -76,7 +74,7 @@ export default function TabLayout() {
               colors={['transparent', theme.colors.background, theme.colors.background]}
             />
           ),
-        }}
+        })}
       >
         <Tabs.Screen
           name="index"

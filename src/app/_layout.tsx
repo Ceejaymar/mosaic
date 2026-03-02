@@ -18,6 +18,7 @@ import migrations from '@/drizzle/migrations';
 import { db } from '@/src/db/client';
 import { storage } from '@/src/services/storage/mmkv';
 import { useAppStore } from '@/src/store/useApp';
+
 import '@/src/i18n/index';
 
 Notifications.setNotificationHandler({
@@ -129,7 +130,6 @@ function RootLayout() {
 
 function RootLayoutNav() {
   const { rt } = useUnistyles();
-  const reduceMotion = useAppStore((s) => s.accessibility.reduceMotion);
 
   const currentTheme = rt.themeName;
   const isDarkTheme = currentTheme === 'dark' || currentTheme === 'darkHighContrast';
@@ -143,11 +143,13 @@ function RootLayoutNav() {
             <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
             <Stack.Screen
               name="check-in/[id]"
-              options={{
+              options={() => ({
                 headerShown: false,
                 gestureEnabled: true,
-                animation: reduceMotion ? 'none' : 'slide_from_right',
-              }}
+                animation: useAppStore.getState().accessibility.reduceMotion
+                  ? 'none'
+                  : 'slide_from_right',
+              })}
             />
           </Stack>
         </GestureHandlerRootView>
