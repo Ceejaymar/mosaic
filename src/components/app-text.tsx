@@ -1,3 +1,4 @@
+import { forwardRef } from 'react';
 import { Text, type TextProps } from 'react-native';
 
 import { useAppStore } from '@/src/store/useApp';
@@ -7,17 +8,23 @@ type AppTextProps = TextProps & {
   variant?: 'heading' | 'body' | 'mono';
 };
 
-export function AppText({ variant = 'body', style, ...rest }: AppTextProps) {
+export const AppText = forwardRef<Text, AppTextProps>(function AppText(
+  { variant = 'body', style, ...rest },
+  ref,
+) {
   const isDyslexicFont = useAppStore((s) => s.accessibility.isDyslexicFont);
   const disableItalics = useAppStore((s) => s.accessibility.disableItalics);
 
-  const injected: { fontFamily?: string; fontStyle?: 'normal' | 'italic' } = {
-    fontFamily: getFontFamily(variant, isDyslexicFont),
-  };
+  const injected: { fontFamily?: string; fontStyle?: 'normal' | 'italic' } = {};
+
+  const resolvedFontFamily = getFontFamily(variant, isDyslexicFont);
+  if (resolvedFontFamily) {
+    injected.fontFamily = resolvedFontFamily;
+  }
 
   if (disableItalics) {
     injected.fontStyle = 'normal';
   }
 
-  return <Text style={[style, injected]} {...rest} />;
-}
+  return <Text ref={ref} style={[style, injected]} {...rest} />;
+});

@@ -1,4 +1,5 @@
 import { getLocales } from 'expo-localization';
+import { Appearance } from 'react-native';
 import { UnistylesRuntime } from 'react-native-unistyles';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
@@ -7,7 +8,12 @@ import { mmkvAdapter } from '@/src/services/storage/mmkv';
 import type { AccessibilitySettings, Actions, Language, State, Theme } from '@/src/types/types';
 import i18n from '../i18n';
 
+let hcSystemListener: ReturnType<typeof Appearance.addChangeListener> | null = null;
+
 const applyTheme = (mode: Theme, highContrast = false) => {
+  hcSystemListener?.remove();
+  hcSystemListener = null;
+
   if (!highContrast) {
     if (mode === 'system') {
       UnistylesRuntime.setAdaptiveThemes(true);
@@ -18,10 +24,19 @@ const applyTheme = (mode: Theme, highContrast = false) => {
     return;
   }
 
-  // High contrast: disable adaptive themes and pick the correct variant
   UnistylesRuntime.setAdaptiveThemes(false);
-  const isDark = mode === 'dark' || (mode === 'system' && UnistylesRuntime.colorScheme === 'dark');
-  UnistylesRuntime.setTheme(isDark ? 'darkHighContrast' : 'lightHighContrast');
+
+  if (mode !== 'system') {
+    UnistylesRuntime.setTheme(mode === 'dark' ? 'darkHighContrast' : 'lightHighContrast');
+    return;
+  }
+
+  // High contrast + system: apply immediately, then track OS changes
+  const applyHc = (scheme: string | null | undefined) => {
+    UnistylesRuntime.setTheme(scheme === 'dark' ? 'darkHighContrast' : 'lightHighContrast');
+  };
+  applyHc(Appearance.getColorScheme());
+  hcSystemListener = Appearance.addChangeListener(({ colorScheme }) => applyHc(colorScheme));
 };
 
 export const useAppStore = create<State & Actions>()(

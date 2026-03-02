@@ -2,6 +2,7 @@ import { BlurMask, Canvas, RadialGradient, Rect, vec } from '@shopify/react-nati
 import { useEffect } from 'react';
 import { useWindowDimensions } from 'react-native';
 import Animated, {
+  cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -23,13 +24,20 @@ export function SkiaAura({ color }: Props) {
   const pulse = useSharedValue(0.03);
 
   useEffect(() => {
-    if (reduceMotion) return; // Keep aura static at minimum opacity
+    if (reduceMotion) {
+      cancelAnimation(pulse);
+      pulse.value = 0.03;
+      return;
+    }
     // Pulse gently up to only 12% opacity
     pulse.value = withRepeat(
       withSequence(withTiming(0.12, { duration: 2500 }), withTiming(0.03, { duration: 2500 })),
       -1, // Infinite
       true, // Reverse
     );
+    return () => {
+      cancelAnimation(pulse);
+    };
   }, [pulse, reduceMotion]);
 
   const animStyle = useAnimatedStyle(() => ({

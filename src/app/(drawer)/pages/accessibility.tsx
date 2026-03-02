@@ -57,7 +57,9 @@ export default function AccessibilityScreen() {
   };
 
   const handleToggle = (key: (typeof TOGGLES)[number]['key'], value: boolean) => {
-    hapticLight();
+    if (!(key === 'disableHaptics' && value === true)) {
+      hapticLight();
+    }
     setAccessibilitySetting(key, value);
   };
 
@@ -66,11 +68,21 @@ export default function AccessibilityScreen() {
       {/* ─── Header ─── */}
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <View style={styles.headerTop}>
-          <Pressable onPress={handleBackToDrawer} style={styles.iconBtn}>
+          <Pressable
+            onPress={handleBackToDrawer}
+            style={({ pressed }) => [styles.iconBtn, pressed && styles.iconBtnPressed]}
+            accessibilityRole="button"
+            accessibilityLabel="Open navigation drawer"
+          >
             <Ionicons name="arrow-back" size={24} color={theme.colors.typography} />
           </Pressable>
 
-          <Pressable onPress={() => router.navigate('/(tabs)/' as Href)} style={styles.iconBtn}>
+          <Pressable
+            onPress={() => router.navigate('/(tabs)/' as Href)}
+            style={({ pressed }) => [styles.iconBtn, pressed && styles.iconBtnPressed]}
+            accessibilityRole="button"
+            accessibilityLabel="Go to home"
+          >
             <Ionicons name="home-outline" size={24} color={theme.colors.typography} />
           </Pressable>
         </View>
@@ -150,6 +162,9 @@ const styles = StyleSheet.create({
   iconBtn: {
     padding: 8,
     marginLeft: -8,
+  },
+  iconBtnPressed: {
+    opacity: 0.6,
   },
   title: {
     fontSize: 32,
