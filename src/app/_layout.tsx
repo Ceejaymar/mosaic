@@ -132,11 +132,12 @@ function RootLayoutNav() {
   const reduceMotion = useAppStore((s) => s.accessibility.reduceMotion);
 
   const currentTheme = rt.themeName;
+  const isDarkTheme = currentTheme === 'dark' || currentTheme === 'darkHighContrast';
 
   return (
     <>
-      <SystemBars style={currentTheme === 'dark' ? 'light' : 'dark'} />
-      <ThemeProvider value={currentTheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <SystemBars style={isDarkTheme ? 'light' : 'dark'} />
+      <ThemeProvider value={isDarkTheme ? DarkTheme : DefaultTheme}>
         <GestureHandlerRootView style={{ flex: 1 }}>
           <Stack>
             <Stack.Screen name="(drawer)" options={{ headerShown: false }} />

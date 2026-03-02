@@ -67,8 +67,11 @@ export const useAppStore = create<State & Actions>()(
       },
       setAccessibilitySetting: (key: keyof AccessibilitySettings, value: boolean) => {
         set({ accessibility: { ...get().accessibility, [key]: value } });
+
         if (key === 'highContrastText') {
-          applyTheme(get().theme, value);
+          setTimeout(() => {
+            applyTheme(get().theme, value);
+          }, 50);
         }
       },
 
