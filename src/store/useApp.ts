@@ -69,6 +69,8 @@ export const useAppStore = create<State & Actions>()(
         set({ accessibility: { ...get().accessibility, [key]: value } });
 
         if (key === 'highContrastText') {
+          // Defer applyTheme so the native Switch animation commits before
+          // Unistyles triggers a global re-render of all themed components.
           setTimeout(() => {
             applyTheme(get().theme, value);
           }, 50);
