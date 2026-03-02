@@ -1,7 +1,8 @@
-import { Pressable, Text } from 'react-native';
+import { Pressable } from 'react-native';
 import Animated, { ReduceMotion, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { StyleSheet } from 'react-native-unistyles';
 
+import { AppText } from '@/src/components/app-text';
 import { useAppStore } from '@/src/store/useApp';
 
 type Props = {
@@ -33,7 +34,8 @@ export function Emotion({ label, color, isSelected, onPress }: Props) {
       accessibilityLabel={label}
       style={[styles.container, animStyle]}
     >
-      <Text
+      <AppText
+        variant="heading"
         numberOfLines={1}
         style={[
           styles.text,
@@ -44,7 +46,7 @@ export function Emotion({ label, color, isSelected, onPress }: Props) {
         ]}
       >
         {label}
-      </Text>
+      </AppText>
     </AnimatedPressable>
   );
 }
@@ -62,6 +64,5 @@ const styles = StyleSheet.create({
     fontSize: 13,
     textTransform: 'capitalize',
     includeFontPadding: false,
-    fontFamily: 'Fraunces',
   },
 });

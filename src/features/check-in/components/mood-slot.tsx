@@ -1,4 +1,4 @@
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import Animated, {
   ReduceMotion,
   useAnimatedStyle,
@@ -7,6 +7,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
+import { AppText } from '@/src/components/app-text';
 import { useAppStore } from '@/src/store/useApp';
 import type { TimeSlot } from '../utils/time-of-day';
 import { getTimeSlotLabel } from '../utils/time-of-day';
@@ -64,22 +65,26 @@ export function MoodSlot({ slot, isCurrentSlot, moodColor, moodLabel, onPress }:
       />
 
       <View style={styles.content}>
-        <Text style={[styles.slotLabel, isFilled && { color: moodColor }]}>
+        <AppText style={[styles.slotLabel, isFilled && { color: moodColor }]}>
           {getTimeSlotLabel(slot).toUpperCase()}
-        </Text>
+        </AppText>
 
         <View style={styles.statusArea}>
           {isFilled ? (
             <>
               <View style={[styles.statusDot, { backgroundColor: moodColor }]} />
-              <Text style={[styles.moodLabel, { color: moodColor }]} numberOfLines={1}>
+              <AppText
+                variant="heading"
+                style={[styles.moodLabel, { color: moodColor }]}
+                numberOfLines={1}
+              >
                 {moodLabel}
-              </Text>
+              </AppText>
             </>
           ) : isCurrentSlot ? (
-            <Text style={styles.nowLabel}>now</Text>
+            <AppText style={styles.nowLabel}>now</AppText>
           ) : (
-            <Text style={styles.emptyDash}>—</Text>
+            <AppText style={styles.emptyDash}>—</AppText>
           )}
         </View>
       </View>
@@ -111,7 +116,7 @@ const styles = StyleSheet.create((theme) => ({
   slotLabel: { fontSize: 11, fontWeight: '600', letterSpacing: 1.2, color: theme.colors.textMuted },
   statusArea: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   statusDot: { width: 8, height: 8, borderRadius: 4 },
-  moodLabel: { fontSize: 16, fontWeight: '600', fontFamily: 'Fraunces', flex: 1 },
+  moodLabel: { fontSize: 16, fontWeight: '600', flex: 1 },
   nowLabel: { fontSize: 13, color: theme.colors.mosaicGold, fontWeight: '500' },
   emptyDash: { fontSize: 20, color: theme.colors.divider, fontWeight: '300' },
 }));

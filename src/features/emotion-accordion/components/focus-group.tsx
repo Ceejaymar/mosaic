@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import Animated, {
   FadeIn,
   FadeOut,
@@ -12,6 +12,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { StyleSheet } from 'react-native-unistyles';
 
+import { AppText } from '@/src/components/app-text';
 import { useAppStore } from '@/src/store/useApp';
 
 import type { EmotionGroup, EmotionNode } from '../types';
@@ -20,7 +21,7 @@ import { getGroupPalette } from '../utils/emotion-utils';
 import { Emotion } from './emotion';
 import { SkiaAura } from './skia-aura';
 
-const AnimatedText = Animated.createAnimatedComponent(Text);
+const AnimatedAppText = Animated.createAnimatedComponent(AppText);
 const AnimatedIcon = Animated.createAnimatedComponent(Ionicons);
 
 type Props = {
@@ -79,7 +80,9 @@ export function FocusGroup({
             pointerEvents="none"
           />
 
-          <AnimatedText style={[styles.headerText, textAnimStyle]}>{group.label}</AnimatedText>
+          <AnimatedAppText variant="heading" style={[styles.headerText, textAnimStyle]}>
+            {group.label}
+          </AnimatedAppText>
 
           <AnimatedIcon
             name={isFocused ? 'close' : 'chevron-down'}
@@ -130,7 +133,6 @@ const styles = StyleSheet.create({
   headerText: {
     fontSize: 19,
     fontWeight: '700',
-    fontFamily: 'Fraunces',
     letterSpacing: -0.3,
   },
   gridContainer: {
