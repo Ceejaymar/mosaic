@@ -92,7 +92,7 @@ export default function AccessibilityScreen() {
 
       {/* ─── Toggle List ─── */}
       <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}>
-        <View style={[styles.listBlock, { borderColor: theme.colors.divider }]}>
+        <View style={styles.listBlock}>
           {TOGGLES.map((item, index) => (
             <View key={item.key}>
               {index > 0 && (
@@ -103,10 +103,7 @@ export default function AccessibilityScreen() {
                   <AppText style={[styles.rowLabel, { color: theme.colors.typography }]}>
                     {item.label}
                   </AppText>
-                  <AppText
-                    variant="mono"
-                    style={[styles.rowSub, { color: theme.colors.textMuted }]}
-                  >
+                  <AppText style={[styles.rowSub, { color: theme.colors.textMuted }]}>
                     {item.sub}
                   </AppText>
                 </View>
@@ -153,15 +150,10 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
   },
   content: {
-    paddingHorizontal: 16,
     paddingTop: 8,
   },
-  listBlock: {
-    borderWidth: 1,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  divider: { height: 1 },
+  listBlock: {},
+  divider: { height: 1, marginHorizontal: 16 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
