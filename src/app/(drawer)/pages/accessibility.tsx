@@ -1,13 +1,13 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { DrawerActions } from '@react-navigation/native';
 import { type Href, useNavigation, useRouter } from 'expo-router';
-import { Pressable, ScrollView, Switch, Text, View } from 'react-native';
+import { Pressable, ScrollView, Switch, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
+import { AppText } from '@/src/components/app-text';
 import { hapticLight } from '@/src/lib/haptics/haptics';
 import { useAppStore } from '@/src/store/useApp';
-import { getFontFamily } from '@/src/utils/typography';
 
 // ─── Toggle Row Data ──────────────────────────────────────────────────────────
 
@@ -50,8 +50,6 @@ export default function AccessibilityScreen() {
   const accessibility = useAppStore((s) => s.accessibility);
   const setAccessibilitySetting = useAppStore((s) => s.setAccessibilitySetting);
 
-  const isDyslexic = accessibility.isDyslexicFont;
-
   const handleBackToDrawer = () => {
     navigation.dispatch(DrawerActions.openDrawer());
   };
@@ -87,14 +85,9 @@ export default function AccessibilityScreen() {
           </Pressable>
         </View>
 
-        <Text
-          style={[
-            styles.title,
-            { color: theme.colors.typography, fontFamily: getFontFamily('heading', isDyslexic) },
-          ]}
-        >
+        <AppText variant="heading" style={[styles.title, { color: theme.colors.typography }]}>
           Accessibility
-        </Text>
+        </AppText>
       </View>
 
       {/* ─── Toggle List ─── */}
@@ -107,34 +100,22 @@ export default function AccessibilityScreen() {
               )}
               <View style={styles.row}>
                 <View style={styles.rowText}>
-                  <Text
-                    style={[
-                      styles.rowLabel,
-                      {
-                        color: theme.colors.typography,
-                        fontFamily: getFontFamily('body', isDyslexic),
-                      },
-                    ]}
-                  >
+                  <AppText style={[styles.rowLabel, { color: theme.colors.typography }]}>
                     {item.label}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.rowSub,
-                      {
-                        color: theme.colors.textMuted,
-                        fontFamily: getFontFamily('mono', isDyslexic),
-                      },
-                    ]}
+                  </AppText>
+                  <AppText
+                    variant="mono"
+                    style={[styles.rowSub, { color: theme.colors.textMuted }]}
                   >
                     {item.sub}
-                  </Text>
+                  </AppText>
                 </View>
                 <Switch
                   value={accessibility[item.key]}
                   onValueChange={(val) => handleToggle(item.key, val)}
                   trackColor={{ false: theme.colors.divider, true: theme.colors.mosaicGold }}
                   thumbColor="#ffffff"
+                  accessibilityLabel={item.label}
                 />
               </View>
             </View>
