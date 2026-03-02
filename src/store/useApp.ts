@@ -9,6 +9,7 @@ import type { AccessibilitySettings, Actions, Language, State, Theme } from '@/s
 import i18n from '../i18n';
 
 let hcSystemListener: ReturnType<typeof Appearance.addChangeListener> | null = null;
+let hcThemeTimer: ReturnType<typeof setTimeout> | null = null;
 
 const applyTheme = (mode: Theme, highContrast = false) => {
   hcSystemListener?.remove();
@@ -69,9 +70,12 @@ export const useAppStore = create<State & Actions>()(
         set({ accessibility: { ...get().accessibility, [key]: value } });
 
         if (key === 'highContrastText') {
+          // Debounce: cancel any pending timer before scheduling a new one.
           // Defer applyTheme so the native Switch animation commits before
           // Unistyles triggers a global re-render of all themed components.
-          setTimeout(() => {
+          if (hcThemeTimer !== null) clearTimeout(hcThemeTimer);
+          hcThemeTimer = setTimeout(() => {
+            hcThemeTimer = null;
             applyTheme(get().theme, value);
           }, 50);
         }
@@ -112,6 +116,17 @@ export const useAppStore = create<State & Actions>()(
         isNotificationsEnabled: state.isNotificationsEnabled,
         reminderTimes: state.reminderTimes,
       }),
+
+      merge: (persisted, current) => {
+        const p = persisted as Partial<State & Actions>;
+        return {
+          ...current,
+          ...p,
+          // Deep-merge accessibility so new default keys are never dropped
+          // when the persisted snapshot pre-dates a new field being added.
+          accessibility: { ...current.accessibility, ...(p.accessibility ?? {}) },
+        };
+      },
 
       onRehydrateStorage: () => (state) => {
         if (!state) return;
