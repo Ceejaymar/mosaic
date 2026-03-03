@@ -8,6 +8,7 @@ import Animated, {
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
+import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
 import { useAppStore } from '@/src/store/useApp';
 import type { TimeSlot } from '../utils/time-of-day';
 import { getTimeSlotLabel } from '../utils/time-of-day';
@@ -24,6 +25,7 @@ type Props = {
 
 export function MoodSlot({ slot, isCurrentSlot, moodColor, moodLabel, onPress }: Props) {
   const { theme } = useUnistyles();
+  const colors = useAccessibleColors();
   const scale = useSharedValue(1);
   const isFilled = !!moodColor;
   const reduceMotion = useAppStore((s) => s.accessibility.reduceMotion);
@@ -44,9 +46,10 @@ export function MoodSlot({ slot, isCurrentSlot, moodColor, moodLabel, onPress }:
       }}
       style={[
         styles.tile,
+        { borderColor: colors.divider },
         animatedStyle,
         isFilled && { borderColor: `${moodColor}50` },
-        isCurrentSlot && !isFilled && styles.currentTile,
+        isCurrentSlot && !isFilled && { borderColor: colors.textMuted },
       ]}
       accessibilityRole="button"
       accessibilityLabel={`${getTimeSlotLabel(slot)}${moodLabel ? `, ${moodLabel}` : ', tap to check in'}`}
@@ -65,7 +68,9 @@ export function MoodSlot({ slot, isCurrentSlot, moodColor, moodLabel, onPress }:
       />
 
       <View style={styles.content}>
-        <AppText style={[styles.slotLabel, isFilled && { color: moodColor }]}>
+        <AppText
+          style={[styles.slotLabel, { color: colors.textMuted }, isFilled && { color: moodColor }]}
+        >
           {getTimeSlotLabel(slot).toUpperCase()}
         </AppText>
 
@@ -84,7 +89,7 @@ export function MoodSlot({ slot, isCurrentSlot, moodColor, moodLabel, onPress }:
           ) : isCurrentSlot ? (
             <AppText style={styles.nowLabel}>now</AppText>
           ) : (
-            <AppText style={styles.emptyDash}>—</AppText>
+            <AppText style={[styles.emptyDash, { color: colors.divider }]}>—</AppText>
           )}
         </View>
       </View>
@@ -99,7 +104,6 @@ const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.tileBackground,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: theme.colors.divider,
     overflow: 'hidden',
     shadowColor: theme.colors.tileShadowColor,
     shadowOffset: { width: 0, height: 4 },
@@ -107,16 +111,12 @@ const styles = StyleSheet.create((theme) => ({
     shadowRadius: 12,
     elevation: theme.isDark ? 0 : 2,
   },
-  currentTile: {
-    // Uses textMuted for a slightly more prominent border than the standard divider
-    borderColor: theme.colors.textMuted,
-  },
   accentStrip: { height: 3, width: '100%' },
   content: { flex: 1, padding: 16, justifyContent: 'space-between' },
-  slotLabel: { fontSize: 11, fontWeight: '600', letterSpacing: 1.2, color: theme.colors.textMuted },
+  slotLabel: { fontSize: 11, fontWeight: '600', letterSpacing: 1.2 },
   statusArea: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   statusDot: { width: 8, height: 8, borderRadius: 4 },
   moodLabel: { fontSize: 16, fontWeight: '600', flex: 1 },
   nowLabel: { fontSize: 13, color: theme.colors.mosaicGold, fontWeight: '500' },
-  emptyDash: { fontSize: 20, color: theme.colors.divider, fontWeight: '300' },
+  emptyDash: { fontSize: 20, fontWeight: '300' },
 }));

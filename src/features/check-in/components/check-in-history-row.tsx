@@ -3,6 +3,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { formatTime } from '@/src/features/check-in/utils/format-time';
+import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
 
 const SQUIRCLE_SIZE = 12;
 const FADE_WIDTH = 20;
@@ -17,6 +18,7 @@ type Props = {
 
 export function CheckInHistoryRow({ occurredAt, label, color, tags, onPress }: Props) {
   const { theme } = useUnistyles();
+  const colors = useAccessibleColors();
   const formattedTime = formatTime(occurredAt);
 
   return (
@@ -26,7 +28,7 @@ export function CheckInHistoryRow({ occurredAt, label, color, tags, onPress }: P
       accessibilityRole="button"
       accessibilityLabel={`${label} at ${formattedTime}, tap to edit`}
     >
-      <Text style={styles.time}>{formattedTime}</Text>
+      <Text style={[styles.time, { color: colors.textMuted }]}>{formattedTime}</Text>
 
       <View style={[styles.squircle, { backgroundColor: color }]} />
 
@@ -43,7 +45,7 @@ export function CheckInHistoryRow({ occurredAt, label, color, tags, onPress }: P
           >
             {tags.map((tag) => (
               <View key={tag} style={styles.tag}>
-                <Text style={styles.tagText}>{tag}</Text>
+                <Text style={[styles.tagText, { color: colors.textMuted }]}>{tag}</Text>
               </View>
             ))}
           </ScrollView>
@@ -70,7 +72,6 @@ const styles = StyleSheet.create((theme) => ({
   },
   time: {
     fontSize: 12,
-    color: theme.colors.textMuted,
     width: 56,
   },
   squircle: {
@@ -110,6 +111,5 @@ const styles = StyleSheet.create((theme) => ({
   tagText: {
     fontSize: 12,
     fontWeight: '600',
-    color: theme.colors.textMuted,
   },
 }));

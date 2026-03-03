@@ -30,6 +30,7 @@ import { CHECK_IN_CONSTANTS } from '@/src/features/check-in/constants/check-in';
 import { useTodayCheckIns } from '@/src/features/check-in/hooks/useCheckIns';
 import { getMoodDisplayInfo } from '@/src/features/check-in/utils/mood-helpers';
 import { getCurrentTimeSlot } from '@/src/features/check-in/utils/time-of-day';
+import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
 import { hapticLight } from '@/src/lib/haptics/haptics';
 import { enableAndroidLayoutAnimations } from '@/src/utils/animations';
 import { getFormattedDateLabel } from '@/src/utils/format-date';
@@ -38,6 +39,7 @@ export default function CheckInScreen() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { theme } = useUnistyles();
+  const colors = useAccessibleColors();
   const router = useRouter();
 
   useEffect(() => {
@@ -140,7 +142,9 @@ export default function CheckInScreen() {
         </Text>
 
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <Text style={styles.dateLabel}>{getFormattedDateLabel()}</Text>
+          <Text style={[styles.dateLabel, { color: colors.textMuted }]}>
+            {getFormattedDateLabel()}
+          </Text>
           <DemoBadge />
         </View>
 
@@ -151,7 +155,9 @@ export default function CheckInScreen() {
             </View>
           ) : loadError && todayEntries.length === 0 ? (
             <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>Could not load today's check-ins.</Text>
+              <Text style={[styles.errorText, { color: colors.textMuted }]}>
+                Could not load today's check-ins.
+              </Text>
               <PillButton
                 label="Try again"
                 onPress={refresh}
@@ -210,7 +216,6 @@ const styles = StyleSheet.create((theme) => ({
     letterSpacing: 1.5,
     marginBottom: 24,
     fontStyle: 'italic',
-    color: theme.colors.textMuted,
   },
   mosaicWrapper: { marginBottom: 24 },
   loadingContainer: {
@@ -230,5 +235,5 @@ const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.surface,
     borderRadius: 20,
   },
-  errorText: { fontSize: 14, color: theme.colors.textMuted, textAlign: 'center' },
+  errorText: { fontSize: 14, textAlign: 'center' },
 }));

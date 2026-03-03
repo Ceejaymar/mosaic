@@ -11,6 +11,8 @@ import { Linking, Platform, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
+import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
+
 // ─── Reusable Drawer Row Component ────────────────────────────────────────────
 
 function DrawerRow({
@@ -44,6 +46,7 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { theme } = useUnistyles();
+  const colors = useAccessibleColors();
 
   const handleHomePress = () => {
     props.navigation.closeDrawer();
@@ -95,10 +98,7 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
       ]}
     >
       <View
-        style={[
-          styles.innerContainer,
-          { borderRightWidth: 1, borderRightColor: theme.colors.divider },
-        ]}
+        style={[styles.innerContainer, { borderRightWidth: 1, borderRightColor: colors.divider }]}
       >
         {/* 1. HEADER */}
         <View style={styles.header}>
@@ -134,10 +134,10 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
             onPress={() => router.push('/pages/accessibility')}
           />
 
-          <View style={[styles.divider, { backgroundColor: theme.colors.divider }]} />
+          <View style={[styles.divider, { backgroundColor: colors.divider }]} />
 
           {/* Group 2: About */}
-          <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>About Mosaic</Text>
+          <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>About Mosaic</Text>
           <DrawerRow
             icon="rocket-outline"
             label="Upcoming features"
@@ -154,10 +154,10 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
             onPress={() => router.push('/pages/faq')}
           />
 
-          <View style={[styles.divider, { backgroundColor: theme.colors.divider }]} />
+          <View style={[styles.divider, { backgroundColor: colors.divider }]} />
 
           {/* Group 3: Resources */}
-          <Text style={[styles.sectionTitle, { color: theme.colors.textMuted }]}>Resources</Text>
+          <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>Resources</Text>
           <DrawerRow
             icon="heart-half-outline"
             label="Mental health hotlines"
@@ -178,11 +178,11 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
         <View
           style={[
             styles.footer,
-            { paddingBottom: insets.bottom + 20, borderTopColor: theme.colors.divider },
+            { paddingBottom: insets.bottom + 20, borderTopColor: colors.divider },
           ]}
         >
-          <Text style={[styles.versionText, { color: theme.colors.textMuted }]}>Mosaic</Text>
-          <Text style={[styles.versionText, { color: theme.colors.textMuted }]}>v1.0.0</Text>
+          <Text style={[styles.versionText, { color: colors.textMuted }]}>Mosaic</Text>
+          <Text style={[styles.versionText, { color: colors.textMuted }]}>v1.0.0</Text>
         </View>
       </View>
     </View>

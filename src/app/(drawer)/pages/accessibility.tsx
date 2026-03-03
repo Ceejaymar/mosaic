@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
+import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
 import { hapticLight } from '@/src/lib/haptics/haptics';
 import { useAppStore } from '@/src/store/useApp';
 
@@ -46,6 +47,7 @@ export default function AccessibilityScreen() {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { theme } = useUnistyles();
+  const colors = useAccessibleColors();
 
   const accessibility = useAppStore((s) => s.accessibility);
   const setAccessibilitySetting = useAppStore((s) => s.setAccessibilitySetting);
@@ -95,22 +97,18 @@ export default function AccessibilityScreen() {
         <View style={styles.listBlock}>
           {TOGGLES.map((item, index) => (
             <View key={item.key}>
-              {index > 0 && (
-                <View style={[styles.divider, { backgroundColor: theme.colors.divider }]} />
-              )}
+              {index > 0 && <View style={[styles.divider, { backgroundColor: colors.divider }]} />}
               <View style={styles.row}>
                 <View style={styles.rowText}>
                   <AppText style={[styles.rowLabel, { color: theme.colors.typography }]}>
                     {item.label}
                   </AppText>
-                  <AppText style={[styles.rowSub, { color: theme.colors.textMuted }]}>
-                    {item.sub}
-                  </AppText>
+                  <AppText style={[styles.rowSub, { color: colors.textMuted }]}>{item.sub}</AppText>
                 </View>
                 <Switch
                   value={accessibility[item.key]}
                   onValueChange={(val) => handleToggle(item.key, val)}
-                  trackColor={{ false: theme.colors.divider, true: theme.colors.mosaicGold }}
+                  trackColor={{ false: colors.divider, true: theme.colors.mosaicGold }}
                   thumbColor="#ffffff"
                   accessibilityLabel={item.label}
                 />

@@ -3,6 +3,7 @@ import { Pressable, Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { formatTime } from '@/src/features/check-in/utils/format-time';
+import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
 
 const GAP = 4;
 const CONTAINER_RADIUS = 20;
@@ -96,6 +97,7 @@ function renderGrid(tiles: MosaicTileData[], onTilePress: (tile: MosaicTileData)
 }
 
 export function MosaicDisplay({ tiles, onAddPress, onTilePress }: Props) {
+  const colors = useAccessibleColors();
   const cappedTiles = tiles.slice(0, 4);
   const count = cappedTiles.length;
 
@@ -103,14 +105,18 @@ export function MosaicDisplay({ tiles, onAddPress, onTilePress }: Props) {
     return (
       <Pressable
         onPress={onAddPress}
-        style={({ pressed }) => [styles.emptyContainer, pressed && { opacity: 0.82 }]}
+        style={({ pressed }) => [
+          styles.emptyContainer,
+          { borderColor: colors.divider },
+          pressed && { opacity: 0.82 },
+        ]}
         accessibilityRole="button"
         accessibilityLabel="Check in"
       >
-        <View style={styles.plusCircle}>
+        <View style={[styles.plusCircle, { backgroundColor: colors.divider }]}>
           <Text style={styles.plusIcon}>+</Text>
         </View>
-        <Text style={styles.emptyHint}>Tap to check in</Text>
+        <Text style={[styles.emptyHint, { color: colors.textMuted }]}>Tap to check in</Text>
       </Pressable>
     );
   }
@@ -125,7 +131,6 @@ const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.surface,
     borderRadius: CONTAINER_RADIUS,
     borderWidth: 1,
-    borderColor: theme.colors.divider,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 12,
@@ -134,12 +139,11 @@ const styles = StyleSheet.create((theme) => ({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: theme.colors.divider,
     alignItems: 'center',
     justifyContent: 'center',
   },
   plusIcon: { fontSize: 32, color: theme.colors.mosaicGold, lineHeight: 40 },
-  emptyHint: { fontSize: 14, color: theme.colors.textMuted },
+  emptyHint: { fontSize: 14 },
   container: {
     width: '100%',
     aspectRatio: 1,

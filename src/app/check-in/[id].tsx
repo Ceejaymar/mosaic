@@ -5,14 +5,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
-
 import { deleteMoodEntry, fetchMoodEntryById } from '@/src/db/repos/moodRepo';
 import { invalidateMonthCache } from '@/src/features/canvas/hooks/useCanvasDbData';
+import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
 
 export default function EditCheckInScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const colors = useAccessibleColors();
 
   useEffect(() => {
     if (!id) router.replace('/');
@@ -61,10 +62,10 @@ export default function EditCheckInScreen() {
       <AppText variant="heading" style={styles.title}>
         Edit Check-in
       </AppText>
-      <AppText variant="mono" style={styles.meta}>
+      <AppText variant="mono" style={[styles.meta, { color: colors.textMuted }]}>
         Entry {id}
       </AppText>
-      <AppText style={styles.body}>Edit flow coming soon.</AppText>
+      <AppText style={[styles.body, { color: colors.textMuted }]}>Edit flow coming soon.</AppText>
 
       <View style={styles.spacer} />
 
@@ -92,8 +93,8 @@ const styles = StyleSheet.create((theme) => ({
     letterSpacing: -0.5,
     marginBottom: 8,
   },
-  meta: { fontSize: 13, color: theme.colors.textMuted, marginBottom: 24 },
-  body: { fontSize: 15, color: theme.colors.textMuted, lineHeight: 22 },
+  meta: { fontSize: 13, marginBottom: 24 },
+  body: { fontSize: 15, lineHeight: 22 },
   spacer: { flex: 1 },
   deleteError: {
     fontSize: 13,

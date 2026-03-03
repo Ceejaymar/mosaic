@@ -15,6 +15,7 @@ import { fetchMoodEntriesPage, type MoodEntry } from '@/src/db/repos/moodRepo';
 import { parseStoredTags } from '@/src/features/check-in/utils/parse-tags';
 import { getDemoEntriesPage } from '@/src/features/demo/generateDemoData';
 import { getMoodDisplayInfo } from '@/src/features/emotion-accordion/utils/mood-display';
+import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
 import { useAppStore } from '@/src/store/useApp';
 import { formatDayLabel, formatEntryTime } from '@/src/utils/format-date';
 
@@ -82,6 +83,7 @@ type EntryCardProps = {
 
 const EntryCard = memo(function EntryCard({ entry, onPress }: EntryCardProps) {
   const { theme } = useUnistyles();
+  const colors = useAccessibleColors();
   const { t } = useTranslation();
   const info = getMoodDisplayInfo(entry.primaryMood);
   const accentColor = info?.color ?? theme.colors.mosaicGold;
@@ -113,7 +115,7 @@ const EntryCard = memo(function EntryCard({ entry, onPress }: EntryCardProps) {
 
       <View style={cardStyles.body}>
         <View style={cardStyles.headlineRow}>
-          <Text style={[cardStyles.iAmFeeling, { color: theme.colors.textMuted }]}>
+          <Text style={[cardStyles.iAmFeeling, { color: colors.textMuted }]}>
             {t('journal.im_feeling')}
           </Text>
           <Text style={[cardStyles.emotion, { color: accentColor }]}>{label}</Text>
@@ -132,14 +134,14 @@ const EntryCard = memo(function EntryCard({ entry, onPress }: EntryCardProps) {
         {tags.length > 0 && (
           <View style={cardStyles.tagRow}>
             {tags.map((tag) => (
-              <View key={tag} style={[cardStyles.tag, { borderColor: theme.colors.divider }]}>
-                <Text style={[cardStyles.tagText, { color: theme.colors.textMuted }]}>{tag}</Text>
+              <View key={tag} style={[cardStyles.tag, { borderColor: colors.divider }]}>
+                <Text style={[cardStyles.tagText, { color: colors.textMuted }]}>{tag}</Text>
               </View>
             ))}
           </View>
         )}
 
-        <Text style={[cardStyles.time, { color: theme.colors.textMuted }]}>
+        <Text style={[cardStyles.time, { color: colors.textMuted }]}>
           {formatEntryTime(entry.occurredAt)}
         </Text>
       </View>
@@ -210,10 +212,13 @@ const cardStyles = StyleSheet.create((_theme) => ({
 
 function EmptyState() {
   const { t } = useTranslation();
+  const colors = useAccessibleColors();
   return (
     <View style={emptyStyles.container}>
       <Text style={emptyStyles.title}>{t('journal.empty_title')}</Text>
-      <Text style={emptyStyles.subtitle}>{t('journal.empty_subtitle')}</Text>
+      <Text style={[emptyStyles.subtitle, { color: colors.textMuted }]}>
+        {t('journal.empty_subtitle')}
+      </Text>
     </View>
   );
 }
@@ -232,7 +237,6 @@ const emptyStyles = StyleSheet.create((theme) => ({
   },
   subtitle: {
     fontSize: 14,
-    color: theme.colors.textMuted,
   },
 }));
 
@@ -269,6 +273,7 @@ const keyExtractor = (item: ListItem) => item.id;
 export default function Journal() {
   const insets = useSafeAreaInsets();
   const { theme } = useUnistyles();
+  const colors = useAccessibleColors();
   const {
     t,
     i18n: { language },
@@ -395,7 +400,7 @@ export default function Journal() {
   if (error) {
     return (
       <View style={[styles.container, styles.centered, { paddingTop: insets.top }]}>
-        <Text style={[styles.errorText, { color: theme.colors.textMuted }]}>
+        <Text style={[styles.errorText, { color: colors.textMuted }]}>
           {t('journal.error_message')}
         </Text>
         <Pressable

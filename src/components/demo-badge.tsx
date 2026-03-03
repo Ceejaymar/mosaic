@@ -1,12 +1,14 @@
 import { Pressable, Text } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
+import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
 import { useAppStore } from '@/src/store/useApp';
 
 export function DemoBadge() {
   const isDemoMode = useAppStore((s) => s.isDemoMode);
   const toggleDemoMode = useAppStore((s) => s.toggleDemoMode);
   const { theme } = useUnistyles();
+  const colors = useAccessibleColors();
 
   return (
     <Pressable
@@ -15,17 +17,14 @@ export function DemoBadge() {
         styles.badge,
         isDemoMode
           ? { backgroundColor: theme.colors.mosaicGold, borderColor: theme.colors.mosaicGold }
-          : { borderColor: theme.colors.divider },
+          : { borderColor: colors.divider },
         pressed && { opacity: 0.5 },
       ]}
       accessibilityRole="button"
       accessibilityLabel={isDemoMode ? 'Disable demo mode' : 'Enable demo mode'}
     >
       <Text
-        style={[
-          styles.label,
-          { color: isDemoMode ? theme.colors.onAccent : theme.colors.textMuted },
-        ]}
+        style={[styles.label, { color: isDemoMode ? theme.colors.onAccent : colors.textMuted }]}
       >
         Demo
       </Text>

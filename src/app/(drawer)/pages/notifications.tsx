@@ -12,6 +12,7 @@ import {
   requestNotificationPermissions,
   rescheduleAllNotifications,
 } from '@/src/features/notifications/notificationService';
+import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
 import { useAppStore } from '@/src/store/useApp';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -48,6 +49,7 @@ export default function NotificationsScreen() {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { theme } = useUnistyles();
+  const colors = useAccessibleColors();
 
   const isEnabled = useAppStore((s) => s.isNotificationsEnabled);
   const reminderTimes = useAppStore((s) => s.reminderTimes);
@@ -225,36 +227,34 @@ export default function NotificationsScreen() {
 
       <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}>
         {/* Master Switch row */}
-        <View style={[styles.row, { borderBottomColor: theme.colors.divider }]}>
+        <View style={[styles.row, { borderBottomColor: colors.divider }]}>
           <View>
             <Text style={[styles.rowLabel, { color: theme.colors.typography }]}>
               Enable reminders
             </Text>
-            <Text style={[styles.rowSub, { color: theme.colors.textMuted }]}>
-              Daily check-in prompts
-            </Text>
+            <Text style={[styles.rowSub, { color: colors.textMuted }]}>Daily check-in prompts</Text>
           </View>
           <Switch
             value={isEnabled}
             onValueChange={handleToggle}
-            trackColor={{ false: theme.colors.divider, true: theme.colors.mosaicGold }}
+            trackColor={{ false: colors.divider, true: theme.colors.mosaicGold }}
             thumbColor="#ffffff"
           />
         </View>
 
         {/* Permission Denied */}
         {permissionDenied ? (
-          <View style={[styles.deniedBlock, { borderColor: theme.colors.divider }]}>
+          <View style={[styles.deniedBlock, { borderColor: colors.divider }]}>
             <Ionicons
               name="notifications-off-outline"
               size={28}
-              color={theme.colors.textMuted}
+              color={colors.textMuted}
               style={styles.deniedIcon}
             />
             <Text style={[styles.deniedText, { color: theme.colors.typography }]}>
               Notifications are disabled in Settings.
             </Text>
-            <Text style={[styles.deniedSub, { color: theme.colors.textMuted }]}>
+            <Text style={[styles.deniedSub, { color: colors.textMuted }]}>
               Enable them for Mosaic to receive check-in reminders.
             </Text>
             <Pressable
@@ -280,11 +280,11 @@ export default function NotificationsScreen() {
             Reminder times
           </Text>
 
-          <View style={[styles.listBlock, { borderColor: theme.colors.divider }]}>
+          <View style={[styles.listBlock, { borderColor: colors.divider }]}>
             {reminderTimes.map((time, index) => (
               <View key={time}>
                 {index > 0 && (
-                  <View style={[styles.divider, { backgroundColor: theme.colors.divider }]} />
+                  <View style={[styles.divider, { backgroundColor: colors.divider }]} />
                 )}
                 <View style={styles.timeRow}>
                   <Pressable
@@ -349,7 +349,7 @@ export default function NotificationsScreen() {
             },
           ]}
         >
-          <View style={[styles.handle, { backgroundColor: theme.colors.divider }]} />
+          <View style={[styles.handle, { backgroundColor: colors.divider }]} />
 
           <Text style={[styles.sheetTitle, { color: theme.colors.typography }]}>
             {activeEditingIndex !== null ? 'Edit reminder' : 'Add reminder'}
@@ -360,7 +360,7 @@ export default function NotificationsScreen() {
             {/* Conditional Hour Picker (12 vs 24 format) */}
             {is24Hour ? (
               <View style={styles.pickerWrapper}>
-                <Text style={[styles.pickerLabel, { color: theme.colors.textMuted }]}>Hour</Text>
+                <Text style={[styles.pickerLabel, { color: colors.textMuted }]}>Hour</Text>
                 <Picker
                   selectedValue={tempHour24}
                   onValueChange={(v) => setTempHour24(v as number)}
@@ -374,7 +374,7 @@ export default function NotificationsScreen() {
               </View>
             ) : (
               <View style={styles.pickerWrapper}>
-                <Text style={[styles.pickerLabel, { color: theme.colors.textMuted }]}>Hour</Text>
+                <Text style={[styles.pickerLabel, { color: colors.textMuted }]}>Hour</Text>
                 <Picker
                   selectedValue={displayHour12}
                   onValueChange={handleHour12Change}
@@ -390,7 +390,7 @@ export default function NotificationsScreen() {
 
             {/* Minutes (Same for both) */}
             <View style={styles.pickerWrapper}>
-              <Text style={[styles.pickerLabel, { color: theme.colors.textMuted }]}>Min</Text>
+              <Text style={[styles.pickerLabel, { color: colors.textMuted }]}>Min</Text>
               <Picker
                 selectedValue={tempMinute}
                 onValueChange={(v) => setTempMinute(v as number)}
@@ -406,7 +406,7 @@ export default function NotificationsScreen() {
             {/* Conditional AM/PM Period Picker (Only show if on 12-hour clock) */}
             {!is24Hour && (
               <View style={styles.pickerWrapper}>
-                <Text style={[styles.pickerLabel, { color: theme.colors.textMuted }]}>Period</Text>
+                <Text style={[styles.pickerLabel, { color: colors.textMuted }]}>Period</Text>
                 <Picker
                   selectedValue={displayPeriod}
                   onValueChange={handlePeriodChange}
@@ -443,10 +443,8 @@ export default function NotificationsScreen() {
             onPress={handleSurpriseMe}
             style={({ pressed }) => [styles.surpriseBtn, pressed && styles.pressed]}
           >
-            <Ionicons name="shuffle-outline" size={16} color={theme.colors.textMuted} />
-            <Text style={[styles.surpriseBtnText, { color: theme.colors.textMuted }]}>
-              Surprise me
-            </Text>
+            <Ionicons name="shuffle-outline" size={16} color={colors.textMuted} />
+            <Text style={[styles.surpriseBtnText, { color: colors.textMuted }]}>Surprise me</Text>
           </Pressable>
         </View>
       </Modal>

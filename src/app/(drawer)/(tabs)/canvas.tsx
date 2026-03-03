@@ -22,6 +22,7 @@ import { MonthGrid } from '@/src/features/canvas/components/month-grid';
 import { YearView } from '@/src/features/canvas/components/year-view';
 import { useCanvasDbData } from '@/src/features/canvas/hooks/useCanvasDbData';
 import { getDowLabels, getMonthName } from '@/src/features/canvas/utils/date-labels';
+import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
 import { useAppStore } from '@/src/store/useApp';
 
 const TOPBAR_H_PAD = 24;
@@ -56,6 +57,7 @@ const AnimatedMonth = memo(function AnimatedMonth({
   onDayPress: (date: string) => void;
 }) {
   const { i18n } = useTranslation();
+  const colors = useAccessibleColors();
   const { days: data } = useCanvasDbData(item.month, item.year);
   const dowLabels = getDowLabels(i18n.language);
 
@@ -79,7 +81,7 @@ const AnimatedMonth = memo(function AnimatedMonth({
         </Text>
         <View style={[styles.row, { gap: TILE_GAP, marginTop: 12 }]}>
           {dowLabels.map(({ key, label }) => (
-            <Text key={key} style={[styles.dowLabel, { width: tileSize }]}>
+            <Text key={key} style={[styles.dowLabel, { width: tileSize, color: colors.textMuted }]}>
               {label}
             </Text>
           ))}
@@ -105,6 +107,7 @@ export default function CanvasScreen() {
   const { width: screenWidth } = useWindowDimensions();
   const { t } = useTranslation();
   const { theme } = useUnistyles();
+  const colors = useAccessibleColors();
   const reduceMotion = useAppStore((s) => s.accessibility.reduceMotion);
   const rm = reduceMotion ? ReduceMotion.Always : ReduceMotion.System;
 
@@ -199,7 +202,7 @@ export default function CanvasScreen() {
             onPress={toggleViewMode}
             style={({ pressed }) => [styles.toggleBtn, pressed && { opacity: 0.5 }]}
           >
-            <Text style={styles.toggleLabel}>
+            <Text style={[styles.toggleLabel, { color: colors.textMuted }]}>
               {viewMode === 'month' ? t('canvas.year') : t('canvas.month')}
             </Text>
           </Pressable>
@@ -340,7 +343,6 @@ const styles = StyleSheet.create((theme) => ({
   toggleLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: theme.colors.textMuted,
     fontFamily: 'SpaceMono',
   },
   fill: { flex: 1 },
@@ -353,5 +355,5 @@ const styles = StyleSheet.create((theme) => ({
     letterSpacing: -0.4,
   },
   row: { flexDirection: 'row' },
-  dowLabel: { fontSize: 11, fontWeight: '600', textAlign: 'center', color: theme.colors.textMuted },
+  dowLabel: { fontSize: 11, fontWeight: '600', textAlign: 'center' },
 }));

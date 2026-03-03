@@ -3,6 +3,7 @@ import { Text, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import type { InsightEntry } from '@/src/features/insights/types';
+import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
 
 type Props = { entries: InsightEntry[] };
 
@@ -15,15 +16,14 @@ const TIME_BLOCKS = [
 
 export function RhythmBar({ entries }: Props) {
   const { theme } = useUnistyles();
+  const colors = useAccessibleColors();
 
   const rhythmData = useMemo(() => {
     return TIME_BLOCKS.map(({ id, label }) => {
-      // 1. Filter entries for this specific time of day
       const timeEntries = entries.filter((e) => e.timeOfDay === id);
       const colorCounts: Record<string, number> = {};
       let totalCount = 0;
 
-      // 2. Tally the core colors
       for (const entry of timeEntries) {
         for (const rawColor of entry.emotions) {
           colorCounts[rawColor] = (colorCounts[rawColor] || 0) + 1;
@@ -31,10 +31,9 @@ export function RhythmBar({ entries }: Props) {
         }
       }
 
-      // 3. Convert to array and sort largest to smallest
       const segments = Object.entries(colorCounts)
         .sort((a, b) => b[1] - a[1])
-        .map(([color, count]) => ({ color, flex: count })); // Flex perfectly handles the percentages!
+        .map(([color, count]) => ({ color, flex: count }));
 
       return { id, label, segments, isEmpty: totalCount === 0 };
     });
@@ -47,7 +46,6 @@ export function RhythmBar({ entries }: Props) {
       <View style={styles.barContainer}>
         {rhythmData.map((block) => (
           <View key={block.id} style={styles.timeColumn}>
-            {/* The individual time block capsule */}
             <View style={styles.capsule}>
               {block.isEmpty ? (
                 <View style={[styles.segment, { backgroundColor: theme.colors.surface }]} />
@@ -61,8 +59,7 @@ export function RhythmBar({ entries }: Props) {
               )}
             </View>
 
-            {/* The label perfectly centered under its capsule */}
-            <Text style={[styles.label, { color: theme.colors.textMuted }]} numberOfLines={1}>
+            <Text style={[styles.label, { color: colors.textMuted }]} numberOfLines={1}>
               {block.label}
             </Text>
           </View>

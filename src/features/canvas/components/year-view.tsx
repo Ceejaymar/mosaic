@@ -15,6 +15,7 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { fetchMoodEntriesForMonth } from '@/src/db/repos/moodRepo';
 import { buildCanvasDays } from '@/src/features/canvas/utils/buildCanvasDays';
 import { getDemoEntriesForMonth } from '@/src/features/demo/generateDemoData';
+import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
 import { useAppStore } from '@/src/store/useApp';
 
 // ─── Context ──────────────────────────────────────────────────────────────────
@@ -183,6 +184,7 @@ const SingleYearBlock = memo(function SingleYearBlock({
   onDayPress: (date: string) => void;
 }) {
   const { t } = useTranslation();
+  const accessibleColors = useAccessibleColors();
   const visibleYear = useContext(VisibleYearContext);
   const isViewable = year === visibleYear;
 
@@ -301,7 +303,11 @@ const SingleYearBlock = memo(function SingleYearBlock({
           {memoizedTiles}
         </View>
       )}
-      {liveLoading && <Text style={styles.loadingText}>{t('canvas.loadingYear', { year })}</Text>}
+      {liveLoading && (
+        <Text style={[styles.loadingText, { color: accessibleColors.textMuted }]}>
+          {t('canvas.loadingYear', { year })}
+        </Text>
+      )}
     </View>
   );
 });
@@ -387,7 +393,7 @@ export function YearView({
   );
 }
 
-const styles = StyleSheet.create((theme) => ({
+const styles = StyleSheet.create(() => ({
   wrapper: {
     flex: 1,
   },
@@ -409,7 +415,6 @@ const styles = StyleSheet.create((theme) => ({
   },
   loadingText: {
     fontSize: 13,
-    color: theme.colors.textMuted,
     position: 'absolute',
     bottom: 20,
   },

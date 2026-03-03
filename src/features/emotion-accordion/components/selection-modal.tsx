@@ -4,6 +4,8 @@ import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
 
+import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
+
 import type { EmotionNode } from '../types';
 import { getEmotionColor } from '../utils/emotion-utils';
 
@@ -15,6 +17,7 @@ type Props = {
 
 export default function SelectionModal({ selectedNode, onPress, style }: Props) {
   const insets = useSafeAreaInsets();
+  const colors = useAccessibleColors();
 
   if (!selectedNode) return null;
 
@@ -38,7 +41,9 @@ export default function SelectionModal({ selectedNode, onPress, style }: Props) 
         <View style={styles.container}>
           <Text style={[styles.value, { color }]}>{selectedNode.label}</Text>
 
-          <Text style={styles.synonyms}>{selectedNode.synonyms.join(' · ')}</Text>
+          <Text style={[styles.synonyms, { color: colors.textMuted }]}>
+            {selectedNode.synonyms.join(' · ')}
+          </Text>
 
           {selectedNode.description && (
             <Text style={styles.description}>{selectedNode.description}</Text>
@@ -76,7 +81,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   container: { flex: 1 },
   value: { fontSize: 28, fontWeight: '700', fontFamily: 'Fraunces' },
-  synonyms: { fontSize: 11, color: theme.colors.textMuted, textTransform: 'capitalize' },
+  synonyms: { fontSize: 11, textTransform: 'capitalize' },
   description: {
     fontSize: 14,
     color: theme.colors.typography,

@@ -1,6 +1,8 @@
 import { Pressable, type StyleProp, Text, type ViewStyle } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
+import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
+
 type Props = {
   label: string;
   onPress: () => void;
@@ -22,6 +24,8 @@ export function PillButton({
   style,
   accessibilityLabel,
 }: Props) {
+  const colors = useAccessibleColors();
+
   return (
     <Pressable
       onPress={onPress}
@@ -35,7 +39,7 @@ export function PillButton({
         style,
       ]}
     >
-      <Text style={styles.label(disabled, size)}>{label}</Text>
+      <Text style={styles.label(disabled, size, colors.textMuted)}>{label}</Text>
     </Pressable>
   );
 }
@@ -55,9 +59,9 @@ const styles = StyleSheet.create((theme) => ({
       elevation: 3,
     }),
   }),
-  label: (disabled: boolean, size: 'sm' | 'md') => ({
+  label: (disabled: boolean, size: 'sm' | 'md', textMuted: string) => ({
     fontSize: size === 'sm' ? 15 : 17,
     fontWeight: '600' as const,
-    color: disabled ? theme.colors.textMuted : theme.colors.onAccent,
+    color: disabled ? textMuted : theme.colors.onAccent,
   }),
 }));
