@@ -45,6 +45,7 @@ export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const safeBottom = Math.max(insets.bottom, 12);
   const tabBarHeight = LAYOUT.TAB_BAR_HEIGHT + safeBottom;
+  const reduceMotion = useAppStore((s) => s.accessibility.reduceMotion);
 
   return (
     <View style={styles.root}>
@@ -52,7 +53,7 @@ export default function TabLayout() {
         detachInactiveScreens={false}
         screenListeners={{ tabPress: () => hapticLight() }}
         screenOptions={() => ({
-          animation: useAppStore.getState().accessibility.reduceMotion ? 'none' : 'shift',
+          animation: reduceMotion ? 'none' : 'shift',
           headerShown: false,
           headerLeft: CustomDrawerButton, // Using stable reference
           headerTransparent: true,

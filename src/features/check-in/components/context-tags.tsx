@@ -1,4 +1,4 @@
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
@@ -29,7 +29,7 @@ export function TagChip({ label, isSelected, color, onPress }: TagChipProps) {
       accessibilityState={{ selected: isSelected }}
       accessibilityLabel={label}
     >
-      <Text
+      <AppText
         style={[
           styles.chipText,
           {
@@ -39,7 +39,7 @@ export function TagChip({ label, isSelected, color, onPress }: TagChipProps) {
         ]}
       >
         {label}
-      </Text>
+      </AppText>
     </Pressable>
   );
 }

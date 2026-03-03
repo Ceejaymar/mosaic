@@ -33,6 +33,7 @@ export const AppText = forwardRef<Text, AppTextProps>(function AppText(
 
   if (colorVariant === 'muted') injected.color = colors.textMuted;
   else if (colorVariant === 'primary') injected.color = colors.typography;
+  else if (colorVariant === 'onAccent') injected.color = colors.onAccent;
 
   return <Text ref={ref} style={[style, injected]} {...rest} />;
 });

@@ -57,7 +57,9 @@ export default function AccessibilityScreen() {
   };
 
   const handleToggle = (key: (typeof TOGGLES)[number]['key'], value: boolean) => {
-    if (!(key === 'disableHaptics' && value === true)) {
+    if (key === 'disableHaptics') {
+      if (value === false) hapticLight(); // re-enabling — confirm with a tap
+    } else if (!accessibility.disableHaptics) {
       hapticLight();
     }
     setAccessibilitySetting(key, value);
