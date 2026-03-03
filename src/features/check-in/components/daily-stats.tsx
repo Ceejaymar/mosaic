@@ -1,6 +1,7 @@
 import { Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
+import { AppText } from '@/src/components/app-text';
 import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
 
 interface DailyStatsRow {
@@ -15,14 +16,16 @@ export function DailyStatsRow({ entriesCount, streakCount }: DailyStatsRow) {
     <View style={styles.statsRow}>
       <View style={styles.statGroup}>
         <Text style={styles.statNum}>{entriesCount}</Text>
-        <Text style={[styles.statLbl, { color: colors.textMuted }]}>
+        <AppText colorVariant="muted" style={styles.statLbl}>
           {entriesCount === 1 ? 'check-in today' : 'check-ins today'}
-        </Text>
+        </AppText>
       </View>
       <View style={[styles.statDivider, { backgroundColor: colors.divider }]} />
       <View style={styles.statGroup}>
         <Text style={styles.statNum}>{streakCount}</Text>
-        <Text style={[styles.statLbl, { color: colors.textMuted }]}>day streak</Text>
+        <AppText colorVariant="muted" style={styles.statLbl}>
+          day streak
+        </AppText>
       </View>
     </View>
   );

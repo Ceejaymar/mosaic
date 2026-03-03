@@ -1,6 +1,7 @@
 import { Pressable, Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
+import { AppText } from '@/src/components/app-text';
 import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
 
 interface TagChipProps {
@@ -52,11 +53,11 @@ interface TagSectionProps {
 }
 
 export function TagSection({ title, tags, selected, color, onToggle }: TagSectionProps) {
-  const colors = useAccessibleColors();
-
   return (
     <View style={styles.container}>
-      <Text style={[styles.title, { color: colors.textMuted }]}>{title}</Text>
+      <AppText colorVariant="muted" style={styles.title}>
+        {title}
+      </AppText>
       <View style={styles.tagGrid}>
         {tags.map((tag) => (
           <TagChip

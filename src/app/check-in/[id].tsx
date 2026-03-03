@@ -7,13 +7,10 @@ import { StyleSheet } from 'react-native-unistyles';
 import { AppText } from '@/src/components/app-text';
 import { deleteMoodEntry, fetchMoodEntryById } from '@/src/db/repos/moodRepo';
 import { invalidateMonthCache } from '@/src/features/canvas/hooks/useCanvasDbData';
-import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
-
 export default function EditCheckInScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const colors = useAccessibleColors();
 
   useEffect(() => {
     if (!id) router.replace('/');
@@ -62,10 +59,12 @@ export default function EditCheckInScreen() {
       <AppText variant="heading" style={styles.title}>
         Edit Check-in
       </AppText>
-      <AppText variant="mono" style={[styles.meta, { color: colors.textMuted }]}>
+      <AppText variant="mono" colorVariant="muted" style={styles.meta}>
         Entry {id}
       </AppText>
-      <AppText style={[styles.body, { color: colors.textMuted }]}>Edit flow coming soon.</AppText>
+      <AppText colorVariant="muted" style={styles.body}>
+        Edit flow coming soon.
+      </AppText>
 
       <View style={styles.spacer} />
 

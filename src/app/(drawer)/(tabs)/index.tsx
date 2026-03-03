@@ -14,6 +14,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
+import { AppText } from '@/src/components/app-text';
 import { DemoBadge } from '@/src/components/demo-badge';
 import { PillButton } from '@/src/components/pill-button';
 import { TopFade } from '@/src/components/top-fade';
@@ -30,7 +31,6 @@ import { CHECK_IN_CONSTANTS } from '@/src/features/check-in/constants/check-in';
 import { useTodayCheckIns } from '@/src/features/check-in/hooks/useCheckIns';
 import { getMoodDisplayInfo } from '@/src/features/check-in/utils/mood-helpers';
 import { getCurrentTimeSlot } from '@/src/features/check-in/utils/time-of-day';
-import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
 import { hapticLight } from '@/src/lib/haptics/haptics';
 import { enableAndroidLayoutAnimations } from '@/src/utils/animations';
 import { getFormattedDateLabel } from '@/src/utils/format-date';
@@ -39,7 +39,6 @@ export default function CheckInScreen() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { theme } = useUnistyles();
-  const colors = useAccessibleColors();
   const router = useRouter();
 
   useEffect(() => {
@@ -142,9 +141,9 @@ export default function CheckInScreen() {
         </Text>
 
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <Text style={[styles.dateLabel, { color: colors.textMuted }]}>
+          <AppText variant="mono" colorVariant="muted" style={styles.dateLabel}>
             {getFormattedDateLabel()}
-          </Text>
+          </AppText>
           <DemoBadge />
         </View>
 
@@ -155,9 +154,9 @@ export default function CheckInScreen() {
             </View>
           ) : loadError && todayEntries.length === 0 ? (
             <View style={styles.errorContainer}>
-              <Text style={[styles.errorText, { color: colors.textMuted }]}>
+              <AppText colorVariant="muted" style={styles.errorText}>
                 Could not load today's check-ins.
-              </Text>
+              </AppText>
               <PillButton
                 label="Try again"
                 onPress={refresh}

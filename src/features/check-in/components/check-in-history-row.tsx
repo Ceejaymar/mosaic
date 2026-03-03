@@ -2,8 +2,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
+import { AppText } from '@/src/components/app-text';
 import { formatTime } from '@/src/features/check-in/utils/format-time';
-import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
 
 const SQUIRCLE_SIZE = 12;
 const FADE_WIDTH = 20;
@@ -18,7 +18,6 @@ type Props = {
 
 export function CheckInHistoryRow({ occurredAt, label, color, tags, onPress }: Props) {
   const { theme } = useUnistyles();
-  const colors = useAccessibleColors();
   const formattedTime = formatTime(occurredAt);
 
   return (
@@ -28,7 +27,9 @@ export function CheckInHistoryRow({ occurredAt, label, color, tags, onPress }: P
       accessibilityRole="button"
       accessibilityLabel={`${label} at ${formattedTime}, tap to edit`}
     >
-      <Text style={[styles.time, { color: colors.textMuted }]}>{formattedTime}</Text>
+      <AppText colorVariant="muted" style={styles.time}>
+        {formattedTime}
+      </AppText>
 
       <View style={[styles.squircle, { backgroundColor: color }]} />
 
@@ -45,7 +46,9 @@ export function CheckInHistoryRow({ occurredAt, label, color, tags, onPress }: P
           >
             {tags.map((tag) => (
               <View key={tag} style={styles.tag}>
-                <Text style={[styles.tagText, { color: colors.textMuted }]}>{tag}</Text>
+                <AppText colorVariant="muted" style={styles.tagText}>
+                  {tag}
+                </AppText>
               </View>
             ))}
           </ScrollView>

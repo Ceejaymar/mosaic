@@ -103,7 +103,9 @@ export default function AccessibilityScreen() {
                   <AppText style={[styles.rowLabel, { color: theme.colors.typography }]}>
                     {item.label}
                   </AppText>
-                  <AppText style={[styles.rowSub, { color: colors.textMuted }]}>{item.sub}</AppText>
+                  <AppText colorVariant="muted" style={styles.rowSub}>
+                    {item.sub}
+                  </AppText>
                 </View>
                 <Switch
                   value={accessibility[item.key]}

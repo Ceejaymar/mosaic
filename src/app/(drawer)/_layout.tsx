@@ -11,6 +11,7 @@ import { Linking, Platform, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
+import { AppText } from '@/src/components/app-text';
 import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
 
 // ─── Reusable Drawer Row Component ────────────────────────────────────────────
@@ -137,7 +138,9 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
           <View style={[styles.divider, { backgroundColor: colors.divider }]} />
 
           {/* Group 2: About */}
-          <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>About Mosaic</Text>
+          <AppText colorVariant="muted" style={styles.sectionTitle}>
+            About Mosaic
+          </AppText>
           <DrawerRow
             icon="rocket-outline"
             label="Upcoming features"
@@ -157,7 +160,9 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
           <View style={[styles.divider, { backgroundColor: colors.divider }]} />
 
           {/* Group 3: Resources */}
-          <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>Resources</Text>
+          <AppText colorVariant="muted" style={styles.sectionTitle}>
+            Resources
+          </AppText>
           <DrawerRow
             icon="heart-half-outline"
             label="Mental health hotlines"
@@ -181,8 +186,12 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
             { paddingBottom: insets.bottom + 20, borderTopColor: colors.divider },
           ]}
         >
-          <Text style={[styles.versionText, { color: colors.textMuted }]}>Mosaic</Text>
-          <Text style={[styles.versionText, { color: colors.textMuted }]}>v1.0.0</Text>
+          <AppText colorVariant="muted" style={styles.versionText}>
+            Mosaic
+          </AppText>
+          <AppText colorVariant="muted" style={styles.versionText}>
+            v1.0.0
+          </AppText>
         </View>
       </View>
     </View>

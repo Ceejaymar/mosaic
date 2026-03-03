@@ -2,6 +2,7 @@ import type { StyleProp, ViewStyle } from 'react-native';
 import { Pressable, Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
+import { AppText } from '@/src/components/app-text';
 import { formatTime } from '@/src/features/check-in/utils/format-time';
 import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
 
@@ -116,7 +117,9 @@ export function MosaicDisplay({ tiles, onAddPress, onTilePress }: Props) {
         <View style={[styles.plusCircle, { backgroundColor: colors.divider }]}>
           <Text style={styles.plusIcon}>+</Text>
         </View>
-        <Text style={[styles.emptyHint, { color: colors.textMuted }]}>Tap to check in</Text>
+        <AppText colorVariant="muted" style={styles.emptyHint}>
+          Tap to check in
+        </AppText>
       </Pressable>
     );
   }

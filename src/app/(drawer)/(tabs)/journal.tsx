@@ -8,6 +8,7 @@ import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
+import { AppText } from '@/src/components/app-text';
 import { DemoBadge } from '@/src/components/demo-badge';
 import { TopFade } from '@/src/components/top-fade';
 import { LAYOUT } from '@/src/constants/layout';
@@ -115,9 +116,9 @@ const EntryCard = memo(function EntryCard({ entry, onPress }: EntryCardProps) {
 
       <View style={cardStyles.body}>
         <View style={cardStyles.headlineRow}>
-          <Text style={[cardStyles.iAmFeeling, { color: colors.textMuted }]}>
+          <AppText colorVariant="muted" style={cardStyles.iAmFeeling}>
             {t('journal.im_feeling')}
-          </Text>
+          </AppText>
           <Text style={[cardStyles.emotion, { color: accentColor }]}>{label}</Text>
         </View>
 
@@ -135,15 +136,17 @@ const EntryCard = memo(function EntryCard({ entry, onPress }: EntryCardProps) {
           <View style={cardStyles.tagRow}>
             {tags.map((tag) => (
               <View key={tag} style={[cardStyles.tag, { borderColor: colors.divider }]}>
-                <Text style={[cardStyles.tagText, { color: colors.textMuted }]}>{tag}</Text>
+                <AppText colorVariant="muted" style={cardStyles.tagText}>
+                  {tag}
+                </AppText>
               </View>
             ))}
           </View>
         )}
 
-        <Text style={[cardStyles.time, { color: colors.textMuted }]}>
+        <AppText colorVariant="muted" style={cardStyles.time}>
           {formatEntryTime(entry.occurredAt)}
-        </Text>
+        </AppText>
       </View>
     </Pressable>
   );
@@ -212,13 +215,12 @@ const cardStyles = StyleSheet.create((_theme) => ({
 
 function EmptyState() {
   const { t } = useTranslation();
-  const colors = useAccessibleColors();
   return (
     <View style={emptyStyles.container}>
       <Text style={emptyStyles.title}>{t('journal.empty_title')}</Text>
-      <Text style={[emptyStyles.subtitle, { color: colors.textMuted }]}>
+      <AppText colorVariant="muted" style={emptyStyles.subtitle}>
         {t('journal.empty_subtitle')}
-      </Text>
+      </AppText>
     </View>
   );
 }
@@ -273,7 +275,6 @@ const keyExtractor = (item: ListItem) => item.id;
 export default function Journal() {
   const insets = useSafeAreaInsets();
   const { theme } = useUnistyles();
-  const colors = useAccessibleColors();
   const {
     t,
     i18n: { language },
@@ -400,9 +401,9 @@ export default function Journal() {
   if (error) {
     return (
       <View style={[styles.container, styles.centered, { paddingTop: insets.top }]}>
-        <Text style={[styles.errorText, { color: colors.textMuted }]}>
+        <AppText colorVariant="muted" style={styles.errorText}>
           {t('journal.error_message')}
-        </Text>
+        </AppText>
         <Pressable
           onPress={refreshEntries}
           style={({ pressed }) => [styles.retryBtn, { opacity: pressed ? 0.6 : 1 }]}

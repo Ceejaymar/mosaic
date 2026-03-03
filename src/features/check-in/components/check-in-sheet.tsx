@@ -49,7 +49,9 @@ function CloseButton({ onPress }: { onPress: () => void }) {
       accessibilityRole="button"
       accessibilityLabel="Close"
     >
-      <AppText style={[styles.closeIcon, { color: colors.textMuted }]}>✕</AppText>
+      <AppText colorVariant="muted" style={styles.closeIcon}>
+        ✕
+      </AppText>
     </Pressable>
   );
 }
@@ -89,7 +91,7 @@ export const CheckInSheet = memo(function CheckInSheet({ visible, onClose, onSav
                 <AppText variant="heading" style={styles.title}>
                   What are you feeling?
                 </AppText>
-                <AppText variant="mono" style={[styles.subtitle, { color: colors.textMuted }]}>
+                <AppText variant="mono" colorVariant="muted" style={styles.subtitle}>
                   {getTimeSubtitle()}
                 </AppText>
               </View>
@@ -157,7 +159,7 @@ export const CheckInSheet = memo(function CheckInSheet({ visible, onClose, onSav
                 </AppText>
               </View>
 
-              <AppText variant="mono" style={[styles.inputLabel, { color: colors.textMuted }]}>
+              <AppText variant="mono" colorVariant="muted" style={styles.inputLabel}>
                 What's on your mind?
               </AppText>
               <View style={styles.inputContainer}>

@@ -4,7 +4,7 @@ import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
 
-import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
+import { AppText } from '@/src/components/app-text';
 
 import type { EmotionNode } from '../types';
 import { getEmotionColor } from '../utils/emotion-utils';
@@ -17,7 +17,6 @@ type Props = {
 
 export default function SelectionModal({ selectedNode, onPress, style }: Props) {
   const insets = useSafeAreaInsets();
-  const colors = useAccessibleColors();
 
   if (!selectedNode) return null;
 
@@ -41,9 +40,9 @@ export default function SelectionModal({ selectedNode, onPress, style }: Props) 
         <View style={styles.container}>
           <Text style={[styles.value, { color }]}>{selectedNode.label}</Text>
 
-          <Text style={[styles.synonyms, { color: colors.textMuted }]}>
+          <AppText colorVariant="muted" style={styles.synonyms}>
             {selectedNode.synonyms.join(' · ')}
-          </Text>
+          </AppText>
 
           {selectedNode.description && (
             <Text style={styles.description}>{selectedNode.description}</Text>

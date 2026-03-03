@@ -8,6 +8,7 @@ import { Linking, Modal, Pressable, ScrollView, Switch, Text, View } from 'react
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
+import { AppText } from '@/src/components/app-text';
 import {
   requestNotificationPermissions,
   rescheduleAllNotifications,
@@ -232,7 +233,9 @@ export default function NotificationsScreen() {
             <Text style={[styles.rowLabel, { color: theme.colors.typography }]}>
               Enable reminders
             </Text>
-            <Text style={[styles.rowSub, { color: colors.textMuted }]}>Daily check-in prompts</Text>
+            <AppText colorVariant="muted" style={styles.rowSub}>
+              Daily check-in prompts
+            </AppText>
           </View>
           <Switch
             value={isEnabled}
@@ -254,9 +257,9 @@ export default function NotificationsScreen() {
             <Text style={[styles.deniedText, { color: theme.colors.typography }]}>
               Notifications are disabled in Settings.
             </Text>
-            <Text style={[styles.deniedSub, { color: colors.textMuted }]}>
+            <AppText colorVariant="muted" style={styles.deniedSub}>
               Enable them for Mosaic to receive check-in reminders.
-            </Text>
+            </AppText>
             <Pressable
               onPress={() => Linking.openSettings()}
               style={({ pressed }) => [
@@ -360,7 +363,9 @@ export default function NotificationsScreen() {
             {/* Conditional Hour Picker (12 vs 24 format) */}
             {is24Hour ? (
               <View style={styles.pickerWrapper}>
-                <Text style={[styles.pickerLabel, { color: colors.textMuted }]}>Hour</Text>
+                <AppText colorVariant="muted" style={styles.pickerLabel}>
+                  Hour
+                </AppText>
                 <Picker
                   selectedValue={tempHour24}
                   onValueChange={(v) => setTempHour24(v as number)}
@@ -374,7 +379,9 @@ export default function NotificationsScreen() {
               </View>
             ) : (
               <View style={styles.pickerWrapper}>
-                <Text style={[styles.pickerLabel, { color: colors.textMuted }]}>Hour</Text>
+                <AppText colorVariant="muted" style={styles.pickerLabel}>
+                  Hour
+                </AppText>
                 <Picker
                   selectedValue={displayHour12}
                   onValueChange={handleHour12Change}
@@ -390,7 +397,9 @@ export default function NotificationsScreen() {
 
             {/* Minutes (Same for both) */}
             <View style={styles.pickerWrapper}>
-              <Text style={[styles.pickerLabel, { color: colors.textMuted }]}>Min</Text>
+              <AppText colorVariant="muted" style={styles.pickerLabel}>
+                Min
+              </AppText>
               <Picker
                 selectedValue={tempMinute}
                 onValueChange={(v) => setTempMinute(v as number)}
@@ -406,7 +415,9 @@ export default function NotificationsScreen() {
             {/* Conditional AM/PM Period Picker (Only show if on 12-hour clock) */}
             {!is24Hour && (
               <View style={styles.pickerWrapper}>
-                <Text style={[styles.pickerLabel, { color: colors.textMuted }]}>Period</Text>
+                <AppText colorVariant="muted" style={styles.pickerLabel}>
+                  Period
+                </AppText>
                 <Picker
                   selectedValue={displayPeriod}
                   onValueChange={handlePeriodChange}
@@ -444,7 +455,9 @@ export default function NotificationsScreen() {
             style={({ pressed }) => [styles.surpriseBtn, pressed && styles.pressed]}
           >
             <Ionicons name="shuffle-outline" size={16} color={colors.textMuted} />
-            <Text style={[styles.surpriseBtnText, { color: colors.textMuted }]}>Surprise me</Text>
+            <AppText colorVariant="muted" style={styles.surpriseBtnText}>
+              Surprise me
+            </AppText>
           </Pressable>
         </View>
       </Modal>

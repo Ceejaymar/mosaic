@@ -2,8 +2,8 @@ import { useMemo } from 'react';
 import { Text, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
+import { AppText } from '@/src/components/app-text';
 import type { InsightEntry } from '@/src/features/insights/types';
-import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
 
 type Props = { entries: InsightEntry[] };
 
@@ -16,7 +16,6 @@ const TIME_BLOCKS = [
 
 export function RhythmBar({ entries }: Props) {
   const { theme } = useUnistyles();
-  const colors = useAccessibleColors();
 
   const rhythmData = useMemo(() => {
     return TIME_BLOCKS.map(({ id, label }) => {
@@ -59,9 +58,9 @@ export function RhythmBar({ entries }: Props) {
               )}
             </View>
 
-            <Text style={[styles.label, { color: colors.textMuted }]} numberOfLines={1}>
+            <AppText variant="mono" colorVariant="muted" style={styles.label} numberOfLines={1}>
               {block.label}
-            </Text>
+            </AppText>
           </View>
         ))}
       </View>

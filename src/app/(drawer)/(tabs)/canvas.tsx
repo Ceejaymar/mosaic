@@ -15,6 +15,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
+import { AppText } from '@/src/components/app-text';
 import { DemoBadge } from '@/src/components/demo-badge';
 import { TopFade } from '@/src/components/top-fade';
 import { LAYOUT } from '@/src/constants/layout';
@@ -22,7 +23,6 @@ import { MonthGrid } from '@/src/features/canvas/components/month-grid';
 import { YearView } from '@/src/features/canvas/components/year-view';
 import { useCanvasDbData } from '@/src/features/canvas/hooks/useCanvasDbData';
 import { getDowLabels, getMonthName } from '@/src/features/canvas/utils/date-labels';
-import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
 import { useAppStore } from '@/src/store/useApp';
 
 const TOPBAR_H_PAD = 24;
@@ -57,7 +57,6 @@ const AnimatedMonth = memo(function AnimatedMonth({
   onDayPress: (date: string) => void;
 }) {
   const { i18n } = useTranslation();
-  const colors = useAccessibleColors();
   const { days: data } = useCanvasDbData(item.month, item.year);
   const dowLabels = getDowLabels(i18n.language);
 
@@ -81,9 +80,9 @@ const AnimatedMonth = memo(function AnimatedMonth({
         </Text>
         <View style={[styles.row, { gap: TILE_GAP, marginTop: 12 }]}>
           {dowLabels.map(({ key, label }) => (
-            <Text key={key} style={[styles.dowLabel, { width: tileSize, color: colors.textMuted }]}>
+            <AppText key={key} colorVariant="muted" style={[styles.dowLabel, { width: tileSize }]}>
               {label}
-            </Text>
+            </AppText>
           ))}
         </View>
       </Animated.View>
@@ -107,7 +106,6 @@ export default function CanvasScreen() {
   const { width: screenWidth } = useWindowDimensions();
   const { t } = useTranslation();
   const { theme } = useUnistyles();
-  const colors = useAccessibleColors();
   const reduceMotion = useAppStore((s) => s.accessibility.reduceMotion);
   const rm = reduceMotion ? ReduceMotion.Always : ReduceMotion.System;
 
@@ -202,9 +200,9 @@ export default function CanvasScreen() {
             onPress={toggleViewMode}
             style={({ pressed }) => [styles.toggleBtn, pressed && { opacity: 0.5 }]}
           >
-            <Text style={[styles.toggleLabel, { color: colors.textMuted }]}>
+            <AppText colorVariant="muted" style={styles.toggleLabel}>
               {viewMode === 'month' ? t('canvas.year') : t('canvas.month')}
-            </Text>
+            </AppText>
           </Pressable>
         </View>
       </View>

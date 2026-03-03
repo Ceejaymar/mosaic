@@ -22,6 +22,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
+import { AppText } from '@/src/components/app-text';
 import { DemoBadge } from '@/src/components/demo-badge';
 import { LAYOUT } from '@/src/constants/layout';
 import { ContextMatrix } from '@/src/features/insights/components/context-matrix';
@@ -348,9 +349,9 @@ export default function InsightsScreen() {
             <Text style={[styles.emptyTitle, { color: theme.colors.typography }]}>
               Not enough data yet
             </Text>
-            <Text style={[styles.emptyText, { color: colors.textMuted }]}>
+            <AppText colorVariant="muted" style={styles.emptyText}>
               Log at least 3 check-ins this {timeFrame} to unlock your emotional patterns.
-            </Text>
+            </AppText>
           </View>
         )}
       </ScrollView>
