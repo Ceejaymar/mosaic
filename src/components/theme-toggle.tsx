@@ -2,6 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Pressable, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
+import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
 import { useAppStore } from '@/src/store/useApp';
 import type { Theme } from '@/src/types/types';
 import { ThemedText } from './themed-text';
@@ -9,6 +10,7 @@ import { ThemedText } from './themed-text';
 export default function ThemeToggle() {
   const { theme, setTheme } = useAppStore();
   const { theme: unistylesTheme } = useUnistyles();
+  const colors = useAccessibleColors();
 
   const options: { label: string; value: Theme; icon: keyof typeof Ionicons.glyphMap }[] = [
     { label: 'Light', value: 'light', icon: 'sunny-outline' },
@@ -19,7 +21,12 @@ export default function ThemeToggle() {
   return (
     <View style={styles.container}>
       {/* Sleek Pill Container */}
-      <View style={[styles.pillContainer, { backgroundColor: unistylesTheme.colors.surface }]}>
+      <View
+        style={[
+          styles.pillContainer,
+          { backgroundColor: unistylesTheme.colors.surface, borderColor: colors.divider },
+        ]}
+      >
         {options.map((option) => {
           const isActive = theme === option.value;
 
@@ -38,19 +45,13 @@ export default function ThemeToggle() {
               <Ionicons
                 name={option.icon}
                 size={16}
-                color={
-                  isActive ? unistylesTheme.colors.typography : unistylesTheme.colors.textMuted
-                }
+                color={isActive ? unistylesTheme.colors.typography : colors.textMuted}
                 style={{ marginBottom: 4 }}
               />
               <ThemedText
                 style={[
                   styles.segmentText,
-                  {
-                    color: isActive
-                      ? unistylesTheme.colors.typography
-                      : unistylesTheme.colors.textMuted,
-                  },
+                  { color: isActive ? unistylesTheme.colors.typography : colors.textMuted },
                   isActive && styles.activeSegmentText,
                 ]}
               >
@@ -76,7 +77,6 @@ const styles = StyleSheet.create((theme) => ({
     padding: 4,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: theme.colors.divider,
   },
   segment: {
     flex: 1,
@@ -95,7 +95,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   segmentText: {
     fontSize: 12,
-    fontFamily: 'SpaceMono', // or your preferred clean font
+    fontFamily: 'SpaceMono',
     fontWeight: '500',
   },
   activeSegmentText: {

@@ -14,6 +14,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
+import { AppText } from '@/src/components/app-text';
 import { DemoBadge } from '@/src/components/demo-badge';
 import { PillButton } from '@/src/components/pill-button';
 import { TopFade } from '@/src/components/top-fade';
@@ -140,7 +141,9 @@ export default function CheckInScreen() {
         </Text>
 
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <Text style={styles.dateLabel}>{getFormattedDateLabel()}</Text>
+          <AppText variant="mono" colorVariant="muted" style={styles.dateLabel}>
+            {getFormattedDateLabel()}
+          </AppText>
           <DemoBadge />
         </View>
 
@@ -151,7 +154,9 @@ export default function CheckInScreen() {
             </View>
           ) : loadError && todayEntries.length === 0 ? (
             <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>Could not load today's check-ins.</Text>
+              <AppText colorVariant="muted" style={styles.errorText}>
+                Could not load today's check-ins.
+              </AppText>
               <PillButton
                 label="Try again"
                 onPress={refresh}
@@ -210,7 +215,6 @@ const styles = StyleSheet.create((theme) => ({
     letterSpacing: 1.5,
     marginBottom: 24,
     fontStyle: 'italic',
-    color: theme.colors.textMuted,
   },
   mosaicWrapper: { marginBottom: 24 },
   loadingContainer: {
@@ -230,5 +234,5 @@ const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.surface,
     borderRadius: 20,
   },
-  errorText: { fontSize: 14, color: theme.colors.textMuted, textAlign: 'center' },
+  errorText: { fontSize: 14, textAlign: 'center' },
 }));

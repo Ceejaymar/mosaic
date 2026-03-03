@@ -22,6 +22,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
+import { AppText } from '@/src/components/app-text';
 import { DemoBadge } from '@/src/components/demo-badge';
 import { LAYOUT } from '@/src/constants/layout';
 import { ContextMatrix } from '@/src/features/insights/components/context-matrix';
@@ -31,6 +32,7 @@ import { RhythmBar } from '@/src/features/insights/components/rhythm-bar';
 import { useInsightsData } from '@/src/features/insights/hooks/useInsightsData';
 import type { TimeFrame } from '@/src/features/insights/types';
 import { generateObservations } from '@/src/features/insights/utils/observations';
+import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
 import { hapticSelection } from '@/src/lib/haptics/haptics';
 import { getDayWithSuffix } from '@/src/utils/format-date';
 
@@ -95,6 +97,7 @@ function TimeFrameDropdown({
   onChange: (tf: TimeFrame) => void;
 }) {
   const { theme } = useUnistyles();
+  const colors = useAccessibleColors();
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -112,7 +115,7 @@ function TimeFrameDropdown({
         <View
           style={[
             styles.dropdownMenu,
-            { backgroundColor: theme.colors.surface, borderColor: theme.colors.divider },
+            { backgroundColor: theme.colors.surface, borderColor: colors.divider },
           ]}
         >
           {TIMEFRAMES.map((tf) => (
@@ -246,6 +249,7 @@ function DateSnapper({
 export default function InsightsScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useUnistyles();
+  const colors = useAccessibleColors();
 
   const [timeFrame, setTimeFrame] = useState<TimeFrame>('week');
   const [offset, setOffset] = useState(0);
@@ -312,6 +316,7 @@ export default function InsightsScreen() {
                         {
                           backgroundColor: theme.colors.tileBackground,
                           shadowColor: theme.colors.tileShadowColor,
+                          borderColor: colors.divider,
                         },
                         pressed && { opacity: 0.8 },
                       ]}
@@ -344,9 +349,9 @@ export default function InsightsScreen() {
             <Text style={[styles.emptyTitle, { color: theme.colors.typography }]}>
               Not enough data yet
             </Text>
-            <Text style={[styles.emptyText, { color: theme.colors.textMuted }]}>
+            <AppText colorVariant="muted" style={styles.emptyText}>
               Log at least 3 check-ins this {timeFrame} to unlock your emotional patterns.
-            </Text>
+            </AppText>
           </View>
         )}
       </ScrollView>
@@ -424,7 +429,6 @@ const styles = StyleSheet.create((theme) => ({
     padding: 16,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: theme.colors.divider,
     elevation: 2,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,

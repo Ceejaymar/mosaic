@@ -2,12 +2,14 @@ import { BlurMask, Canvas, RadialGradient, Rect, vec } from '@shopify/react-nati
 import { useEffect } from 'react';
 import { useWindowDimensions } from 'react-native';
 import Animated, {
+  cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
+import { useAppStore } from '@/src/store/useApp';
 
 type Props = {
   color: string;
@@ -16,18 +18,27 @@ type Props = {
 export function SkiaAura({ color }: Props) {
   const { width } = useWindowDimensions();
   const height = 400; // Large enough to cover the grid
+  const reduceMotion = useAppStore((s) => s.accessibility.reduceMotion);
 
   // Start almost completely transparent (3%)
   const pulse = useSharedValue(0.03);
 
   useEffect(() => {
+    if (reduceMotion) {
+      cancelAnimation(pulse);
+      pulse.value = 0.03;
+      return;
+    }
     // Pulse gently up to only 12% opacity
     pulse.value = withRepeat(
       withSequence(withTiming(0.12, { duration: 2500 }), withTiming(0.03, { duration: 2500 })),
       -1, // Infinite
       true, // Reverse
     );
-  }, [pulse]);
+    return () => {
+      cancelAnimation(pulse);
+    };
+  }, [pulse, reduceMotion]);
 
   const animStyle = useAnimatedStyle(() => ({
     opacity: pulse.value,

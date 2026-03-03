@@ -9,9 +9,10 @@ import {
   useState,
 } from 'react';
 import { useTranslation } from 'react-i18next';
-import { type DimensionValue, FlatList, Pressable, Text, View, type ViewToken } from 'react-native';
+import { type DimensionValue, FlatList, Pressable, View, type ViewToken } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
+import { AppText } from '@/src/components/app-text';
 import { fetchMoodEntriesForMonth } from '@/src/db/repos/moodRepo';
 import { buildCanvasDays } from '@/src/features/canvas/utils/buildCanvasDays';
 import { getDemoEntriesForMonth } from '@/src/features/demo/generateDemoData';
@@ -301,7 +302,11 @@ const SingleYearBlock = memo(function SingleYearBlock({
           {memoizedTiles}
         </View>
       )}
-      {liveLoading && <Text style={styles.loadingText}>{t('canvas.loadingYear', { year })}</Text>}
+      {liveLoading && (
+        <AppText colorVariant="muted" style={styles.loadingText}>
+          {t('canvas.loadingYear', { year })}
+        </AppText>
+      )}
     </View>
   );
 });
@@ -387,7 +392,7 @@ export function YearView({
   );
 }
 
-const styles = StyleSheet.create((theme) => ({
+const styles = StyleSheet.create(() => ({
   wrapper: {
     flex: 1,
   },
@@ -409,7 +414,6 @@ const styles = StyleSheet.create((theme) => ({
   },
   loadingText: {
     fontSize: 13,
-    color: theme.colors.textMuted,
     position: 'absolute',
     bottom: 20,
   },

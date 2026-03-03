@@ -1,5 +1,8 @@
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
+
+import { AppText } from '@/src/components/app-text';
+import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
 
 interface TagChipProps {
   label: string;
@@ -9,15 +12,34 @@ interface TagChipProps {
 }
 
 export function TagChip({ label, isSelected, color, onPress }: TagChipProps) {
+  const colors = useAccessibleColors();
+
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [styles.chip(isSelected, color), pressed && { opacity: 0.75 }]}
+      style={({ pressed }) => [
+        styles.chip,
+        {
+          borderColor: isSelected ? (color ?? colors.textMuted) : colors.divider,
+          backgroundColor: isSelected ? colors.divider : 'transparent',
+        },
+        pressed && { opacity: 0.75 },
+      ]}
       accessibilityRole="button"
       accessibilityState={{ selected: isSelected }}
       accessibilityLabel={label}
     >
-      <Text style={styles.chipText(isSelected, color)}>{label}</Text>
+      <AppText
+        style={[
+          styles.chipText,
+          {
+            color: isSelected ? (color ?? colors.typography) : colors.textMuted,
+            fontWeight: isSelected ? '600' : '400',
+          },
+        ]}
+      >
+        {label}
+      </AppText>
     </Pressable>
   );
 }
@@ -33,7 +55,9 @@ interface TagSectionProps {
 export function TagSection({ title, tags, selected, color, onToggle }: TagSectionProps) {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{title}</Text>
+      <AppText colorVariant="muted" style={styles.title}>
+        {title}
+      </AppText>
       <View style={styles.tagGrid}>
         {tags.map((tag) => (
           <TagChip
@@ -49,28 +73,23 @@ export function TagSection({ title, tags, selected, color, onToggle }: TagSectio
   );
 }
 
-const styles = StyleSheet.create((theme) => ({
+const styles = StyleSheet.create(() => ({
   container: { marginBottom: 24 },
   title: {
     fontSize: 12,
     fontWeight: '600',
-    color: theme.colors.textMuted,
     letterSpacing: 1.2,
     marginBottom: 10,
     textTransform: 'uppercase',
   },
   tagGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: (isSelected: boolean, color: string | null) => ({
+  chip: {
     paddingVertical: 8,
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     borderRadius: 100,
     borderWidth: 1.5,
-    borderColor: isSelected ? (color ?? theme.colors.textMuted) : theme.colors.divider,
-    backgroundColor: isSelected ? theme.colors.divider : 'transparent',
-  }),
-  chipText: (isSelected: boolean, color: string | null) => ({
+  },
+  chipText: {
     fontSize: 14,
-    color: isSelected ? (color ?? theme.colors.typography) : theme.colors.textMuted,
-    fontWeight: isSelected ? '600' : '400',
-  }),
+  },
 }));

@@ -1,12 +1,12 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Pressable, Text, View } from 'react-native';
+import { Alert, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
 
+import { AppText } from '@/src/components/app-text';
 import { deleteMoodEntry, fetchMoodEntryById } from '@/src/db/repos/moodRepo';
 import { invalidateMonthCache } from '@/src/features/canvas/hooks/useCanvasDbData';
-
 export default function EditCheckInScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -53,23 +53,29 @@ export default function EditCheckInScreen() {
         accessibilityRole="button"
         accessibilityLabel="Go back"
       >
-        <Text style={styles.backText}>← Back</Text>
+        <AppText style={styles.backText}>← Back</AppText>
       </Pressable>
 
-      <Text style={styles.title}>Edit Check-in</Text>
-      <Text style={styles.meta}>Entry {id}</Text>
-      <Text style={styles.body}>Edit flow coming soon.</Text>
+      <AppText variant="heading" style={styles.title}>
+        Edit Check-in
+      </AppText>
+      <AppText variant="mono" colorVariant="muted" style={styles.meta}>
+        Entry {id}
+      </AppText>
+      <AppText colorVariant="muted" style={styles.body}>
+        Edit flow coming soon.
+      </AppText>
 
       <View style={styles.spacer} />
 
-      {deleteError && <Text style={styles.deleteError}>{deleteError}</Text>}
+      {deleteError && <AppText style={styles.deleteError}>{deleteError}</AppText>}
       <Pressable
         onPress={handleDelete}
         style={({ pressed }) => [styles.deleteBtn, pressed && { opacity: 0.6 }]}
         accessibilityRole="button"
         accessibilityLabel="Delete this check-in"
       >
-        <Text style={styles.deleteBtnText}>Delete check-in</Text>
+        <AppText style={styles.deleteBtnText}>Delete check-in</AppText>
       </Pressable>
     </View>
   );
@@ -82,13 +88,12 @@ const styles = StyleSheet.create((theme) => ({
   title: {
     fontSize: 32,
     fontWeight: '700',
-    fontFamily: 'Fraunces',
     color: theme.colors.typography,
     letterSpacing: -0.5,
     marginBottom: 8,
   },
-  meta: { fontSize: 13, color: theme.colors.textMuted, marginBottom: 24 },
-  body: { fontSize: 15, color: theme.colors.textMuted, lineHeight: 22 },
+  meta: { fontSize: 13, marginBottom: 24 },
+  body: { fontSize: 15, lineHeight: 22 },
   spacer: { flex: 1 },
   deleteError: {
     fontSize: 13,

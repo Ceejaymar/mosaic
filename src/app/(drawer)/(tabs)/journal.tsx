@@ -8,6 +8,7 @@ import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
+import { AppText } from '@/src/components/app-text';
 import { DemoBadge } from '@/src/components/demo-badge';
 import { TopFade } from '@/src/components/top-fade';
 import { LAYOUT } from '@/src/constants/layout';
@@ -15,6 +16,7 @@ import { fetchMoodEntriesPage, type MoodEntry } from '@/src/db/repos/moodRepo';
 import { parseStoredTags } from '@/src/features/check-in/utils/parse-tags';
 import { getDemoEntriesPage } from '@/src/features/demo/generateDemoData';
 import { getMoodDisplayInfo } from '@/src/features/emotion-accordion/utils/mood-display';
+import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
 import { useAppStore } from '@/src/store/useApp';
 import { formatDayLabel, formatEntryTime } from '@/src/utils/format-date';
 
@@ -82,6 +84,7 @@ type EntryCardProps = {
 
 const EntryCard = memo(function EntryCard({ entry, onPress }: EntryCardProps) {
   const { theme } = useUnistyles();
+  const colors = useAccessibleColors();
   const { t } = useTranslation();
   const info = getMoodDisplayInfo(entry.primaryMood);
   const accentColor = info?.color ?? theme.colors.mosaicGold;
@@ -113,9 +116,9 @@ const EntryCard = memo(function EntryCard({ entry, onPress }: EntryCardProps) {
 
       <View style={cardStyles.body}>
         <View style={cardStyles.headlineRow}>
-          <Text style={[cardStyles.iAmFeeling, { color: theme.colors.textMuted }]}>
+          <AppText colorVariant="muted" style={cardStyles.iAmFeeling}>
             {t('journal.im_feeling')}
-          </Text>
+          </AppText>
           <Text style={[cardStyles.emotion, { color: accentColor }]}>{label}</Text>
         </View>
 
@@ -132,16 +135,18 @@ const EntryCard = memo(function EntryCard({ entry, onPress }: EntryCardProps) {
         {tags.length > 0 && (
           <View style={cardStyles.tagRow}>
             {tags.map((tag) => (
-              <View key={tag} style={[cardStyles.tag, { borderColor: theme.colors.divider }]}>
-                <Text style={[cardStyles.tagText, { color: theme.colors.textMuted }]}>{tag}</Text>
+              <View key={tag} style={[cardStyles.tag, { borderColor: colors.divider }]}>
+                <AppText colorVariant="muted" style={cardStyles.tagText}>
+                  {tag}
+                </AppText>
               </View>
             ))}
           </View>
         )}
 
-        <Text style={[cardStyles.time, { color: theme.colors.textMuted }]}>
+        <AppText colorVariant="muted" style={cardStyles.time}>
           {formatEntryTime(entry.occurredAt)}
-        </Text>
+        </AppText>
       </View>
     </Pressable>
   );
@@ -213,7 +218,9 @@ function EmptyState() {
   return (
     <View style={emptyStyles.container}>
       <Text style={emptyStyles.title}>{t('journal.empty_title')}</Text>
-      <Text style={emptyStyles.subtitle}>{t('journal.empty_subtitle')}</Text>
+      <AppText colorVariant="muted" style={emptyStyles.subtitle}>
+        {t('journal.empty_subtitle')}
+      </AppText>
     </View>
   );
 }
@@ -232,7 +239,6 @@ const emptyStyles = StyleSheet.create((theme) => ({
   },
   subtitle: {
     fontSize: 14,
-    color: theme.colors.textMuted,
   },
 }));
 
@@ -395,9 +401,9 @@ export default function Journal() {
   if (error) {
     return (
       <View style={[styles.container, styles.centered, { paddingTop: insets.top }]}>
-        <Text style={[styles.errorText, { color: theme.colors.textMuted }]}>
+        <AppText colorVariant="muted" style={styles.errorText}>
           {t('journal.error_message')}
-        </Text>
+        </AppText>
         <Pressable
           onPress={refreshEntries}
           style={({ pressed }) => [styles.retryBtn, { opacity: pressed ? 0.6 : 1 }]}

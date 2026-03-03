@@ -17,6 +17,8 @@ import migrations from '@/drizzle/migrations';
 
 import { db } from '@/src/db/client';
 import { storage } from '@/src/services/storage/mmkv';
+import { useAppStore } from '@/src/store/useApp';
+
 import '@/src/i18n/index';
 
 Notifications.setNotificationHandler({
@@ -74,6 +76,8 @@ function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     Fraunces: require('../assets/fonts/Fraunces-VariableFont.ttf'),
+    'OpenDyslexic-Regular': require('../assets/fonts/OpenDyslexic-Regular.otf'),
+    'OpenDyslexic-Bold': require('../assets/fonts/OpenDyslexic-Bold.otf'),
     ...FontAwesome.font,
   });
 
@@ -128,17 +132,24 @@ function RootLayoutNav() {
   const { rt } = useUnistyles();
 
   const currentTheme = rt.themeName;
+  const isDarkTheme = currentTheme === 'dark';
 
   return (
     <>
-      <SystemBars style={currentTheme === 'dark' ? 'light' : 'dark'} />
-      <ThemeProvider value={currentTheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <SystemBars style={isDarkTheme ? 'light' : 'dark'} />
+      <ThemeProvider value={isDarkTheme ? DarkTheme : DefaultTheme}>
         <GestureHandlerRootView style={{ flex: 1 }}>
           <Stack>
             <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
             <Stack.Screen
               name="check-in/[id]"
-              options={{ headerShown: false, gestureEnabled: true, animation: 'slide_from_right' }}
+              options={() => ({
+                headerShown: false,
+                gestureEnabled: true,
+                animation: useAppStore.getState().accessibility.reduceMotion
+                  ? 'none'
+                  : 'slide_from_right',
+              })}
             />
           </Stack>
         </GestureHandlerRootView>

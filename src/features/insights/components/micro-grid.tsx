@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Text, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
+import { AppText } from '@/src/components/app-text';
 import type { InsightEntry } from '@/src/features/insights/types';
 
 type Props = { entries: InsightEntry[] };
@@ -14,7 +15,7 @@ const DOW_CONFIG = [
   { id: 'thu', label: 'T', dayIndex: 4 },
   { id: 'fri', label: 'F', dayIndex: 5 },
   { id: 'sat', label: 'S', dayIndex: 6 },
-];
+] as const;
 
 export function MicroGrid({ entries }: Props) {
   const { theme } = useUnistyles();
@@ -105,7 +106,9 @@ export function MicroGrid({ entries }: Props) {
 
           return (
             <View key={id} style={styles.col}>
-              <Text style={[styles.label, { color: theme.colors.textMuted }]}>{label}</Text>
+              <AppText variant="mono" colorVariant="muted" style={styles.label}>
+                {label}
+              </AppText>
               {renderMiniTile(colors)}
             </View>
           );

@@ -5,13 +5,13 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  Text,
   TextInput,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
+import { AppText } from '@/src/components/app-text';
 import { PillButton } from '@/src/components/pill-button';
 import { TagSection } from '@/src/features/check-in/components/context-tags';
 import {
@@ -26,6 +26,7 @@ import {
   getEmotionColor,
   getEmotionNode,
 } from '@/src/features/emotion-accordion/utils/emotion-utils';
+import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
 import { hexToRgba, isLightColor } from '@/src/utils/color-ui';
 
 type Props = {
@@ -35,14 +36,22 @@ type Props = {
 };
 
 function CloseButton({ onPress }: { onPress: () => void }) {
+  const colors = useAccessibleColors();
+
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [styles.closeBtn, pressed && { opacity: 0.7 }]}
+      style={({ pressed }) => [
+        styles.closeBtn,
+        { backgroundColor: colors.divider },
+        pressed && { opacity: 0.7 },
+      ]}
       accessibilityRole="button"
       accessibilityLabel="Close"
     >
-      <Text style={styles.closeIcon}>✕</Text>
+      <AppText colorVariant="muted" style={styles.closeIcon}>
+        ✕
+      </AppText>
     </Pressable>
   );
 }
@@ -50,6 +59,7 @@ function CloseButton({ onPress }: { onPress: () => void }) {
 export const CheckInSheet = memo(function CheckInSheet({ visible, onClose, onSave }: Props) {
   const insets = useSafeAreaInsets();
   const { theme } = useUnistyles();
+  const colors = useAccessibleColors();
 
   const form = useCheckInForm(onSave, onClose);
 
@@ -57,7 +67,7 @@ export const CheckInSheet = memo(function CheckInSheet({ visible, onClose, onSav
 
   const selectedColor = useMemo(() => getEmotionColor(selectedNode), [selectedNode]);
 
-  const bannerBg = selectedColor ?? theme.colors.divider;
+  const bannerBg = selectedColor ?? colors.divider;
   const bannerTextColor = isLightColor(bannerBg) ? theme.colors.onAccent : '#ffffff';
 
   return (
@@ -74,12 +84,16 @@ export const CheckInSheet = memo(function CheckInSheet({ visible, onClose, onSav
       >
         {form.step === 'emotion' ? (
           <>
-            <View style={styles.handleBar} />
+            <View style={[styles.handleBar, { backgroundColor: colors.divider }]} />
 
             <View style={styles.header}>
               <View style={styles.flex1}>
-                <Text style={styles.title}>What are you feeling?</Text>
-                <Text style={styles.subtitle}>{getTimeSubtitle()}</Text>
+                <AppText variant="heading" style={styles.title}>
+                  What are you feeling?
+                </AppText>
+                <AppText variant="mono" colorVariant="muted" style={styles.subtitle}>
+                  {getTimeSubtitle()}
+                </AppText>
               </View>
               <CloseButton onPress={form.handleClose} />
             </View>
@@ -97,24 +111,28 @@ export const CheckInSheet = memo(function CheckInSheet({ visible, onClose, onSav
           </>
         ) : (
           <>
-            <View style={styles.step2Header}>
+            <View style={[styles.step2Header, { borderBottomColor: colors.divider }]}>
               <Pressable
                 onPress={() => form.setStep('emotion')}
                 style={({ pressed }) => pressed && { opacity: 0.7 }}
               >
-                <Text style={[styles.backBtn, { color: selectedColor ?? theme.colors.typography }]}>
+                <AppText
+                  style={[styles.backBtn, { color: selectedColor ?? theme.colors.typography }]}
+                >
                   ← Back
-                </Text>
+                </AppText>
               </Pressable>
 
               <View style={styles.selectedEmotionPill}>
                 <View
                   style={[
                     styles.emotionDot,
-                    { backgroundColor: selectedColor ?? theme.colors.textMuted },
+                    { backgroundColor: selectedColor ?? colors.textMuted },
                   ]}
                 />
-                <Text style={styles.selectedEmotionText}>{selectedNode?.label}</Text>
+                <AppText variant="heading" style={styles.selectedEmotionText}>
+                  {selectedNode?.label}
+                </AppText>
               </View>
 
               <CloseButton onPress={form.handleClose} />
@@ -126,26 +144,29 @@ export const CheckInSheet = memo(function CheckInSheet({ visible, onClose, onSav
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
             >
-              <View
-                style={[
-                  styles.emotionBanner,
-                  { backgroundColor: selectedColor ?? theme.colors.divider },
-                ]}
-              >
-                <Text style={[styles.emotionBannerPre, { color: hexToRgba(bannerTextColor, 0.7) }]}>
+              <View style={[styles.emotionBanner, { backgroundColor: bannerBg }]}>
+                <AppText
+                  variant="mono"
+                  style={[styles.emotionBannerPre, { color: hexToRgba(bannerTextColor, 0.7) }]}
+                >
                   I'm feeling
-                </Text>
-                <Text style={[styles.emotionBannerText, { color: bannerTextColor }]}>
+                </AppText>
+                <AppText
+                  variant="heading"
+                  style={[styles.emotionBannerText, { color: bannerTextColor }]}
+                >
                   {selectedNode?.label}
-                </Text>
+                </AppText>
               </View>
 
-              <Text style={styles.inputLabel}>What's on your mind?</Text>
+              <AppText variant="mono" colorVariant="muted" style={styles.inputLabel}>
+                What's on your mind?
+              </AppText>
               <View style={styles.inputContainer}>
                 <TextInput
                   style={styles.textInput}
                   placeholder="Add a note... (optional)"
-                  placeholderTextColor={theme.colors.textMuted}
+                  placeholderTextColor={colors.textMuted}
                   value={form.note}
                   onChangeText={form.setNote}
                   multiline
@@ -178,7 +199,12 @@ export const CheckInSheet = memo(function CheckInSheet({ visible, onClose, onSav
               />
             </ScrollView>
 
-            <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 20) }]}>
+            <View
+              style={[
+                styles.footer,
+                { paddingBottom: Math.max(insets.bottom, 20), borderTopColor: colors.divider },
+              ]}
+            >
               <PillButton label="Save check-in" onPress={form.handleSave} elevated />
             </View>
           </>
@@ -194,7 +220,6 @@ const styles = StyleSheet.create((theme) => ({
   handleBar: {
     width: 36,
     height: 4,
-    backgroundColor: theme.colors.divider,
     borderRadius: 2,
     alignSelf: 'center',
     marginTop: 12,
@@ -210,16 +235,14 @@ const styles = StyleSheet.create((theme) => ({
   title: {
     fontSize: 22,
     fontWeight: '700',
-    fontFamily: 'Fraunces',
     color: theme.colors.typography,
     letterSpacing: -0.66,
   },
-  subtitle: { fontSize: 13, color: theme.colors.textMuted, marginTop: 4, lineHeight: 22 },
+  subtitle: { fontSize: 13, marginTop: 4, lineHeight: 22 },
   closeBtn: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: theme.colors.divider,
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 16,
@@ -229,7 +252,7 @@ const styles = StyleSheet.create((theme) => ({
     shadowRadius: 4,
     elevation: 1,
   },
-  closeIcon: { fontSize: 13, color: theme.colors.textMuted },
+  closeIcon: { fontSize: 13 },
 
   // Step 2 Styles
   step2Header: {
@@ -240,7 +263,6 @@ const styles = StyleSheet.create((theme) => ({
     paddingTop: 20,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.divider,
   },
   backBtn: { fontSize: 15, fontWeight: '500' },
   selectedEmotionPill: { flexDirection: 'row', alignItems: 'center', gap: 8 },
@@ -248,7 +270,6 @@ const styles = StyleSheet.create((theme) => ({
   selectedEmotionText: {
     fontSize: 16,
     fontWeight: '700',
-    fontFamily: 'Fraunces',
     color: theme.colors.typography,
     textTransform: 'capitalize',
   },
@@ -263,7 +284,6 @@ const styles = StyleSheet.create((theme) => ({
   emotionBannerText: {
     fontSize: 36,
     fontWeight: '700',
-    fontFamily: 'Fraunces',
     textTransform: 'capitalize',
     lineHeight: 40,
     letterSpacing: -1.08,
@@ -271,7 +291,6 @@ const styles = StyleSheet.create((theme) => ({
   inputLabel: {
     fontSize: 12,
     fontWeight: '600',
-    color: theme.colors.textMuted,
     letterSpacing: 1.2,
     marginBottom: 8,
     textTransform: 'uppercase',
@@ -294,6 +313,5 @@ const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: 20,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.divider,
   },
 }));

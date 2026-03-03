@@ -9,6 +9,7 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { MainFab } from '@/src/components/fab';
 import { LAYOUT } from '@/src/constants/layout';
 import { hapticLight } from '@/src/lib/haptics/haptics';
+import { useAppStore } from '@/src/store/useApp';
 
 // 1. STABLE REFERENCE: Spacer Button
 // By moving this outside, React never unmounts/remounts it during tab switches.
@@ -42,17 +43,17 @@ const CustomDrawerButton = ({ tintColor }: { tintColor?: string }) => (
 export default function TabLayout() {
   const { theme } = useUnistyles();
   const insets = useSafeAreaInsets();
-
   const safeBottom = Math.max(insets.bottom, 12);
   const tabBarHeight = LAYOUT.TAB_BAR_HEIGHT + safeBottom;
+  const reduceMotion = useAppStore((s) => s.accessibility.reduceMotion);
 
   return (
     <View style={styles.root}>
       <Tabs
         detachInactiveScreens={false}
         screenListeners={{ tabPress: () => hapticLight() }}
-        screenOptions={{
-          animation: 'shift',
+        screenOptions={() => ({
+          animation: reduceMotion ? 'none' : 'shift',
           headerShown: false,
           headerLeft: CustomDrawerButton, // Using stable reference
           headerTransparent: true,
@@ -74,7 +75,7 @@ export default function TabLayout() {
               colors={['transparent', theme.colors.background, theme.colors.background]}
             />
           ),
-        }}
+        })}
       >
         <Tabs.Screen
           name="index"

@@ -5,6 +5,7 @@ import { Alert, Pressable, Text, useWindowDimensions, View } from 'react-native'
 import Animated, {
   Extrapolation,
   interpolate,
+  ReduceMotion,
   type SharedValue,
   useAnimatedScrollHandler,
   useAnimatedStyle,
@@ -14,6 +15,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
+import { AppText } from '@/src/components/app-text';
 import { DemoBadge } from '@/src/components/demo-badge';
 import { TopFade } from '@/src/components/top-fade';
 import { LAYOUT } from '@/src/constants/layout';
@@ -21,6 +23,7 @@ import { MonthGrid } from '@/src/features/canvas/components/month-grid';
 import { YearView } from '@/src/features/canvas/components/year-view';
 import { useCanvasDbData } from '@/src/features/canvas/hooks/useCanvasDbData';
 import { getDowLabels, getMonthName } from '@/src/features/canvas/utils/date-labels';
+import { useAppStore } from '@/src/store/useApp';
 
 const TOPBAR_H_PAD = 24;
 const GRID_H_PAD = 8;
@@ -77,9 +80,9 @@ const AnimatedMonth = memo(function AnimatedMonth({
         </Text>
         <View style={[styles.row, { gap: TILE_GAP, marginTop: 12 }]}>
           {dowLabels.map(({ key, label }) => (
-            <Text key={key} style={[styles.dowLabel, { width: tileSize }]}>
+            <AppText key={key} colorVariant="muted" style={[styles.dowLabel, { width: tileSize }]}>
               {label}
-            </Text>
+            </AppText>
           ))}
         </View>
       </Animated.View>
@@ -103,6 +106,8 @@ export default function CanvasScreen() {
   const { width: screenWidth } = useWindowDimensions();
   const { t } = useTranslation();
   const { theme } = useUnistyles();
+  const reduceMotion = useAppStore((s) => s.accessibility.reduceMotion);
+  const rm = reduceMotion ? ReduceMotion.Always : ReduceMotion.System;
 
   const [viewMode, setViewMode] = useState<'month' | 'year'>('month');
   const [isCompact, setIsCompact] = useState(false);
@@ -152,15 +157,15 @@ export default function CanvasScreen() {
     setIsYearMounted(true);
     setViewMode((prev) => {
       if (prev === 'month') {
-        monthOpacity.value = withTiming(0, { duration: 180 });
-        yearOpacity.value = withTiming(1, { duration: 180 });
+        monthOpacity.value = withTiming(0, { duration: 180, reduceMotion: rm });
+        yearOpacity.value = withTiming(1, { duration: 180, reduceMotion: rm });
         return 'year';
       }
-      yearOpacity.value = withTiming(0, { duration: 180 });
-      monthOpacity.value = withTiming(1, { duration: 180 });
+      yearOpacity.value = withTiming(0, { duration: 180, reduceMotion: rm });
+      monthOpacity.value = withTiming(1, { duration: 180, reduceMotion: rm });
       return 'month';
     });
-  }, [monthOpacity, yearOpacity]);
+  }, [monthOpacity, yearOpacity, rm]);
 
   return (
     <View style={styles.screen}>
@@ -195,9 +200,9 @@ export default function CanvasScreen() {
             onPress={toggleViewMode}
             style={({ pressed }) => [styles.toggleBtn, pressed && { opacity: 0.5 }]}
           >
-            <Text style={styles.toggleLabel}>
+            <AppText colorVariant="muted" style={styles.toggleLabel}>
               {viewMode === 'month' ? t('canvas.year') : t('canvas.month')}
-            </Text>
+            </AppText>
           </Pressable>
         </View>
       </View>
@@ -336,7 +341,6 @@ const styles = StyleSheet.create((theme) => ({
   toggleLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: theme.colors.textMuted,
     fontFamily: 'SpaceMono',
   },
   fill: { flex: 1 },
@@ -349,5 +353,5 @@ const styles = StyleSheet.create((theme) => ({
     letterSpacing: -0.4,
   },
   row: { flexDirection: 'row' },
-  dowLabel: { fontSize: 11, fontWeight: '600', textAlign: 'center', color: theme.colors.textMuted },
+  dowLabel: { fontSize: 11, fontWeight: '600', textAlign: 'center' },
 }));

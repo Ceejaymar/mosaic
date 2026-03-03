@@ -1,9 +1,10 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import Animated, {
   FadeIn,
   FadeOut,
+  ReduceMotion,
   useAnimatedProps,
   useAnimatedStyle,
   withSpring,
@@ -11,13 +12,16 @@ import Animated, {
 } from 'react-native-reanimated';
 import { StyleSheet } from 'react-native-unistyles';
 
+import { AppText } from '@/src/components/app-text';
+import { useAppStore } from '@/src/store/useApp';
+
 import type { EmotionGroup, EmotionNode } from '../types';
 import { muteColor } from '../utils/color';
 import { getGroupPalette } from '../utils/emotion-utils';
 import { Emotion } from './emotion';
 import { SkiaAura } from './skia-aura';
 
-const AnimatedText = Animated.createAnimatedComponent(Text);
+const AnimatedAppText = Animated.createAnimatedComponent(AppText);
 const AnimatedIcon = Animated.createAnimatedComponent(Ionicons);
 
 type Props = {
@@ -39,21 +43,29 @@ export function FocusGroup({
 }: Props) {
   const groupPalette = getGroupPalette(group.id);
   const mutedBackground = muteColor(group.color);
+  const reduceMotion = useAppStore((s) => s.accessibility.reduceMotion);
+  const rm = reduceMotion ? ReduceMotion.Always : ReduceMotion.System;
 
   const headerAnimStyle = useAnimatedStyle(() => ({
-    backgroundColor: withTiming(isFocused ? group.color : mutedBackground, { duration: 250 }),
-    // Fixed: Scale now uses withSpring for a subtler, snappier bounce
-    transform: [{ scale: withSpring(isFocused ? 1.02 : 1, { damping: 15, stiffness: 200 }) }],
+    backgroundColor: withTiming(isFocused ? group.color : mutedBackground, {
+      duration: 250,
+      reduceMotion: rm,
+    }),
+    transform: [
+      {
+        scale: withSpring(isFocused ? 1.02 : 1, { damping: 15, stiffness: 200, reduceMotion: rm }),
+      },
+    ],
   }));
 
   const textAnimStyle = useAnimatedStyle(() => ({
-    color: withTiming(isFocused ? '#000000' : '#FFFFFF', { duration: 250 }),
-    opacity: withTiming(isFocused ? 1 : 0.95, { duration: 250 }),
+    color: withTiming(isFocused ? '#000000' : '#FFFFFF', { duration: 250, reduceMotion: rm }),
+    opacity: withTiming(isFocused ? 1 : 0.95, { duration: 250, reduceMotion: rm }),
   }));
 
   const iconAnimProps = useAnimatedProps(() => ({
-    color: withTiming(isFocused ? '#000000' : '#FFFFFF', { duration: 250 }),
-    opacity: withTiming(isFocused ? 1 : 0.8, { duration: 250 }),
+    color: withTiming(isFocused ? '#000000' : '#FFFFFF', { duration: 250, reduceMotion: rm }),
+    opacity: withTiming(isFocused ? 1 : 0.8, { duration: 250, reduceMotion: rm }),
   }));
 
   return (
@@ -68,7 +80,9 @@ export function FocusGroup({
             pointerEvents="none"
           />
 
-          <AnimatedText style={[styles.headerText, textAnimStyle]}>{group.label}</AnimatedText>
+          <AnimatedAppText variant="heading" style={[styles.headerText, textAnimStyle]}>
+            {group.label}
+          </AnimatedAppText>
 
           <AnimatedIcon
             name={isFocused ? 'close' : 'chevron-down'}
@@ -80,8 +94,8 @@ export function FocusGroup({
 
       {isFocused && (
         <Animated.View
-          entering={FadeIn.duration(400)}
-          exiting={FadeOut.duration(200)}
+          entering={reduceMotion ? undefined : FadeIn.duration(400)}
+          exiting={reduceMotion ? undefined : FadeOut.duration(200)}
           style={styles.gridContainer}
         >
           <SkiaAura color={group.color} />
@@ -119,7 +133,6 @@ const styles = StyleSheet.create({
   headerText: {
     fontSize: 19,
     fontWeight: '700',
-    fontFamily: 'Fraunces',
     letterSpacing: -0.3,
   },
   gridContainer: {

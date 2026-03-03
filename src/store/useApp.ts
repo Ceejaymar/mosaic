@@ -28,7 +28,6 @@ export const useAppStore = create<State & Actions>()(
       theme: 'system',
       setTheme: (mode: Theme) => {
         set({ theme: mode });
-
         applyTheme(mode);
       },
 
@@ -37,9 +36,15 @@ export const useAppStore = create<State & Actions>()(
 
       accessibility: {
         disableLiquidGlass: false,
+        isDyslexicFont: false,
+        disableItalics: false,
+        highContrastText: false,
+        reduceMotion: false,
+        disableHaptics: false,
       },
-      setAccessibilitySetting: (key: keyof AccessibilitySettings, value: boolean) =>
-        set({ accessibility: { ...get().accessibility, [key]: value } }),
+      setAccessibilitySetting: (key: keyof AccessibilitySettings, value: boolean) => {
+        set({ accessibility: { ...get().accessibility, [key]: value } });
+      },
 
       isDemoMode: false,
       toggleDemoMode: () => set((s) => ({ isDemoMode: !s.isDemoMode })),
@@ -77,9 +82,19 @@ export const useAppStore = create<State & Actions>()(
         reminderTimes: state.reminderTimes,
       }),
 
+      merge: (persisted, current) => {
+        const p = persisted as Partial<State & Actions>;
+        return {
+          ...current,
+          ...p,
+          // Deep-merge accessibility so new default keys are never dropped
+          // when the persisted snapshot pre-dates a new field being added.
+          accessibility: { ...current.accessibility, ...(p.accessibility ?? {}) },
+        };
+      },
+
       onRehydrateStorage: () => (state) => {
         if (!state) return;
-
         applyTheme(state.theme);
       },
     },

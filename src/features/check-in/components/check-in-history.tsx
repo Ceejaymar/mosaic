@@ -4,6 +4,7 @@ import { StyleSheet } from 'react-native-unistyles';
 import type { MoodEntry } from '@/src/db/repos/moodRepo';
 import { getMoodDisplayInfo } from '@/src/features/check-in/utils/mood-helpers';
 import { parseStoredTags } from '@/src/features/check-in/utils/parse-tags';
+import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
 
 import { CheckInHistoryRow } from './check-in-history-row';
 
@@ -13,6 +14,8 @@ type Props = {
 };
 
 export function CheckInHistory({ entries, onEntryPress }: Props) {
+  const colors = useAccessibleColors();
+
   if (entries.length === 0) return null;
 
   return (
@@ -33,7 +36,9 @@ export function CheckInHistory({ entries, onEntryPress }: Props) {
               tags={parseStoredTags(entry.tags)}
               onPress={() => onEntryPress(entry.id)}
             />
-            {index < visible.length - 1 && <View style={styles.divider} />}
+            {index < visible.length - 1 && (
+              <View style={[styles.divider, { backgroundColor: colors.divider }]} />
+            )}
           </View>
         ))}
     </View>
@@ -54,7 +59,6 @@ const styles = StyleSheet.create((theme) => ({
   },
   divider: {
     height: 1,
-    backgroundColor: theme.colors.divider,
     marginLeft: 64,
   },
 }));

@@ -163,7 +163,7 @@ export const DayTile = memo(function DayTile({ colors, day, size }: Props) {
             bottom: 4,
             right: 4,
             fontSize: Math.max(6, Math.round(size * 0.18)),
-            color: theme.colors.textMuted,
+            color: theme.colors.typography,
           }}
         >
           {day}
