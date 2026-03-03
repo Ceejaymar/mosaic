@@ -85,7 +85,7 @@ const styles = StyleSheet.create(() => ({
   tagGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
     paddingVertical: 8,
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     borderRadius: 100,
     borderWidth: 1.5,
   },
