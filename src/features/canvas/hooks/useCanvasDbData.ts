@@ -44,12 +44,13 @@ export async function prefetchMonth(year: number, month: number): Promise<void> 
  * Fetches real mood entries from the DB for a given month/year and returns
  * them shaped as CanvasDay[]. Results are cached so re-visiting a month is instant.
  */
-export function useCanvasDbData(month: number, year: number): CanvasDbState {
+export function useCanvasDbData(month: number, year: number, refreshKey = 0): CanvasDbState {
   const isDemoMode = useAppStore((s) => s.isDemoMode);
   const [days, setDays] = useState<CanvasDay[]>(() => _cache.get(`${year}-${month}`) ?? []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<unknown>(null);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: refreshKey is an intentional cache-bust trigger
   useEffect(() => {
     if (isDemoMode) {
       const demoEntries = getDemoEntriesForMonth(year, month);
@@ -88,7 +89,7 @@ export function useCanvasDbData(month: number, year: number): CanvasDbState {
     return () => {
       cancelled = true;
     };
-  }, [month, year, isDemoMode]);
+  }, [month, year, isDemoMode, refreshKey]);
 
   return { days, loading, error };
 }
