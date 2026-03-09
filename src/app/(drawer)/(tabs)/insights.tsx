@@ -33,6 +33,7 @@ import { useInsightsData } from '@/src/features/insights/hooks/useInsightsData';
 import type { TimeFrame } from '@/src/features/insights/types';
 import { generateObservations } from '@/src/features/insights/utils/observations';
 import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
+import { useRefreshOnFocus } from '@/src/hooks/useRefreshOnFocus';
 import { hapticSelection } from '@/src/lib/haptics/haptics';
 import { getDayWithSuffix } from '@/src/utils/format-date';
 
@@ -253,13 +254,16 @@ export default function InsightsScreen() {
 
   const [timeFrame, setTimeFrame] = useState<TimeFrame>('week');
   const [offset, setOffset] = useState(0);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  useRefreshOnFocus(useCallback(() => setRefreshKey((k) => k + 1), []));
 
   const handleTimeFrameChange = useCallback((tf: TimeFrame) => {
     setTimeFrame(tf);
     setOffset(0);
   }, []);
 
-  const entries = useInsightsData(timeFrame, offset);
+  const entries = useInsightsData(timeFrame, offset, refreshKey);
   const observations = useMemo(() => generateObservations(entries), [entries]);
   const hasEnoughData = entries.length >= 3;
 
