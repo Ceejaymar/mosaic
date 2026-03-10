@@ -264,7 +264,7 @@ export default function CanvasScreen() {
               initialScrollIndex={monthList.length - 1}
               contentContainerStyle={{
                 paddingTop: verticalPadding + 40,
-                paddingBottom: LAYOUT.TAB_BAR_HEIGHT + insets.bottom,
+                paddingBottom: 0,
               }}
               snapToInterval={itemHeight}
               decelerationRate="fast"
