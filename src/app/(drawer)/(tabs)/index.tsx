@@ -1,16 +1,8 @@
 import { DrawerToggleButton } from '@react-navigation/drawer';
-import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Text, View } from 'react-native';
-import Animated, {
-  Extrapolation,
-  interpolate,
-  useAnimatedScrollHandler,
-  useAnimatedStyle,
-  useSharedValue,
-} from 'react-native-reanimated';
+import { ActivityIndicator, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
@@ -32,6 +24,7 @@ import { useTodayCheckIns } from '@/src/features/check-in/hooks/useCheckIns';
 import { getMoodDisplayInfo } from '@/src/features/check-in/utils/mood-helpers';
 import { getCurrentTimeSlot } from '@/src/features/check-in/utils/time-of-day';
 import { hapticLight } from '@/src/lib/haptics/haptics';
+import { LETTER_SPACING } from '@/src/styles/design-tokens';
 import { enableAndroidLayoutAnimations } from '@/src/utils/animations';
 import { getFormattedDateLabel } from '@/src/utils/format-date';
 
@@ -99,46 +92,30 @@ export default function CheckInScreen() {
       });
   }, [todayEntries]);
 
-  // --- Scroll Tracking for the Hamburger Background ---
-  const scrollY = useSharedValue(0);
-  const scrollHandler = useAnimatedScrollHandler((event) => {
-    scrollY.value = event.contentOffset.y;
-  });
-
-  const hamburgerBgStyle = useAnimatedStyle(() => {
-    // Fades in between 20px and 70px of scrolling
-    const opacity = interpolate(scrollY.value, [20, 70], [0, 1], Extrapolation.CLAMP);
-    return { opacity };
-  });
-
   return (
     <View style={styles.container}>
-      {/* 1. THE TOP FADE */}
-      <TopFade height={insets.top + 60} />
+      {/* 1. THE TOP FADE — full-width seamless gradient covering the hamburger area */}
+      <TopFade height={insets.top + 80} />
 
       {/* 2. THE FLOATING HAMBURGER MENU */}
       <View style={[styles.floatingMenu, { top: insets.top + 8 }]}>
-        <Animated.View style={[styles.hamburgerSquircle, hamburgerBgStyle]}>
-          <BlurView intensity={75} tint="dark" style={StyleSheet.absoluteFill} />
-        </Animated.View>
         <DrawerToggleButton tintColor={theme.colors.typography} />
       </View>
 
       {/* 3. SCROLL CONTENT */}
-      <Animated.ScrollView
-        onScroll={scrollHandler}
-        scrollEventThrottle={16}
-        contentContainerStyle={{
-          paddingTop: insets.top + 72,
-          paddingBottom: LAYOUT.TAB_BAR_HEIGHT + insets.bottom + 20,
-          paddingHorizontal: 20,
-        }}
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            paddingTop: insets.top + 72,
+            paddingBottom: LAYOUT.TAB_BAR_HEIGHT + insets.bottom + 20,
+          },
+        ]}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.greeting}>
-          How are you feeling{'\n'}
-          {t(`dashboard.time_of_day.${currentSlot}`)}?
-        </Text>
+        <AppText font="heading" colorVariant="primary" style={styles.greeting}>
+          {`How are you feeling\n${t(`dashboard.time_of_day.${currentSlot}`)}?`}
+        </AppText>
 
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <AppText font="mono" colorVariant="muted" style={styles.dateLabel}>
@@ -175,7 +152,7 @@ export default function CheckInScreen() {
 
         <DailyStatsRow entriesCount={todayEntries.length} streakCount={1} />
         <CheckInHistory entries={todayEntries} onEntryPress={handleEntryPress} />
-      </Animated.ScrollView>
+      </ScrollView>
 
       <CheckInSheet visible={sheetVisible} onClose={handleCloseSheet} onSave={handleSave} />
     </View>
@@ -186,28 +163,22 @@ const styles = StyleSheet.create((theme) => ({
   container: { flex: 1, backgroundColor: theme.colors.background },
   floatingMenu: {
     position: 'absolute',
-    left: 8,
+    left: theme.spacing[2],
     zIndex: 100,
     width: 48,
     height: 48,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  hamburgerSquircle: {
-    ...StyleSheet.absoluteFillObject,
-    borderRadius: theme.radius.card,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+  scrollContent: {
+    paddingHorizontal: theme.spacing[5],
   },
   greeting: {
     fontSize: theme.fontSize.display,
-    fontFamily: 'Fraunces',
     fontWeight: '700',
     lineHeight: 41,
-    letterSpacing: -0.5,
+    letterSpacing: LETTER_SPACING.tight,
     marginBottom: theme.spacing[2],
-    color: theme.colors.typography,
   },
   dateLabel: {
     fontSize: 12,
