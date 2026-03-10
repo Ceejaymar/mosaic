@@ -43,6 +43,8 @@ const lightTheme = {
     overlayDark: 'rgba(0,0,0,0.12)',
     /** Full modal backdrop overlay */
     modalOverlay: 'rgba(0,0,0,0.5)',
+    /** iOS shadow color — always dark so shadows render correctly */
+    shadow: '#000000',
   },
 };
 
@@ -77,6 +79,8 @@ const darkTheme = {
     overlayDark: 'rgba(0,0,0,0.20)',
     /** Full modal backdrop overlay */
     modalOverlay: 'rgba(0,0,0,0.5)',
+    /** iOS shadow color — transparent in dark mode to avoid white halo */
+    shadow: 'transparent',
   },
 };
 
