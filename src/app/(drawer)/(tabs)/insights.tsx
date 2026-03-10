@@ -390,14 +390,14 @@ const styles = StyleSheet.create((theme) => ({
     zIndex: 10,
   },
   pageTitle: {
-    fontSize: 28,
+    fontSize: theme.fontSize['2xl'],
     fontFamily: 'Fraunces',
     fontWeight: '700',
     color: theme.colors.typography,
     letterSpacing: -0.4,
   },
   dropdownTrigger: { paddingVertical: 8, paddingLeft: 16 },
-  dropdownTriggerText: { fontSize: 15, fontWeight: '600', fontFamily: 'SpaceMono' },
+  dropdownTriggerText: { fontSize: theme.fontSize.md, fontWeight: '600', fontFamily: 'SpaceMono' },
   dropdownMenu: {
     position: 'absolute',
     top: 40,
@@ -415,7 +415,7 @@ const styles = StyleSheet.create((theme) => ({
   dropdownItemText: { fontSize: 14, fontWeight: '600', fontFamily: 'SpaceMono' },
   snapperContainer: { height: 44, justifyContent: 'center', marginBottom: 0 },
   snapperItem: { alignItems: 'center', justifyContent: 'center' },
-  snapperText: { fontSize: 15, fontWeight: '700', fontFamily: 'SpaceMono' },
+  snapperText: { fontSize: theme.fontSize.md, fontWeight: '700', fontFamily: 'SpaceMono' },
   scrollContent: { paddingBottom: 40 },
   section: { marginTop: 16, marginBottom: 24 },
   sectionTitle: {
@@ -442,5 +442,5 @@ const styles = StyleSheet.create((theme) => ({
   observationText: { fontSize: 16, lineHeight: 22, fontFamily: 'Fraunces', fontWeight: '500' },
   emptyState: { paddingHorizontal: 24, paddingVertical: 64, alignItems: 'center' },
   emptyTitle: { fontSize: 18, fontFamily: 'Fraunces', fontWeight: '600', marginBottom: 8 },
-  emptyText: { fontSize: 15, textAlign: 'center', lineHeight: 22 },
+  emptyText: { fontSize: theme.fontSize.md, textAlign: 'center', lineHeight: 22 },
 }));

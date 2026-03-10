@@ -46,9 +46,9 @@ export function PillButton({
 
 const styles = StyleSheet.create((theme) => ({
   base: (disabled: boolean, size: 'sm' | 'md', elevated: boolean) => ({
-    borderRadius: 100,
-    paddingVertical: size === 'sm' ? 12 : 16,
-    paddingHorizontal: size === 'sm' ? 24 : 0,
+    borderRadius: theme.radius.pill,
+    paddingVertical: size === 'sm' ? theme.spacing[3] : theme.spacing[4],
+    paddingHorizontal: size === 'sm' ? theme.spacing[6] : 0,
     alignItems: 'center',
     backgroundColor: disabled ? theme.colors.surface : theme.colors.mosaicGold,
     ...(elevated && {
@@ -60,7 +60,7 @@ const styles = StyleSheet.create((theme) => ({
     }),
   }),
   label: (disabled: boolean, size: 'sm' | 'md', textMuted: string) => ({
-    fontSize: size === 'sm' ? 15 : 17,
+    fontSize: size === 'sm' ? theme.fontSize.md : theme.fontSize.base,
     fontWeight: '600' as const,
     color: disabled ? textMuted : theme.colors.onAccent,
   }),

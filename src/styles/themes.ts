@@ -1,5 +1,22 @@
+import { FONT_SIZE, RADIUS, SPACING } from './design-tokens';
+
+// ─── Shared Design Tokens ─────────────────────────────────────────────────────
+// Spacing, radius, and font-size are theme-invariant — same values in light and
+// dark. Spreading them into each theme object makes them accessible as
+// `theme.spacing`, `theme.radius`, and `theme.fontSize` in every Unistyles
+// stylesheet, with full TypeScript inference.
+
+const sharedTokens = {
+  spacing: SPACING,
+  radius: RADIUS,
+  fontSize: FONT_SIZE,
+} as const;
+
+// ─── Light Theme ──────────────────────────────────────────────────────────────
+
 const lightTheme = {
   isDark: false as const,
+  ...sharedTokens,
   colors: {
     background: '#ffffff',
     typography: '#000000',
@@ -20,11 +37,20 @@ const lightTheme = {
     tabBarGradient: ['rgba(255,255,255,0)', 'rgba(255,255,255,0.9)'],
     /** Tab bar label/icon when not selected (light background) */
     tabInactive: 'rgba(0,0,0,0.45)',
+    /** Light (white-tinted) overlay — gradient highlights, surface shimmer */
+    overlayLight: 'rgba(255,255,255,0.12)',
+    /** Dark (black-tinted) overlay — tile scrims, shadow gradients */
+    overlayDark: 'rgba(0,0,0,0.12)',
+    /** Full modal backdrop overlay */
+    modalOverlay: 'rgba(0,0,0,0.5)',
   },
 };
 
+// ─── Dark Theme ───────────────────────────────────────────────────────────────
+
 const darkTheme = {
   isDark: true as const,
+  ...sharedTokens,
   colors: {
     background: '#000000',
     typography: '#ffffff',
@@ -45,8 +71,16 @@ const darkTheme = {
     tabBarGradient: ['rgba(0,0,0,0)', 'rgba(0,0,0,0.9)'],
     /** Tab bar label/icon when not selected (dark background) */
     tabInactive: 'rgba(255,255,255,0.45)',
+    /** Light (white-tinted) overlay — gradient highlights, surface shimmer */
+    overlayLight: 'rgba(255,255,255,0.12)',
+    /** Dark (black-tinted) overlay — tile scrims, shadow gradients (stronger in dark) */
+    overlayDark: 'rgba(0,0,0,0.20)',
+    /** Full modal backdrop overlay */
+    modalOverlay: 'rgba(0,0,0,0.5)',
   },
 };
+
+// ─── Export ───────────────────────────────────────────────────────────────────
 
 export const appThemes = {
   light: lightTheme,

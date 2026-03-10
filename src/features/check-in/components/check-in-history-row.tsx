@@ -70,8 +70,8 @@ const styles = StyleSheet.create((theme) => ({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 16,
-    gap: 8,
+    paddingVertical: theme.spacing[4],
+    gap: theme.spacing[2],
   },
   time: {
     fontSize: 12,
@@ -80,7 +80,7 @@ const styles = StyleSheet.create((theme) => ({
   squircle: {
     width: SQUIRCLE_SIZE,
     height: SQUIRCLE_SIZE,
-    borderRadius: 4,
+    borderRadius: theme.radius.tight,
   },
   label: {
     fontSize: 18,
@@ -94,7 +94,7 @@ const styles = StyleSheet.create((theme) => ({
   tagsContent: {
     flexGrow: 1,
     justifyContent: 'flex-end',
-    gap: 8,
+    gap: theme.spacing[2],
     paddingLeft: FADE_WIDTH,
   },
   fadeLeft: {
@@ -107,7 +107,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   tag: {
     backgroundColor: theme.colors.surface,
-    borderRadius: 100,
+    borderRadius: theme.radius.pill,
     paddingHorizontal: 10,
     paddingVertical: 4,
   },

@@ -76,17 +76,17 @@ const styles = StyleSheet.create((theme) => ({
     fontFamily: 'Fraunces',
     color: theme.colors.typography,
     letterSpacing: -0.4,
-    marginBottom: 16,
+    marginBottom: theme.spacing[4],
   },
   barContainer: {
     flexDirection: 'row',
     width: '100%',
-    gap: 8,
+    gap: theme.spacing[2],
   },
   timeColumn: {
     flex: 1,
     alignItems: 'center',
-    gap: 8,
+    gap: theme.spacing[2],
   },
   capsule: {
     flexDirection: 'row',
@@ -99,7 +99,7 @@ const styles = StyleSheet.create((theme) => ({
     height: '100%',
   },
   label: {
-    fontSize: 11,
+    fontSize: theme.fontSize.xs,
     fontWeight: '600',
     fontFamily: 'SpaceMono',
   },

@@ -127,17 +127,17 @@ export default function AccessibilityScreen() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create((theme) => ({
   container: { flex: 1 },
   header: {
-    paddingHorizontal: 16,
-    paddingBottom: 12,
+    paddingHorizontal: theme.spacing[4],
+    paddingBottom: theme.spacing[3],
   },
   headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: theme.spacing[2],
   },
   iconBtn: {
     padding: 8,
@@ -155,15 +155,15 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   listBlock: {},
-  divider: { height: 1, marginHorizontal: 16 },
+  divider: { height: 1, marginHorizontal: theme.spacing[4] },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingHorizontal: theme.spacing[4],
+    paddingVertical: theme.spacing[4],
   },
   rowText: { flex: 1, paddingRight: 16 },
-  rowLabel: { fontSize: 17, fontWeight: '600', marginBottom: 2 },
-  rowSub: { fontSize: 13, lineHeight: 18 },
-});
+  rowLabel: { fontSize: theme.fontSize.base, fontWeight: '600', marginBottom: 2 },
+  rowSub: { fontSize: theme.fontSize.sm, lineHeight: 18 },
+}));

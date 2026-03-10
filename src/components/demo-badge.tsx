@@ -32,16 +32,16 @@ export function DemoBadge() {
   );
 }
 
-const styles = StyleSheet.create(() => ({
+const styles = StyleSheet.create((theme) => ({
   badge: {
-    paddingHorizontal: 8,
+    paddingHorizontal: theme.spacing[2],
     paddingVertical: 3,
     borderRadius: 10,
     borderWidth: 1,
-    marginLeft: 8,
+    marginLeft: theme.spacing[2],
   },
   label: {
-    fontSize: 11,
+    fontSize: theme.fontSize.xs,
     fontWeight: '600',
     fontFamily: 'SpaceMono',
   },

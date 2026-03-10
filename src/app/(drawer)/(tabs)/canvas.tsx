@@ -318,7 +318,7 @@ const styles = StyleSheet.create((theme) => ({
     paddingBottom: 4,
   },
   pageTitle: {
-    fontSize: 28,
+    fontSize: theme.fontSize['2xl'],
     fontFamily: 'Fraunces',
     fontWeight: '700',
     color: theme.colors.typography,
@@ -359,12 +359,12 @@ const styles = StyleSheet.create((theme) => ({
   fill: { flex: 1 },
   absoluteFill: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   monthPageLabel: {
-    fontSize: 20,
+    fontSize: theme.fontSize.lg,
     fontWeight: '700',
     fontFamily: 'Fraunces',
     color: theme.colors.typography,
     letterSpacing: -0.4,
   },
   row: { flexDirection: 'row' },
-  dowLabel: { fontSize: 11, fontWeight: '600', textAlign: 'center' },
+  dowLabel: { fontSize: theme.fontSize.xs, fontWeight: '600', textAlign: 'center' },
 }));

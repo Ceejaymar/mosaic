@@ -7,9 +7,6 @@ import { useUnistyles } from 'react-native-unistyles';
 const CORNER_SMOOTHING = 0.8;
 const FILL = { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 } as const;
 
-/** Semi-transparent gradient overlay for depth on each color segment */
-const SEGMENT_OVERLAY: readonly [string, string] = ['rgba(255,255,255,0.12)', 'rgba(0,0,0,0.10)'];
-
 type Props = {
   colors: string[]; // 0–4 hex colors
   day?: number; // date number to show; omit to hide label
@@ -17,6 +14,8 @@ type Props = {
 };
 
 function ColorSegments({ colors, size }: { colors: string[]; size: number }) {
+  const { theme } = useUnistyles();
+  const segmentOverlay = [theme.colors.overlayLight, theme.colors.overlayDark] as const;
   const half = size / 2;
 
   if (colors.length === 0) return null;
@@ -25,7 +24,7 @@ function ColorSegments({ colors, size }: { colors: string[]; size: number }) {
     return (
       <>
         <View style={[FILL, { backgroundColor: colors[0] }]} />
-        <LinearGradient colors={SEGMENT_OVERLAY} style={FILL} />
+        <LinearGradient colors={segmentOverlay} style={FILL} />
       </>
     );
   }
@@ -53,7 +52,7 @@ function ColorSegments({ colors, size }: { colors: string[]; size: number }) {
             backgroundColor: colors[1],
           }}
         />
-        <LinearGradient colors={SEGMENT_OVERLAY} style={FILL} />
+        <LinearGradient colors={segmentOverlay} style={FILL} />
       </>
     );
   }
@@ -91,7 +90,7 @@ function ColorSegments({ colors, size }: { colors: string[]; size: number }) {
             backgroundColor: colors[2],
           }}
         />
-        <LinearGradient colors={SEGMENT_OVERLAY} style={FILL} />
+        <LinearGradient colors={segmentOverlay} style={FILL} />
       </>
     );
   }
@@ -139,7 +138,7 @@ function ColorSegments({ colors, size }: { colors: string[]; size: number }) {
           backgroundColor: colors[3],
         }}
       />
-      <LinearGradient colors={SEGMENT_OVERLAY} style={FILL} />
+      <LinearGradient colors={segmentOverlay} style={FILL} />
     </>
   );
 }

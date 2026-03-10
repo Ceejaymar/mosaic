@@ -1,6 +1,6 @@
 import { Pressable } from 'react-native';
 import Animated, { ReduceMotion, useAnimatedStyle, withSpring } from 'react-native-reanimated';
-import { StyleSheet } from 'react-native-unistyles';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
 import { useAppStore } from '@/src/store/useApp';
@@ -15,6 +15,7 @@ type Props = {
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export function Emotion({ label, color, isSelected, onPress }: Props) {
+  const { theme } = useUnistyles();
   const reduceMotion = useAppStore((s) => s.accessibility.reduceMotion);
   const rm = reduceMotion ? ReduceMotion.Always : ReduceMotion.System;
 
@@ -40,7 +41,7 @@ export function Emotion({ label, color, isSelected, onPress }: Props) {
         style={[
           styles.text,
           {
-            color: isSelected ? '#050505' : '#888888',
+            color: isSelected ? theme.colors.onAccent : theme.colors.textMuted,
             fontWeight: isSelected ? '700' : '600',
           },
         ]}
@@ -51,18 +52,18 @@ export function Emotion({ label, color, isSelected, onPress }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create((theme) => ({
   container: {
     width: '31%', // Gives enough room to scale up without hitting the parent's overflow mask
-    paddingVertical: 12,
-    borderRadius: 100,
+    paddingVertical: theme.spacing[3],
+    borderRadius: theme.radius.pill,
     borderWidth: 1.5,
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: theme.spacing[2],
   },
   text: {
-    fontSize: 13,
+    fontSize: theme.fontSize.sm,
     textTransform: 'capitalize',
     includeFontPadding: false,
   },
-});
+}));

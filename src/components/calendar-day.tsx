@@ -27,6 +27,6 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: 16,
     fontWeight: 'bold',
     fontFamily: 'Fraunces',
-    color: 'white',
+    color: theme.colors.onAccent,
   },
 }));

@@ -50,6 +50,7 @@ export function MainFab() {
         styles.fab,
         {
           backgroundColor: theme.colors.mosaicGold,
+          shadowColor: theme.colors.typography,
           bottom: fabBottom,
         },
         fabAnimatedStyle,
@@ -71,7 +72,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 100,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.4,
     shadowRadius: 12,

@@ -467,21 +467,21 @@ export default function NotificationsScreen() {
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create((theme) => ({
   container: { flex: 1 },
   header: {
-    paddingHorizontal: 16,
-    paddingBottom: 12,
+    paddingHorizontal: theme.spacing[4],
+    paddingBottom: theme.spacing[3],
   },
   headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8, // Space between the icons and the giant title below
+    marginBottom: theme.spacing[2],
   },
   iconBtn: {
     padding: 8,
-    marginLeft: -8, // Optical alignment so the icon sits flush left
+    marginLeft: -8,
   },
   title: {
     fontSize: 32,
@@ -489,7 +489,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: -0.5,
   },
-  content: { paddingHorizontal: 16, paddingTop: 8, gap: 24 },
+  content: { paddingHorizontal: theme.spacing[4], paddingTop: 8, gap: 24 },
 
   row: {
     flexDirection: 'row',
@@ -498,7 +498,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderBottomWidth: 1,
   },
-  rowLabel: { fontSize: 17, fontWeight: '600' },
+  rowLabel: { fontSize: theme.fontSize.base, fontWeight: '600' },
   rowSub: { fontSize: 13, fontFamily: 'SpaceMono', marginTop: 2 },
 
   deniedBlock: {
@@ -512,13 +512,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: theme.spacing[2],
   },
   deniedSub: {
     fontSize: 14,
     textAlign: 'center',
     lineHeight: 20,
-    marginBottom: 16,
+    marginBottom: theme.spacing[4],
   },
   openSettingsBtn: {
     paddingHorizontal: 20,
@@ -555,7 +555,7 @@ const styles = StyleSheet.create({
     paddingRight: 16,
   },
   timeIcon: { opacity: 0.4 },
-  timeText: { fontSize: 18, fontWeight: '500', flex: 1 },
+  timeText: { fontSize: theme.fontSize.lg, fontWeight: '500', flex: 1 },
   deleteBtn: { padding: 10, marginLeft: 8 },
   addBtnMain: {
     flexDirection: 'row',
@@ -564,18 +564,18 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 14,
     marginTop: 8,
-    marginBottom: 24,
+    marginBottom: theme.spacing[6],
   },
   addBtnMainText: { fontSize: 15, fontWeight: '600' },
   pressed: { opacity: 0.6 },
 
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: theme.colors.modalOverlay,
   },
   sheet: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: theme.radius.sheet,
+    borderTopRightRadius: theme.radius.sheet,
     paddingHorizontal: 20,
     paddingTop: 12,
   },
@@ -584,14 +584,14 @@ const styles = StyleSheet.create({
     height: 4,
     borderRadius: 2,
     alignSelf: 'center',
-    marginBottom: 16,
+    marginBottom: theme.spacing[4],
   },
   sheetTitle: {
-    fontSize: 20,
+    fontSize: theme.fontSize.lg,
     fontFamily: 'Fraunces',
     fontWeight: '700',
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: theme.spacing[6],
   },
   pickerRow: {
     flexDirection: 'row',
@@ -610,13 +610,13 @@ const styles = StyleSheet.create({
     fontSize: 13,
     textAlign: 'center',
     fontFamily: 'SpaceMono',
-    marginBottom: 8,
+    marginBottom: theme.spacing[2],
   },
   saveBtn: {
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
-    marginTop: 16,
+    marginTop: theme.spacing[4],
     marginBottom: 12,
   },
   saveBtnText: { fontSize: 16, fontWeight: '700' },
@@ -628,4 +628,4 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   surpriseBtnText: { fontSize: 14, fontFamily: 'SpaceMono' },
-});
+}));

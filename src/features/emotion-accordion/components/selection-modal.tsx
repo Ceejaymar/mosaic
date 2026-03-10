@@ -2,7 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Pressable, type StyleProp, Text, View, type ViewStyle } from 'react-native';
 import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { StyleSheet } from 'react-native-unistyles';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
 
@@ -16,11 +16,12 @@ type Props = {
 };
 
 export default function SelectionModal({ selectedNode, onPress, style }: Props) {
+  const { theme } = useUnistyles();
   const insets = useSafeAreaInsets();
 
   if (!selectedNode) return null;
 
-  const color = getEmotionColor(selectedNode) ?? '#808080';
+  const color = getEmotionColor(selectedNode) ?? theme.colors.lightGrey;
   const bottom = Math.max(insets.bottom, 16) + 8;
 
   return (
@@ -63,8 +64,8 @@ const styles = StyleSheet.create((theme) => ({
     left: 20,
     right: 20,
     backgroundColor: theme.colors.surface,
-    borderRadius: 16,
-    shadowColor: '#000',
+    borderRadius: theme.radius.card,
+    shadowColor: theme.colors.typography,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.2,
     shadowRadius: 12,
@@ -75,17 +76,17 @@ const styles = StyleSheet.create((theme) => ({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 12,
-    padding: 20,
+    gap: theme.spacing[3],
+    padding: theme.spacing[5],
   },
   container: { flex: 1 },
-  value: { fontSize: 28, fontWeight: '700', fontFamily: 'Fraunces' },
-  synonyms: { fontSize: 11, textTransform: 'capitalize' },
+  value: { fontSize: theme.fontSize['2xl'], fontWeight: '700', fontFamily: 'Fraunces' },
+  synonyms: { fontSize: theme.fontSize.xs, textTransform: 'capitalize' },
   description: {
     fontSize: 14,
     color: theme.colors.typography,
     fontWeight: '600',
-    marginTop: 8,
+    marginTop: theme.spacing[2],
     textTransform: 'lowercase',
     minHeight: 34,
   },
