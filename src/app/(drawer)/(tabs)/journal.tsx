@@ -135,7 +135,7 @@ const EntryCard = memo(function EntryCard({ entry, onPress }: EntryCardProps) {
   }, [entry.id, onPress]);
 
   // Mood gradient passed to Surface — eliminates a stacked LinearGradient inside the card body.
-  const gradientColors = [hexAlpha(accentColor, 0.1), hexAlpha(accentColor, 0)] as const;
+  const gradientColors = [hexAlpha(accentColor, 0), hexAlpha(accentColor, 0.2)] as const;
 
   return (
     <Pressable
