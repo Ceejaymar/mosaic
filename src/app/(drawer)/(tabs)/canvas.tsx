@@ -354,15 +354,15 @@ const styles = StyleSheet.create((theme) => ({
   controls: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-end',
-    gap: theme.spacing[2],
+    justifyContent: 'center',
+    minHeight: 36,
   },
   compactBtn: {
+    position: 'absolute',
+    right: 145,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
     gap: theme.spacing[1],
-    minWidth: 96,
     paddingHorizontal: theme.spacing[2],
     paddingVertical: theme.spacing[2],
   },
@@ -372,6 +372,8 @@ const styles = StyleSheet.create((theme) => ({
   viewToggleGroup: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-end',
+    width: 110,
     paddingVertical: theme.spacing[2],
   },
   toggleActive: {
