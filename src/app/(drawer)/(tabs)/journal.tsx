@@ -69,7 +69,7 @@ const dhStyles = StyleSheet.create((theme) => ({
     fontWeight: '600' as const,
     letterSpacing: -0.5,
     color: theme.colors.typography,
-    paddingHorizontal: 20,
+    paddingHorizontal: theme.spacing[5],
     paddingTop: 28,
     paddingBottom: 8,
   },
@@ -111,7 +111,7 @@ const EntryCard = memo(function EntryCard({ entry, onPress }: EntryCardProps) {
         colors={gradientColors}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={[StyleSheet.absoluteFill, { borderRadius: 20 }]}
+        style={[StyleSheet.absoluteFill, { borderRadius: theme.radius.sheet }]}
       />
 
       <View style={cardStyles.body}>
@@ -152,19 +152,19 @@ const EntryCard = memo(function EntryCard({ entry, onPress }: EntryCardProps) {
   );
 });
 
-const cardStyles = StyleSheet.create((_theme) => ({
+const cardStyles = StyleSheet.create((theme) => ({
   card: {
-    marginHorizontal: 16,
-    marginVertical: 8,
-    borderRadius: 20,
+    marginHorizontal: theme.spacing[4],
+    marginVertical: theme.spacing[2],
+    borderRadius: theme.radius.sheet,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.14,
     shadowRadius: 10,
     elevation: 3,
   },
   body: {
-    padding: 20,
-    gap: 8,
+    padding: theme.spacing[5],
+    gap: theme.spacing[2],
   },
   headlineRow: {
     flexDirection: 'row' as const,
@@ -182,7 +182,7 @@ const cardStyles = StyleSheet.create((_theme) => ({
     fontWeight: '700' as const,
   },
   note: {
-    fontSize: 20,
+    fontSize: theme.fontSize.lg,
     lineHeight: 28,
     fontFamily: 'Fraunces',
     fontWeight: '400' as const,
@@ -191,12 +191,12 @@ const cardStyles = StyleSheet.create((_theme) => ({
   tagRow: {
     flexDirection: 'row' as const,
     flexWrap: 'wrap' as const,
-    gap: 8,
+    gap: theme.spacing[2],
   },
   tag: {
     borderWidth: 1,
-    borderRadius: 20,
-    paddingHorizontal: 12,
+    borderRadius: theme.radius.sheet,
+    paddingHorizontal: theme.spacing[3],
     paddingVertical: 4,
   },
   tagText: {
@@ -229,7 +229,7 @@ const emptyStyles = StyleSheet.create((theme) => ({
   container: {
     paddingTop: 80,
     alignItems: 'center' as const,
-    gap: 8,
+    gap: theme.spacing[2],
   },
   title: {
     fontSize: 18,
@@ -459,12 +459,12 @@ const styles = StyleSheet.create((theme) => ({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingTop: 12,
-    paddingBottom: 16,
+    paddingHorizontal: theme.spacing[6],
+    paddingTop: theme.spacing[3],
+    paddingBottom: theme.spacing[4],
   },
   pageTitle: {
-    fontSize: 28,
+    fontSize: theme.fontSize['2xl'],
     fontFamily: 'Fraunces',
     fontWeight: '700',
     color: theme.colors.typography,
@@ -475,11 +475,11 @@ const styles = StyleSheet.create((theme) => ({
     justifyContent: 'center' as const,
   },
   errorText: {
-    fontSize: 15,
-    marginBottom: 16,
+    fontSize: theme.fontSize.md,
+    marginBottom: theme.spacing[4],
   },
   retryBtn: {
-    paddingHorizontal: 20,
-    paddingVertical: 8,
+    paddingHorizontal: theme.spacing[5],
+    paddingVertical: theme.spacing[2],
   },
 }));

@@ -7,8 +7,6 @@ import { formatTime } from '@/src/features/check-in/utils/format-time';
 import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
 
 const GAP = 4;
-const CONTAINER_RADIUS = 20;
-const TILE_RADIUS = 4;
 
 export type MosaicTileData = {
   id: string;
@@ -132,11 +130,11 @@ const styles = StyleSheet.create((theme) => ({
     width: '100%',
     aspectRatio: 1,
     backgroundColor: theme.colors.surface,
-    borderRadius: CONTAINER_RADIUS,
+    borderRadius: theme.radius.sheet,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 12,
+    gap: theme.spacing[3],
   },
   plusCircle: {
     width: 64,
@@ -150,26 +148,31 @@ const styles = StyleSheet.create((theme) => ({
   container: {
     width: '100%',
     aspectRatio: 1,
-    borderRadius: CONTAINER_RADIUS,
+    borderRadius: theme.radius.sheet,
     overflow: 'hidden',
     gap: GAP,
   },
   row: { flexDirection: 'row', gap: GAP },
   flex1: { flex: 1 },
-  tile: { borderRadius: TILE_RADIUS, justifyContent: 'flex-end', padding: 16, overflow: 'hidden' },
+  tile: {
+    borderRadius: theme.radius.tight,
+    justifyContent: 'flex-end',
+    padding: theme.spacing[4],
+    overflow: 'hidden',
+  },
   scrim: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.22)',
+    backgroundColor: theme.colors.overlayDark,
   },
   tileLabel: {
     fontSize: 18,
     fontWeight: '700',
     fontFamily: 'Fraunces',
-    color: '#fff',
+    color: theme.colors.onAccent,
     letterSpacing: -0.54,
   },
   tileTime: { fontSize: 12, color: 'rgba(255,255,255,0.65)', marginTop: 4 },

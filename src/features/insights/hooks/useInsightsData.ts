@@ -135,7 +135,11 @@ async function fetchRealEntries(timeFrame: TimeFrame, offset: number): Promise<M
 
 // ─── Hook ────────────────────────────────────────────────────────────────────
 
-export function useInsightsData(timeFrame: TimeFrame, offset: number): InsightEntry[] {
+export function useInsightsData(
+  timeFrame: TimeFrame,
+  offset: number,
+  refreshKey = 0,
+): InsightEntry[] {
   const isDemoMode = useAppStore((s) => s.isDemoMode);
   const [realEntries, setRealEntries] = useState<InsightEntry[]>([]);
 
@@ -146,6 +150,7 @@ export function useInsightsData(timeFrame: TimeFrame, offset: number): InsightEn
   }, [isDemoMode, timeFrame, offset]);
 
   // Real mode: async DB fetch
+  // biome-ignore lint/correctness/useExhaustiveDependencies: refreshKey is an intentional refetch trigger
   useEffect(() => {
     if (isDemoMode) return;
 
@@ -163,7 +168,7 @@ export function useInsightsData(timeFrame: TimeFrame, offset: number): InsightEn
     return () => {
       cancelled = true;
     };
-  }, [isDemoMode, timeFrame, offset]);
+  }, [isDemoMode, timeFrame, offset, refreshKey]);
 
   return isDemoMode ? demoEntries : realEntries;
 }

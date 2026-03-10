@@ -7,7 +7,7 @@ import { StyleSheet } from 'react-native-unistyles';
 import { AppText } from '@/src/components/app-text';
 
 import type { EmotionNode } from '../types';
-import { getEmotionColor } from '../utils/emotion-utils';
+import { getEmotionColorOrDefault } from '../utils/emotion-utils';
 
 type Props = {
   selectedNode: EmotionNode | null;
@@ -20,7 +20,7 @@ export default function SelectionModal({ selectedNode, onPress, style }: Props) 
 
   if (!selectedNode) return null;
 
-  const color = getEmotionColor(selectedNode) ?? '#808080';
+  const color = getEmotionColorOrDefault(selectedNode);
   const bottom = Math.max(insets.bottom, 16) + 8;
 
   return (
@@ -63,29 +63,29 @@ const styles = StyleSheet.create((theme) => ({
     left: 20,
     right: 20,
     backgroundColor: theme.colors.surface,
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
+    borderRadius: theme.radius.card,
+    shadowColor: theme.colors.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
     shadowRadius: 12,
-    elevation: 10,
+    elevation: 6,
     overflow: 'hidden',
   },
   pressable: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 12,
-    padding: 20,
+    gap: theme.spacing[3],
+    padding: theme.spacing[5],
   },
   container: { flex: 1 },
-  value: { fontSize: 28, fontWeight: '700', fontFamily: 'Fraunces' },
-  synonyms: { fontSize: 11, textTransform: 'capitalize' },
+  value: { fontSize: theme.fontSize['2xl'], fontWeight: '700', fontFamily: 'Fraunces' },
+  synonyms: { fontSize: theme.fontSize.xs, textTransform: 'capitalize' },
   description: {
-    fontSize: 14,
+    fontSize: theme.fontSize.sm,
     color: theme.colors.typography,
     fontWeight: '600',
-    marginTop: 8,
+    marginTop: theme.spacing[2],
     textTransform: 'lowercase',
     minHeight: 34,
   },

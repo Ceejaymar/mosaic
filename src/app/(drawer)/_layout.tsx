@@ -216,7 +216,7 @@ export default function Layout() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create((theme) => ({
   container: { flex: 1 },
   innerContainer: { flex: 1 },
   header: {
@@ -229,21 +229,21 @@ const styles = StyleSheet.create({
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: theme.spacing[2],
   },
   iconBtn: { padding: 16 },
   headerTitle: {
-    fontSize: 28,
+    fontSize: theme.fontSize['2xl'],
     fontFamily: 'Fraunces',
     fontWeight: '700',
     letterSpacing: -0.5,
   },
-  scrollContent: { paddingTop: 8, paddingBottom: 24 },
+  scrollContent: { paddingTop: 8, paddingBottom: theme.spacing[6] },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 8,
+    paddingVertical: theme.spacing[2],
   },
   rowLeft: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   rowLabel: { fontSize: 18, fontWeight: '500' },
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: theme.spacing[2],
   },
   versionText: { fontSize: 12, fontFamily: 'SpaceMono' },
-});
+}));

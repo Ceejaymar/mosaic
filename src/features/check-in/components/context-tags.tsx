@@ -73,8 +73,8 @@ export function TagSection({ title, tags, selected, color, onToggle }: TagSectio
   );
 }
 
-const styles = StyleSheet.create(() => ({
-  container: { marginBottom: 24 },
+const styles = StyleSheet.create((theme) => ({
+  container: { marginBottom: theme.spacing[6] },
   title: {
     fontSize: 12,
     fontWeight: '600',
@@ -82,11 +82,11 @@ const styles = StyleSheet.create(() => ({
     marginBottom: 10,
     textTransform: 'uppercase',
   },
-  tagGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  tagGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing[2] },
   chip: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 100,
+    paddingVertical: theme.spacing[2],
+    paddingHorizontal: theme.spacing[4],
+    borderRadius: theme.radius.pill,
     borderWidth: 1.5,
   },
   chipText: {

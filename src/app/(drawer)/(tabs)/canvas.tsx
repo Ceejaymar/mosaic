@@ -21,8 +21,9 @@ import { TopFade } from '@/src/components/top-fade';
 import { LAYOUT } from '@/src/constants/layout';
 import { MonthGrid } from '@/src/features/canvas/components/month-grid';
 import { YearView } from '@/src/features/canvas/components/year-view';
-import { useCanvasDbData } from '@/src/features/canvas/hooks/useCanvasDbData';
+import { invalidateMonthCache, useCanvasDbData } from '@/src/features/canvas/hooks/useCanvasDbData';
 import { getDowLabels, getMonthName } from '@/src/features/canvas/utils/date-labels';
+import { useRefreshOnFocus } from '@/src/hooks/useRefreshOnFocus';
 import { useAppStore } from '@/src/store/useApp';
 
 const TOPBAR_H_PAD = 24;
@@ -48,6 +49,7 @@ const AnimatedMonth = memo(function AnimatedMonth({
   itemHeight,
   tileSize,
   onDayPress,
+  refreshKey,
 }: {
   item: MonthItem;
   index: number;
@@ -55,9 +57,10 @@ const AnimatedMonth = memo(function AnimatedMonth({
   itemHeight: number;
   tileSize: number;
   onDayPress: (date: string) => void;
+  refreshKey: number;
 }) {
   const { i18n } = useTranslation();
-  const { days: data } = useCanvasDbData(item.month, item.year);
+  const { days: data } = useCanvasDbData(item.month, item.year, refreshKey);
   const dowLabels = getDowLabels(i18n.language);
 
   const gridAnimStyle = useAnimatedStyle(() => {
@@ -114,6 +117,15 @@ export default function CanvasScreen() {
   const [containerHeight, setContainerHeight] = useState(0);
   const [isYearMounted, setIsYearMounted] = useState(false);
   const [overviewYear, setOverviewYear] = useState(new Date().getFullYear());
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  useRefreshOnFocus(
+    useCallback(() => {
+      const now = new Date();
+      invalidateMonthCache(now.getFullYear(), now.getMonth());
+      setRefreshKey((k) => k + 1);
+    }, []),
+  );
 
   const monthList = useMemo(() => buildMonthList(MONTHS_BACK), []);
 
@@ -227,6 +239,7 @@ export default function CanvasScreen() {
                   itemHeight={itemHeight}
                   tileSize={tileSize}
                   onDayPress={handleDayPress}
+                  refreshKey={refreshKey}
                 />
               )}
               getItemLayout={getItemLayout}
@@ -305,7 +318,7 @@ const styles = StyleSheet.create((theme) => ({
     paddingBottom: 4,
   },
   pageTitle: {
-    fontSize: 28,
+    fontSize: theme.fontSize['2xl'],
     fontFamily: 'Fraunces',
     fontWeight: '700',
     color: theme.colors.typography,
@@ -346,12 +359,12 @@ const styles = StyleSheet.create((theme) => ({
   fill: { flex: 1 },
   absoluteFill: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   monthPageLabel: {
-    fontSize: 20,
+    fontSize: theme.fontSize.lg,
     fontWeight: '700',
     fontFamily: 'Fraunces',
     color: theme.colors.typography,
     letterSpacing: -0.4,
   },
   row: { flexDirection: 'row' },
-  dowLabel: { fontSize: 11, fontWeight: '600', textAlign: 'center' },
+  dowLabel: { fontSize: theme.fontSize.xs, fontWeight: '600', textAlign: 'center' },
 }));

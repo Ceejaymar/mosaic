@@ -31,10 +31,9 @@ export function getTimeSlotLabel(slot: TimeSlot): string {
 }
 
 export function getTimeSubtitle(): string {
-  const time = new Date().toLocaleTimeString('en-US', {
+  const time = new Date().toLocaleTimeString([], {
     hour: 'numeric',
     minute: '2-digit',
-    hour12: true,
   });
   const slot = getTimeSlotLabel(getCurrentTimeSlot());
   return `${time} · ${slot}`;

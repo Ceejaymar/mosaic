@@ -80,9 +80,9 @@ const styles = StyleSheet.create((theme) => ({
     fontFamily: 'Fraunces',
     color: theme.colors.typography,
     letterSpacing: -0.4,
-    marginBottom: 16,
+    marginBottom: theme.spacing[4],
   },
-  list: { gap: 16 },
+  list: { gap: theme.spacing[4] },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -90,10 +90,10 @@ const styles = StyleSheet.create((theme) => ({
   },
   label: {
     flex: 1,
-    fontSize: 15,
+    fontSize: theme.fontSize.md,
     fontWeight: '500',
     color: theme.colors.typography,
-    marginRight: 16,
+    marginRight: theme.spacing[4],
   },
   pillContainer: {
     flex: 2,

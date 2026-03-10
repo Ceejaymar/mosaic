@@ -19,3 +19,8 @@ export function getEmotionColor(node: EmotionNode | null): string | null {
   const raw = palette?.[node.colorIndex] ?? null;
   return raw ? muteColor(raw) : null;
 }
+
+/** Returns the muted display color for a node, falling back to a neutral within the feature. */
+export function getEmotionColorOrDefault(node: EmotionNode | null): string {
+  return getEmotionColor(node) ?? '#808080';
+}
