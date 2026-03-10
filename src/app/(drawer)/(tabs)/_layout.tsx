@@ -29,7 +29,7 @@ function TabBarOverlay({ height, colors }: { height: number; colors: [string, st
       }}
       pointerEvents="none"
     >
-      <LinearGradient colors={colors} locations={[0, 0.6, 1]} style={StyleSheet.absoluteFill} />
+      <LinearGradient colors={colors} locations={[0, 0.5, 1]} style={StyleSheet.absoluteFill} />
     </View>
   );
 }
@@ -71,8 +71,12 @@ export default function TabLayout() {
           },
           tabBarBackground: () => (
             <TabBarOverlay
-              height={tabBarHeight + 20}
-              colors={['transparent', theme.colors.background, theme.colors.background]}
+              height={tabBarHeight + 100}
+              colors={[
+                'transparent',
+                theme.isDark ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.8)',
+                theme.colors.background,
+              ]}
             />
           ),
         })}
