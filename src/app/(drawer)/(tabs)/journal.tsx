@@ -4,13 +4,16 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { memo, useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, View } from 'react-native';
+import { useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
+import { BlurHeader } from '@/src/components/blur-header';
 import { DemoBadge } from '@/src/components/demo-badge';
-import { TopFade } from '@/src/components/top-fade';
+import { Screen } from '@/src/components/screen';
+import { Surface } from '@/src/components/surface';
 import { LAYOUT } from '@/src/constants/layout';
 import { fetchMoodEntriesPage, type MoodEntry } from '@/src/db/repos/moodRepo';
 import { parseStoredTags } from '@/src/features/check-in/utils/parse-tags';
@@ -59,19 +62,19 @@ function buildListItems(entries: MoodEntry[], notesOnly: boolean): ListItem[] {
 // ─── DayHeaderRow ─────────────────────────────────────────────────────────────
 
 function DayHeaderRow({ label }: { label: string }) {
-  return <Text style={dhStyles.label}>{label}</Text>;
+  return (
+    <AppText font="heading" variant="xl" colorVariant="primary" style={dhStyles.label}>
+      {label}
+    </AppText>
+  );
 }
 
 const dhStyles = StyleSheet.create((theme) => ({
   label: {
-    fontSize: 22,
-    fontFamily: 'Fraunces',
     fontWeight: '600' as const,
-    letterSpacing: -0.5,
-    color: theme.colors.typography,
     paddingHorizontal: theme.spacing[5],
     paddingTop: 28,
-    paddingBottom: 8,
+    paddingBottom: theme.spacing[2],
   },
 }));
 
@@ -99,61 +102,67 @@ const EntryCard = memo(function EntryCard({ entry, onPress }: EntryCardProps) {
     <Pressable
       onPress={handlePress}
       style={({ pressed }) => [
-        cardStyles.card,
-        {
-          backgroundColor: theme.colors.tileBackground,
-          shadowColor: theme.colors.tileShadowColor,
-          opacity: pressed ? 0.78 : 1,
-        },
+        cardStyles.pressable,
+        { shadowColor: theme.colors.tileShadowColor, opacity: pressed ? 0.78 : 1 },
       ]}
     >
-      <LinearGradient
-        colors={gradientColors}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[StyleSheet.absoluteFill, { borderRadius: theme.radius.sheet }]}
-      />
+      <Surface
+        variant="sheet"
+        bordered={false}
+        style={{ backgroundColor: theme.colors.tileBackground }}
+      >
+        <LinearGradient
+          colors={gradientColors}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
 
-      <View style={cardStyles.body}>
-        <View style={cardStyles.headlineRow}>
-          <AppText colorVariant="muted" style={cardStyles.iAmFeeling}>
-            {t('journal.im_feeling')}
-          </AppText>
-          <Text style={[cardStyles.emotion, { color: accentColor }]}>{label}</Text>
-        </View>
-
-        {entry.note ? (
-          <Text
-            style={[cardStyles.note, { color: theme.colors.typography }]}
-            numberOfLines={3}
-            ellipsizeMode="tail"
-          >
-            {entry.note}
-          </Text>
-        ) : null}
-
-        {tags.length > 0 && (
-          <View style={cardStyles.tagRow}>
-            {tags.map((tag) => (
-              <View key={tag} style={[cardStyles.tag, { borderColor: colors.divider }]}>
-                <AppText colorVariant="muted" style={cardStyles.tagText}>
-                  {tag}
-                </AppText>
-              </View>
-            ))}
+        <View style={cardStyles.body}>
+          <View style={cardStyles.headlineRow}>
+            <AppText font="heading" colorVariant="muted" style={cardStyles.iAmFeeling}>
+              {t('journal.im_feeling')}
+            </AppText>
+            <AppText font="heading" style={[cardStyles.emotion, { color: accentColor }]}>
+              {label}
+            </AppText>
           </View>
-        )}
 
-        <AppText colorVariant="muted" style={cardStyles.time}>
-          {formatEntryTime(entry.occurredAt)}
-        </AppText>
-      </View>
+          {entry.note ? (
+            <AppText
+              font="heading"
+              colorVariant="primary"
+              style={cardStyles.note}
+              numberOfLines={3}
+              ellipsizeMode="tail"
+            >
+              {entry.note}
+            </AppText>
+          ) : null}
+
+          {tags.length > 0 && (
+            <View style={cardStyles.tagRow}>
+              {tags.map((tag) => (
+                <View key={tag} style={[cardStyles.tag, { borderColor: colors.divider }]}>
+                  <AppText colorVariant="muted" style={cardStyles.tagText}>
+                    {tag}
+                  </AppText>
+                </View>
+              ))}
+            </View>
+          )}
+
+          <AppText colorVariant="muted" style={cardStyles.time}>
+            {formatEntryTime(entry.occurredAt)}
+          </AppText>
+        </View>
+      </Surface>
     </Pressable>
   );
 });
 
 const cardStyles = StyleSheet.create((theme) => ({
-  card: {
+  pressable: {
     marginHorizontal: theme.spacing[4],
     marginVertical: theme.spacing[2],
     borderRadius: theme.radius.sheet,
@@ -173,18 +182,15 @@ const cardStyles = StyleSheet.create((theme) => ({
   },
   iAmFeeling: {
     fontSize: 14,
-    fontFamily: 'Fraunces',
     fontStyle: 'italic' as const,
   },
   emotion: {
     fontSize: 14,
-    fontFamily: 'Fraunces',
     fontWeight: '700' as const,
   },
   note: {
     fontSize: theme.fontSize.lg,
     lineHeight: 28,
-    fontFamily: 'Fraunces',
     fontWeight: '400' as const,
     letterSpacing: -0.2,
   },
@@ -197,7 +203,7 @@ const cardStyles = StyleSheet.create((theme) => ({
     borderWidth: 1,
     borderRadius: theme.radius.sheet,
     paddingHorizontal: theme.spacing[3],
-    paddingVertical: 4,
+    paddingVertical: theme.spacing[1],
   },
   tagText: {
     fontSize: 12,
@@ -207,7 +213,7 @@ const cardStyles = StyleSheet.create((theme) => ({
     fontSize: 12,
     fontWeight: '400' as const,
     letterSpacing: 0.2,
-    marginTop: 4,
+    marginTop: theme.spacing[1],
   },
 }));
 
@@ -217,7 +223,9 @@ function EmptyState() {
   const { t } = useTranslation();
   return (
     <View style={emptyStyles.container}>
-      <Text style={emptyStyles.title}>{t('journal.empty_title')}</Text>
+      <AppText font="heading" colorVariant="primary" style={emptyStyles.title}>
+        {t('journal.empty_title')}
+      </AppText>
       <AppText colorVariant="muted" style={emptyStyles.subtitle}>
         {t('journal.empty_subtitle')}
       </AppText>
@@ -227,15 +235,13 @@ function EmptyState() {
 
 const emptyStyles = StyleSheet.create((theme) => ({
   container: {
-    paddingTop: 80,
+    paddingTop: theme.spacing[20],
     alignItems: 'center' as const,
     gap: theme.spacing[2],
   },
   title: {
     fontSize: 18,
-    fontFamily: 'Fraunces',
     fontWeight: '600' as const,
-    color: theme.colors.typography,
   },
   subtitle: {
     fontSize: 14,
@@ -258,9 +264,9 @@ function FilterToggle({ notesOnly, onToggle }: FilterToggleProps) {
         notesOnly ? t('journal.filter_a11y_show_all') : t('journal.filter_a11y_with_notes')
       }
     >
-      <Text style={{ fontSize: 15, fontWeight: '500', color: theme.colors.mosaicGold }}>
+      <AppText variant="md" style={{ fontWeight: '500' as const, color: theme.colors.mosaicGold }}>
         {notesOnly ? t('journal.filter_with_notes') : t('journal.filter_show_all')}
-      </Text>
+      </AppText>
     </Pressable>
   );
 }
@@ -290,6 +296,8 @@ export default function Journal() {
   const hasMoreRef = useRef(true);
   const offsetRef = useRef(0);
   const entriesRef = useRef<MoodEntry[]>([]);
+
+  const scrollY = useSharedValue(0);
 
   const toggleNotesOnly = useCallback(() => setNotesOnly((v) => !v), []);
 
@@ -392,15 +400,15 @@ export default function Journal() {
 
   if (isLoading) {
     return (
-      <View style={[styles.container, styles.centered, { paddingTop: insets.top }]}>
+      <Screen style={[styles.centered, { paddingTop: insets.top }]}>
         <ActivityIndicator color={theme.colors.mosaicGold} />
-      </View>
+      </Screen>
     );
   }
 
   if (error) {
     return (
-      <View style={[styles.container, styles.centered, { paddingTop: insets.top }]}>
+      <Screen style={[styles.centered, { paddingTop: insets.top }]}>
         <AppText colorVariant="muted" style={styles.errorText}>
           {t('journal.error_message')}
         </AppText>
@@ -408,25 +416,30 @@ export default function Journal() {
           onPress={refreshEntries}
           style={({ pressed }) => [styles.retryBtn, { opacity: pressed ? 0.6 : 1 }]}
         >
-          <Text style={{ color: theme.colors.mosaicGold, fontWeight: '600', fontSize: 15 }}>
+          <AppText
+            variant="md"
+            style={{ color: theme.colors.mosaicGold, fontWeight: '600' as const }}
+          >
             {t('journal.error_retry')}
-          </Text>
+          </AppText>
         </Pressable>
-      </View>
+      </Screen>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <TopFade height={insets.top + 80} />
-
-      <View style={[styles.topBar, { top: insets.top }]}>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <Text style={styles.pageTitle}>{t('journal.title', 'Journal')}</Text>
-          <DemoBadge />
+    <Screen>
+      <BlurHeader scrollY={scrollY}>
+        <View style={styles.headerContent}>
+          <View style={styles.headerLeft}>
+            <AppText font="heading" variant="2xl" colorVariant="primary" style={styles.pageTitle}>
+              {t('journal.title', 'Journal')}
+            </AppText>
+            <DemoBadge />
+          </View>
+          <FilterToggle notesOnly={notesOnly} onToggle={toggleNotesOnly} />
         </View>
-        <FilterToggle notesOnly={notesOnly} onToggle={toggleNotesOnly} />
-      </View>
+      </BlurHeader>
 
       <FlashList
         data={listItems}
@@ -436,40 +449,21 @@ export default function Journal() {
         onEndReached={loadNextPage}
         onEndReachedThreshold={0.4}
         ListEmptyComponent={EmptyState}
+        onScroll={(e) => {
+          scrollY.value = e.nativeEvent.contentOffset.y;
+        }}
+        scrollEventThrottle={16}
         contentContainerStyle={{
           paddingBottom,
-          paddingTop: insets.top + 60, // Pushed down past the absolute header
+          paddingTop: insets.top + 60,
         }}
         showsVerticalScrollIndicator={false}
       />
-    </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create((theme) => ({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  topBar: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    zIndex: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: theme.spacing[6],
-    paddingTop: theme.spacing[3],
-    paddingBottom: theme.spacing[4],
-  },
-  pageTitle: {
-    fontSize: theme.fontSize['2xl'],
-    fontFamily: 'Fraunces',
-    fontWeight: '700',
-    color: theme.colors.typography,
-    letterSpacing: -0.4,
-  },
   centered: {
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
@@ -481,5 +475,18 @@ const styles = StyleSheet.create((theme) => ({
   retryBtn: {
     paddingHorizontal: theme.spacing[5],
     paddingVertical: theme.spacing[2],
+  },
+  headerContent: {
+    flex: 1,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+  },
+  headerLeft: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+  },
+  pageTitle: {
+    fontWeight: '700' as const,
   },
 }));

@@ -89,7 +89,7 @@ export default function AccessibilityScreen() {
           </Pressable>
         </View>
 
-        <AppText variant="heading" style={[styles.title, { color: theme.colors.typography }]}>
+        <AppText font="heading" style={[styles.title, { color: theme.colors.typography }]}>
           Accessibility
         </AppText>
       </View>

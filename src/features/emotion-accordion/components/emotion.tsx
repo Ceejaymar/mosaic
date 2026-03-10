@@ -36,7 +36,7 @@ export function Emotion({ label, color, isSelected, onPress }: Props) {
       style={[styles.container, animStyle]}
     >
       <AppText
-        variant="heading"
+        font="heading"
         numberOfLines={1}
         style={[
           styles.text,

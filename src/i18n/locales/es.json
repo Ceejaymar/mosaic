@@ -31,6 +31,7 @@
     }
   },
   "journal": {
+    "title": "Diario",
     "im_feeling": "Me siento ",
     "empty_title": "Nada por aquí todavía",
     "empty_subtitle": "Tus estados de ánimo aparecerán aquí",

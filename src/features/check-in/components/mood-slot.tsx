@@ -79,7 +79,7 @@ export function MoodSlot({ slot, isCurrentSlot, moodColor, moodLabel, onPress }:
             <>
               <View style={[styles.statusDot, { backgroundColor: moodColor }]} />
               <AppText
-                variant="heading"
+                font="heading"
                 style={[styles.moodLabel, { color: moodColor }]}
                 numberOfLines={1}
               >

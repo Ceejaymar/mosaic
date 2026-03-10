@@ -141,7 +141,7 @@ export default function CheckInScreen() {
         </Text>
 
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <AppText variant="mono" colorVariant="muted" style={styles.dateLabel}>
+          <AppText font="mono" colorVariant="muted" style={styles.dateLabel}>
             {getFormattedDateLabel()}
           </AppText>
           <DemoBadge />

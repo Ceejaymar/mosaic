@@ -34,6 +34,7 @@
     }
   },
   "journal": {
+    "title": "Journal",
     "im_feeling": "I'm feeling ",
     "empty_title": "Nothing here yet",
     "empty_subtitle": "Your mood check-ins will appear here",
