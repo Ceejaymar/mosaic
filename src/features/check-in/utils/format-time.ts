@@ -1,8 +1,7 @@
 import i18n from '@/src/i18n';
 
 export function uses24HourClock(): boolean {
-  // Test by formatting a known 2 PM time — if "am"/"pm" appears, it's 12h
-  return !/[ap]m/i.test(new Date(2000, 0, 1, 14, 0).toLocaleTimeString());
+  return !Intl.DateTimeFormat(i18n.language, { hour: 'numeric' }).resolvedOptions().hour12;
 }
 
 export function formatTime(iso: string): string {

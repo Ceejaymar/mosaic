@@ -50,7 +50,7 @@ export function MainFab() {
         styles.fab,
         {
           backgroundColor: theme.colors.mosaicGold,
-          shadowColor: theme.colors.typography,
+          shadowColor: theme.colors.shadow,
           bottom: fabBottom,
         },
         fabAnimatedStyle,

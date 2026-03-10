@@ -2,12 +2,12 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Pressable, type StyleProp, Text, View, type ViewStyle } from 'react-native';
 import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
 
 import type { EmotionNode } from '../types';
-import { getEmotionColor } from '../utils/emotion-utils';
+import { getEmotionColorOrDefault } from '../utils/emotion-utils';
 
 type Props = {
   selectedNode: EmotionNode | null;
@@ -16,12 +16,11 @@ type Props = {
 };
 
 export default function SelectionModal({ selectedNode, onPress, style }: Props) {
-  const { theme } = useUnistyles();
   const insets = useSafeAreaInsets();
 
   if (!selectedNode) return null;
 
-  const color = getEmotionColor(selectedNode) ?? theme.colors.lightGrey;
+  const color = getEmotionColorOrDefault(selectedNode);
   const bottom = Math.max(insets.bottom, 16) + 8;
 
   return (
