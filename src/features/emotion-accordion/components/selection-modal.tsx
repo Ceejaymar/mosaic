@@ -82,7 +82,7 @@ const styles = StyleSheet.create((theme) => ({
   value: { fontSize: theme.fontSize['2xl'], fontWeight: '700', fontFamily: 'Fraunces' },
   synonyms: { fontSize: theme.fontSize.xs, textTransform: 'capitalize' },
   description: {
-    fontSize: 14,
+    fontSize: theme.fontSize.sm,
     color: theme.colors.typography,
     fontWeight: '600',
     marginTop: theme.spacing[2],
