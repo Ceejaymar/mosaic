@@ -67,7 +67,13 @@ function DayHeaderRow({ label }: { label: string }) {
 
   if (!match) {
     return (
-      <AppText font="heading" variant="xl" colorVariant="primary" style={dhStyles.label}>
+      <AppText
+        font="heading"
+        variant="xl"
+        colorVariant="primary"
+        style={dhStyles.label}
+        accessibilityRole="header"
+      >
         {label}
       </AppText>
     );
@@ -75,15 +81,40 @@ function DayHeaderRow({ label }: { label: string }) {
 
   const [, before, suffix, after] = match;
   return (
-    <View style={dhStyles.row}>
-      <AppText font="heading" variant="xl" colorVariant="primary" style={dhStyles.mainText}>
+    <View
+      style={dhStyles.row}
+      accessible={true}
+      accessibilityLabel={label}
+      accessibilityRole="header"
+    >
+      <AppText
+        font="heading"
+        variant="xl"
+        colorVariant="primary"
+        style={dhStyles.mainText}
+        accessibilityElementsHidden={true}
+        importantForAccessibility="no"
+      >
         {before}
       </AppText>
-      <AppText font="heading" colorVariant="primary" style={dhStyles.ordinal}>
+      <AppText
+        font="heading"
+        colorVariant="primary"
+        style={dhStyles.ordinal}
+        accessibilityElementsHidden={true}
+        importantForAccessibility="no"
+      >
         {suffix}
       </AppText>
       {after ? (
-        <AppText font="heading" variant="xl" colorVariant="primary" style={dhStyles.mainText}>
+        <AppText
+          font="heading"
+          variant="xl"
+          colorVariant="primary"
+          style={dhStyles.mainText}
+          accessibilityElementsHidden={true}
+          importantForAccessibility="no"
+        >
           {after}
         </AppText>
       ) : null}
