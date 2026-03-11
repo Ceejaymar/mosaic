@@ -1,39 +1,36 @@
 import { DrawerToggleButton } from '@react-navigation/drawer';
-import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Text, View } from 'react-native';
-import Animated, {
-  Extrapolation,
-  interpolate,
-  useAnimatedScrollHandler,
-  useAnimatedStyle,
-  useSharedValue,
-} from 'react-native-reanimated';
+import { ActivityIndicator, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
 import { DemoBadge } from '@/src/components/demo-badge';
 import { PillButton } from '@/src/components/pill-button';
+import { Surface } from '@/src/components/surface';
 import { TopFade } from '@/src/components/top-fade';
 import { LAYOUT } from '@/src/constants/layout';
 import { onOpenCheckInSheet } from '@/src/features/check-in/check-in-sheet-events';
 import { CheckInHistory } from '@/src/features/check-in/components/check-in-history';
 import { CheckInSheet } from '@/src/features/check-in/components/check-in-sheet';
-import { DailyStatsRow } from '@/src/features/check-in/components/daily-stats';
 import {
   MosaicDisplay,
   type MosaicTileData,
 } from '@/src/features/check-in/components/mosaic-display';
 import { CHECK_IN_CONSTANTS } from '@/src/features/check-in/constants/check-in';
 import { useTodayCheckIns } from '@/src/features/check-in/hooks/useCheckIns';
+import { useStats } from '@/src/features/check-in/hooks/useStats';
+import { generateDailyObservation } from '@/src/features/check-in/utils/daily-observations';
 import { getMoodDisplayInfo } from '@/src/features/check-in/utils/mood-helpers';
 import { getCurrentTimeSlot } from '@/src/features/check-in/utils/time-of-day';
 import { hapticLight } from '@/src/lib/haptics/haptics';
+import { LETTER_SPACING } from '@/src/styles/design-tokens';
 import { enableAndroidLayoutAnimations } from '@/src/utils/animations';
 import { getFormattedDateLabel } from '@/src/utils/format-date';
+
+const OBS_GRADIENT = ['rgba(255,255,255,0.04)', 'rgba(255,255,255,0)', 'rgba(0,0,0,0.06)'] as const;
 
 export default function CheckInScreen() {
   const { t } = useTranslation();
@@ -47,6 +44,7 @@ export default function CheckInScreen() {
 
   const [sheetVisible, setSheetVisible] = useState(false);
   const { todayEntries, isLoading, loadError, saveEntry, refresh } = useTodayCheckIns();
+  const { currentStreak, checkInsThisWeek } = useStats();
 
   const currentSlot = getCurrentTimeSlot();
   const atLimit = todayEntries.length >= CHECK_IN_CONSTANTS.MAX_DAILY_ENTRIES;
@@ -80,6 +78,8 @@ export default function CheckInScreen() {
     return onOpenCheckInSheet(handleOpenSheet);
   }, [handleOpenSheet]);
 
+  const dailyObservation = useMemo(() => generateDailyObservation(todayEntries), [todayEntries]);
+
   const mosaicTiles = useMemo<MosaicTileData[]>(() => {
     return todayEntries
       .slice()
@@ -99,49 +99,33 @@ export default function CheckInScreen() {
       });
   }, [todayEntries]);
 
-  // --- Scroll Tracking for the Hamburger Background ---
-  const scrollY = useSharedValue(0);
-  const scrollHandler = useAnimatedScrollHandler((event) => {
-    scrollY.value = event.contentOffset.y;
-  });
-
-  const hamburgerBgStyle = useAnimatedStyle(() => {
-    // Fades in between 20px and 70px of scrolling
-    const opacity = interpolate(scrollY.value, [20, 70], [0, 1], Extrapolation.CLAMP);
-    return { opacity };
-  });
-
   return (
     <View style={styles.container}>
-      {/* 1. THE TOP FADE */}
-      <TopFade height={insets.top + 60} />
+      {/* 1. THE TOP FADE — full-width seamless gradient covering the hamburger area */}
+      <TopFade height={insets.top + 80} />
 
       {/* 2. THE FLOATING HAMBURGER MENU */}
       <View style={[styles.floatingMenu, { top: insets.top + 8 }]}>
-        <Animated.View style={[styles.hamburgerSquircle, hamburgerBgStyle]}>
-          <BlurView intensity={75} tint="dark" style={StyleSheet.absoluteFill} />
-        </Animated.View>
         <DrawerToggleButton tintColor={theme.colors.typography} />
       </View>
 
       {/* 3. SCROLL CONTENT */}
-      <Animated.ScrollView
-        onScroll={scrollHandler}
-        scrollEventThrottle={16}
-        contentContainerStyle={{
-          paddingTop: insets.top + 72,
-          paddingBottom: LAYOUT.TAB_BAR_HEIGHT + insets.bottom + 20,
-          paddingHorizontal: 20,
-        }}
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            paddingTop: insets.top + 72,
+            paddingBottom: LAYOUT.TAB_BAR_HEIGHT + insets.bottom + 20,
+          },
+        ]}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.greeting}>
-          How are you feeling{'\n'}
-          {t(`dashboard.time_of_day.${currentSlot}`)}?
-        </Text>
+        <AppText font="heading" colorVariant="primary" style={styles.greeting}>
+          {`How are you feeling\n${t(`dashboard.time_of_day.${currentSlot}`)}?`}
+        </AppText>
 
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <AppText variant="mono" colorVariant="muted" style={styles.dateLabel}>
+        <View style={styles.dateLabelRow}>
+          <AppText font="mono" colorVariant="muted" style={styles.dateLabel}>
             {getFormattedDateLabel()}
           </AppText>
           <DemoBadge />
@@ -173,9 +157,46 @@ export default function CheckInScreen() {
           )}
         </View>
 
-        <DailyStatsRow entriesCount={todayEntries.length} streakCount={1} />
+        <Surface variant="card" style={styles.statsPill}>
+          <View style={styles.statItem}>
+            <AppText font="heading" variant="xl" colorVariant="primary">
+              {checkInsThisWeek}
+            </AppText>
+            <AppText variant="sm" colorVariant="muted">
+              {t('stats.checkInsThisWeek')}
+            </AppText>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <AppText font="heading" variant="xl" colorVariant="primary">
+              {currentStreak}
+            </AppText>
+            <AppText variant="sm" colorVariant="muted">
+              {t('stats.dayStreak')}
+            </AppText>
+          </View>
+        </Surface>
+
+        {dailyObservation.length > 0 && (
+          <Surface
+            variant="card"
+            surfaceGradientColors={OBS_GRADIENT}
+            style={styles.observationCard}
+          >
+            {dailyObservation.map((obs) => (
+              <View key={obs} style={styles.obsRow}>
+                <AppText variant="md" colorVariant="muted" style={styles.obsBullet}>
+                  •
+                </AppText>
+                <AppText variant="md" colorVariant="muted" style={styles.obsText}>
+                  {obs}
+                </AppText>
+              </View>
+            ))}
+          </Surface>
+        )}
         <CheckInHistory entries={todayEntries} onEntryPress={handleEntryPress} />
-      </Animated.ScrollView>
+      </ScrollView>
 
       <CheckInSheet visible={sheetVisible} onClose={handleCloseSheet} onSave={handleSave} />
     </View>
@@ -186,28 +207,22 @@ const styles = StyleSheet.create((theme) => ({
   container: { flex: 1, backgroundColor: theme.colors.background },
   floatingMenu: {
     position: 'absolute',
-    left: 8,
+    left: theme.spacing[2],
     zIndex: 100,
     width: 48,
     height: 48,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  hamburgerSquircle: {
-    ...StyleSheet.absoluteFillObject,
-    borderRadius: theme.radius.card,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+  scrollContent: {
+    paddingHorizontal: theme.spacing[5],
   },
   greeting: {
     fontSize: theme.fontSize.display,
-    fontFamily: 'Fraunces',
     fontWeight: '700',
     lineHeight: 41,
-    letterSpacing: -0.5,
+    letterSpacing: LETTER_SPACING.tight,
     marginBottom: theme.spacing[2],
-    color: theme.colors.typography,
   },
   dateLabel: {
     fontSize: 12,
@@ -235,4 +250,43 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius.sheet,
   },
   errorText: { fontSize: 14, textAlign: 'center' },
+  statsPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: theme.radius.pill,
+    paddingVertical: theme.spacing[3],
+    paddingHorizontal: theme.spacing[5],
+    marginBottom: theme.spacing[3],
+  },
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
+    gap: theme.spacing[1],
+  },
+  statDivider: {
+    width: 1,
+    height: 28,
+    marginHorizontal: theme.spacing[3],
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)',
+  },
+  observationCard: {
+    marginBottom: theme.spacing[4],
+    padding: theme.spacing[4],
+    gap: theme.spacing[3],
+  },
+  obsRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: theme.spacing[2],
+  },
+  obsBullet: {
+    opacity: 0.4,
+  },
+  obsText: {
+    flex: 1,
+  },
+  dateLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
 }));

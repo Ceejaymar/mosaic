@@ -56,7 +56,7 @@ const darkTheme = {
   colors: {
     background: '#000000',
     typography: '#ffffff',
-    textMuted: '#8E8E93',
+    textMuted: '#A1A1A6',
     surface: '#1C1C1E',
     divider: '#3A3A3C',
     mosaicGold: '#E0C097',

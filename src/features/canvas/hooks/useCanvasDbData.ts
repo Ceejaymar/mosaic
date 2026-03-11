@@ -89,6 +89,7 @@ export function useCanvasDbData(month: number, year: number, refreshKey = 0): Ca
     return () => {
       cancelled = true;
     };
+    // biome-ignore lint/correctness/useExhaustiveDependencies: refreshKey is an intentional cache-bust trigger
   }, [month, year, isDemoMode, refreshKey]);
 
   return { days, loading, error };

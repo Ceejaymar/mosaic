@@ -80,7 +80,7 @@ export function FocusGroup({
             pointerEvents="none"
           />
 
-          <AnimatedAppText variant="heading" style={[styles.headerText, textAnimStyle]}>
+          <AnimatedAppText font="heading" style={[styles.headerText, textAnimStyle]}>
             {group.label}
           </AnimatedAppText>
 

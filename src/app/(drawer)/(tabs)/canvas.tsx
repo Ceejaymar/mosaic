@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Pressable, Text, useWindowDimensions, View } from 'react-native';
+import { Alert, Pressable, useWindowDimensions, View } from 'react-native';
 import Animated, {
   Extrapolation,
   interpolate,
@@ -21,12 +21,17 @@ import { TopFade } from '@/src/components/top-fade';
 import { LAYOUT } from '@/src/constants/layout';
 import { MonthGrid } from '@/src/features/canvas/components/month-grid';
 import { YearView } from '@/src/features/canvas/components/year-view';
-import { invalidateMonthCache, useCanvasDbData } from '@/src/features/canvas/hooks/useCanvasDbData';
+import {
+  invalidateMonthCache,
+  prefetchMonth,
+  useCanvasDbData,
+} from '@/src/features/canvas/hooks/useCanvasDbData';
 import { getDowLabels, getMonthName } from '@/src/features/canvas/utils/date-labels';
 import { useRefreshOnFocus } from '@/src/hooks/useRefreshOnFocus';
 import { useAppStore } from '@/src/store/useApp';
+import { LETTER_SPACING } from '@/src/styles/design-tokens';
 
-const TOPBAR_H_PAD = 24;
+// Grid math constants — used in layout calculations, exempt from token rule
 const GRID_H_PAD = 8;
 const TILE_GAP = 4;
 const MONTHS_BACK = 36;
@@ -50,6 +55,7 @@ const AnimatedMonth = memo(function AnimatedMonth({
   tileSize,
   onDayPress,
   refreshKey,
+  reduceMotion,
 }: {
   item: MonthItem;
   index: number;
@@ -58,9 +64,10 @@ const AnimatedMonth = memo(function AnimatedMonth({
   tileSize: number;
   onDayPress: (date: string) => void;
   refreshKey: number;
+  reduceMotion: boolean;
 }) {
   const { i18n } = useTranslation();
-  const { days: data } = useCanvasDbData(item.month, item.year, refreshKey);
+  const { days: data, loading } = useCanvasDbData(item.month, item.year, refreshKey);
   const dowLabels = getDowLabels(i18n.language);
 
   const gridAnimStyle = useAnimatedStyle(() => {
@@ -75,15 +82,30 @@ const AnimatedMonth = memo(function AnimatedMonth({
     return { opacity };
   });
 
+  const dataOpacity = useSharedValue(loading ? 0 : 1);
+  const dataAnimStyle = useAnimatedStyle(() => ({ opacity: dataOpacity.value }));
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: dataOpacity is a stable shared value ref
+  useEffect(() => {
+    if (!loading) {
+      dataOpacity.value = reduceMotion ? 1 : withTiming(1, { duration: 300 });
+    }
+  }, [loading, reduceMotion]);
+
   return (
     <View style={{ height: itemHeight, paddingHorizontal: GRID_H_PAD, justifyContent: 'center' }}>
-      <Animated.View style={[{ marginBottom: 12 }, textAnimStyle]}>
-        <Text style={styles.monthPageLabel}>
+      <Animated.View style={[styles.monthLabelWrapper, textAnimStyle]}>
+        <AppText font="heading" variant="xl" colorVariant="primary" style={styles.monthPageLabel}>
           {getMonthName(item.month, 'long', i18n.language)} {item.year}
-        </Text>
-        <View style={[styles.row, { gap: TILE_GAP, marginTop: 12 }]}>
+        </AppText>
+        <View style={[styles.dowRow, { gap: TILE_GAP }]}>
           {dowLabels.map(({ key, label }) => (
-            <AppText key={key} colorVariant="muted" style={[styles.dowLabel, { width: tileSize }]}>
+            <AppText
+              key={key}
+              variant="xs"
+              colorVariant="muted"
+              style={[styles.dowLabel, { width: tileSize }]}
+            >
               {label}
             </AppText>
           ))}
@@ -91,14 +113,16 @@ const AnimatedMonth = memo(function AnimatedMonth({
       </Animated.View>
 
       <Animated.View style={gridAnimStyle}>
-        <MonthGrid
-          month={item.month}
-          year={item.year}
-          data={data}
-          tileSize={tileSize}
-          tileGap={TILE_GAP}
-          onDayPress={onDayPress}
-        />
+        <Animated.View style={dataAnimStyle}>
+          <MonthGrid
+            month={item.month}
+            year={item.year}
+            data={data}
+            tileSize={tileSize}
+            tileGap={TILE_GAP}
+            onDayPress={onDayPress}
+          />
+        </Animated.View>
       </Animated.View>
     </View>
   );
@@ -129,12 +153,11 @@ export default function CanvasScreen() {
 
   const monthList = useMemo(() => buildMonthList(MONTHS_BACK), []);
 
+  // Grid math — raw numbers intentional
   const gridContentWidth = screenWidth - GRID_H_PAD * 2;
   const tileSize = (gridContentWidth - 6 * TILE_GAP) / 7;
-
   const gridH = GRID_ROWS * tileSize + (GRID_ROWS - 1) * TILE_GAP;
   const itemHeight = 66 + gridH;
-
   const verticalPadding = containerHeight > 0 ? Math.max(0, (containerHeight - itemHeight) / 2) : 0;
 
   const futureDate = useMemo(() => {
@@ -179,41 +202,65 @@ export default function CanvasScreen() {
     });
   }, [monthOpacity, yearOpacity, rm]);
 
+  // Preload adjacent months to prevent visual pop-in
+  // biome-ignore lint/correctness/useExhaustiveDependencies: refreshKey is an intentional cache-bust trigger
+  useEffect(() => {
+    const current = monthList[monthList.length - 1];
+    const prev = monthList[monthList.length - 2];
+    const prePrev = monthList[monthList.length - 3];
+    prefetchMonth(current.year, current.month);
+    prefetchMonth(prev.year, prev.month);
+    prefetchMonth(prePrev.year, prePrev.month);
+  }, [monthList, refreshKey]);
+
   return (
     <View style={styles.screen}>
       <TopFade height={insets.top + 60} />
 
-      <View style={[styles.topBar, { top: insets.top, paddingHorizontal: TOPBAR_H_PAD }]}>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <Text style={styles.pageTitle}>Canvas</Text>
+      <View style={[styles.topBar, { top: insets.top }]}>
+        {/* Left: year number in year mode, empty in month mode */}
+        <View style={styles.topLeft}>
+          {viewMode === 'year' && (
+            <AppText font="heading" variant="2xl" colorVariant="primary" style={styles.yearTitle}>
+              {overviewYear}
+            </AppText>
+          )}
           <DemoBadge />
         </View>
+
+        {/* Right: compact icon + month/year toggle pill */}
         <View style={styles.controls}>
           {viewMode === 'year' && (
             <Pressable
               onPress={() => setIsCompact(!isCompact)}
-              style={({ pressed }) => [
-                styles.iconBtn,
-                pressed && { opacity: 0.5 },
-                { marginRight: 8 },
-              ]}
+              style={({ pressed }) => [styles.compactBtn, pressed && { opacity: 0.5 }]}
             >
               <Ionicons
-                name={isCompact ? 'apps' : 'apps-outline'}
-                size={22}
-                color={theme.colors.typography}
+                name={isCompact ? 'apps-outline' : 'apps'}
+                size={14}
+                color={theme.colors.textMuted}
               />
+              <AppText variant="sm" font="mono" colorVariant="muted" style={styles.compactLabel}>
+                {isCompact ? t('canvas.mode.standard') : t('canvas.mode.compact')}
+              </AppText>
             </Pressable>
           )}
-          <Text style={styles.headerLabel}>
-            {viewMode === 'year' ? overviewYear.toString() : ''}
-          </Text>
-          <Pressable
-            onPress={toggleViewMode}
-            style={({ pressed }) => [styles.toggleBtn, pressed && { opacity: 0.5 }]}
-          >
-            <AppText colorVariant="muted" style={styles.toggleLabel}>
-              {viewMode === 'month' ? t('canvas.year') : t('canvas.month')}
+
+          <Pressable onPress={toggleViewMode} style={styles.viewToggleGroup} hitSlop={12}>
+            <AppText
+              font="mono"
+              style={viewMode === 'month' ? styles.toggleActive : styles.toggleInactive}
+            >
+              {t('canvas.month')}
+            </AppText>
+            <AppText font="mono" colorVariant="muted">
+              {' | '}
+            </AppText>
+            <AppText
+              font="mono"
+              style={viewMode === 'year' ? styles.toggleActive : styles.toggleInactive}
+            >
+              {t('canvas.year')}
             </AppText>
           </Pressable>
         </View>
@@ -240,23 +287,34 @@ export default function CanvasScreen() {
                   tileSize={tileSize}
                   onDayPress={handleDayPress}
                   refreshKey={refreshKey}
+                  reduceMotion={reduceMotion}
                 />
               )}
               getItemLayout={getItemLayout}
               initialScrollIndex={monthList.length - 1}
               contentContainerStyle={{
                 paddingTop: verticalPadding + 40,
-                paddingBottom: LAYOUT.TAB_BAR_HEIGHT + insets.bottom,
+                paddingBottom: 0,
               }}
               snapToInterval={itemHeight}
               decelerationRate="fast"
               showsVerticalScrollIndicator={false}
+              initialNumToRender={4}
+              maxToRenderPerBatch={4}
+              windowSize={5}
+              removeClippedSubviews={false}
               bounces={true}
               onScroll={scrollHandler}
               scrollEventThrottle={16}
               ListFooterComponent={
                 <View style={{ height: verticalPadding, overflow: 'hidden' }}>
-                  <View style={{ paddingHorizontal: GRID_H_PAD, opacity: 0.15, marginTop: 16 }}>
+                  <View
+                    style={{
+                      paddingHorizontal: GRID_H_PAD,
+                      opacity: 0.15,
+                      marginTop: theme.spacing[4],
+                    }}
+                  >
                     <MonthGrid
                       month={futureMonth.month}
                       year={futureMonth.year}
@@ -314,57 +372,70 @@ const styles = StyleSheet.create((theme) => ({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 12,
-    paddingBottom: 4,
+    paddingTop: theme.spacing[3],
+    paddingBottom: theme.spacing[1],
+    paddingHorizontal: theme.spacing[4],
   },
-  pageTitle: {
-    fontSize: theme.fontSize['2xl'],
-    fontFamily: 'Fraunces',
+  topLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing[2],
+  },
+  yearTitle: {
     fontWeight: '700',
-    color: theme.colors.typography,
-    letterSpacing: -0.4,
+    letterSpacing: LETTER_SPACING.tight,
   },
-  headerLabel: {
-    fontSize: 16,
-    fontWeight: '700',
-    fontFamily: 'Fraunces',
-    color: theme.colors.typography,
-    marginRight: 8,
-  },
-  controls: { flexDirection: 'row', alignItems: 'center' },
-  chip: {
-    height: 28,
-    paddingHorizontal: 8,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: theme.colors.divider,
+  controls: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    minHeight: 36,
   },
-  chipActive: { backgroundColor: theme.colors.mosaicGold, borderColor: theme.colors.mosaicGold },
-  chipLabel: {
-    fontSize: 12,
+  compactBtn: {
+    position: 'absolute',
+    right: 145,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing[1],
+    paddingHorizontal: theme.spacing[2],
+    paddingVertical: theme.spacing[2],
+  },
+  compactLabel: {
+    fontWeight: '600',
+  },
+  viewToggleGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    width: 110,
+    paddingVertical: theme.spacing[2],
+  },
+  toggleActive: {
+    fontSize: theme.fontSize.sm,
+    fontWeight: '600',
+    color: theme.colors.mosaicGold,
+  },
+  toggleInactive: {
+    fontSize: theme.fontSize.sm,
     fontWeight: '600',
     color: theme.colors.textMuted,
-    fontFamily: 'SpaceMono',
   },
-  chipLabelActive: { color: theme.colors.onAccent },
-  iconBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
-  toggleBtn: { height: 36, paddingHorizontal: 8, alignItems: 'center', justifyContent: 'center' },
-  toggleLabel: {
-    fontSize: 14,
+  // AnimatedMonth
+  monthLabelWrapper: {
+    marginBottom: theme.spacing[3],
+  },
+  monthPageLabel: {
+    fontWeight: '700',
+  },
+  dowRow: {
+    flexDirection: 'row',
+    marginTop: theme.spacing[3],
+  },
+  dowLabel: {
     fontWeight: '600',
-    fontFamily: 'SpaceMono',
+    textAlign: 'center',
   },
+  // Layout utilities
   fill: { flex: 1 },
   absoluteFill: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
-  monthPageLabel: {
-    fontSize: theme.fontSize.lg,
-    fontWeight: '700',
-    fontFamily: 'Fraunces',
-    color: theme.colors.typography,
-    letterSpacing: -0.4,
-  },
-  row: { flexDirection: 'row' },
-  dowLabel: { fontSize: theme.fontSize.xs, fontWeight: '600', textAlign: 'center' },
 }));

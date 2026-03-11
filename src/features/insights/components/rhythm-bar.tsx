@@ -58,7 +58,7 @@ export function RhythmBar({ entries }: Props) {
               )}
             </View>
 
-            <AppText variant="mono" colorVariant="muted" style={styles.label} numberOfLines={1}>
+            <AppText font="mono" colorVariant="muted" style={styles.label} numberOfLines={1}>
               {block.label}
             </AppText>
           </View>

@@ -4,6 +4,7 @@ export type InsightEntry = {
   id: string;
   date: string; // YYYY-MM-DD
   emotions: string[];
+  coreEmotions: string[];
   timeOfDay: 'morning' | 'afternoon' | 'evening' | 'night';
   activities: string[];
   people: string[];
