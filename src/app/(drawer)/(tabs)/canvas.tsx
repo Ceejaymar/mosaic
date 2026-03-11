@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Pressable, useWindowDimensions, View } from 'react-native';
 import Animated, {
@@ -61,7 +61,7 @@ const AnimatedMonth = memo(function AnimatedMonth({
   refreshKey: number;
 }) {
   const { i18n } = useTranslation();
-  const { days: data } = useCanvasDbData(item.month, item.year, refreshKey);
+  const { days: data, loading } = useCanvasDbData(item.month, item.year, refreshKey);
   const dowLabels = getDowLabels(i18n.language);
 
   const gridAnimStyle = useAnimatedStyle(() => {
@@ -75,6 +75,16 @@ const AnimatedMonth = memo(function AnimatedMonth({
     const opacity = interpolate(distance, [0, itemHeight * 0.4], [1, 0], Extrapolation.CLAMP);
     return { opacity };
   });
+
+  const dataOpacity = useSharedValue(loading ? 0 : 1);
+  const dataAnimStyle = useAnimatedStyle(() => ({ opacity: dataOpacity.value }));
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: dataOpacity is a stable shared value ref
+  useEffect(() => {
+    if (!loading) {
+      dataOpacity.value = withTiming(1, { duration: 300 });
+    }
+  }, [loading]);
 
   return (
     <View style={{ height: itemHeight, paddingHorizontal: GRID_H_PAD, justifyContent: 'center' }}>
@@ -97,14 +107,16 @@ const AnimatedMonth = memo(function AnimatedMonth({
       </Animated.View>
 
       <Animated.View style={gridAnimStyle}>
-        <MonthGrid
-          month={item.month}
-          year={item.year}
-          data={data}
-          tileSize={tileSize}
-          tileGap={TILE_GAP}
-          onDayPress={onDayPress}
-        />
+        <Animated.View style={dataAnimStyle}>
+          <MonthGrid
+            month={item.month}
+            year={item.year}
+            data={data}
+            tileSize={tileSize}
+            tileGap={TILE_GAP}
+            onDayPress={onDayPress}
+          />
+        </Animated.View>
       </Animated.View>
     </View>
   );
@@ -183,6 +195,14 @@ export default function CanvasScreen() {
       return 'month';
     });
   }, [monthOpacity, yearOpacity, rm]);
+
+  // Preload adjacent months to prevent visual pop-in
+  const currentMonth = monthList[monthList.length - 1];
+  const prevMonth = monthList[monthList.length - 2];
+  const prePrevMonth = monthList[monthList.length - 3];
+  useCanvasDbData(currentMonth.month, currentMonth.year, refreshKey);
+  useCanvasDbData(prevMonth.month, prevMonth.year, refreshKey);
+  useCanvasDbData(prePrevMonth.month, prePrevMonth.year, refreshKey);
 
   return (
     <View style={styles.screen}>
@@ -269,6 +289,10 @@ export default function CanvasScreen() {
               snapToInterval={itemHeight}
               decelerationRate="fast"
               showsVerticalScrollIndicator={false}
+              initialNumToRender={4}
+              maxToRenderPerBatch={4}
+              windowSize={5}
+              removeClippedSubviews={false}
               bounces={true}
               onScroll={scrollHandler}
               scrollEventThrottle={16}
