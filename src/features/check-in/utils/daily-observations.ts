@@ -91,7 +91,7 @@ export function generateDailyObservation(entries: MoodEntry[]): string[] {
     return obs;
   }
 
-  // ── 3–4 entries ────────────────────────────────────────────────────────────
+  // ── 3+ entries ────────────────────────────────────────────────────────────
   obs.push(`Started the day with ${getMoodLabel(first.primaryMood)}`);
 
   // Pattern: dominant emotion family or recurring tag
@@ -128,10 +128,15 @@ export function generateDailyObservation(entries: MoodEntry[]): string[] {
     }
 
     if (topTag && topTagCount >= 2) {
-      obs.push(`${topTag} across ${topTagCount} check-ins`);
+      const capitalizedTag = topTag.charAt(0).toUpperCase() + topTag.slice(1);
+      obs.push(`${capitalizedTag} across ${topTagCount} check-ins`);
     } else {
       const uniqueGroupCount = new Set(groupIds).size;
-      obs.push(`Across ${uniqueGroupCount} different emotional spaces`);
+      obs.push(
+        uniqueGroupCount === 0
+          ? 'Across multiple different emotional spaces'
+          : `Across ${uniqueGroupCount} different emotional spaces`,
+      );
     }
   }
 

@@ -124,7 +124,7 @@ export default function CheckInScreen() {
           {`How are you feeling\n${t(`dashboard.time_of_day.${currentSlot}`)}?`}
         </AppText>
 
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <View style={styles.dateLabelRow}>
           <AppText font="mono" colorVariant="muted" style={styles.dateLabel}>
             {getFormattedDateLabel()}
           </AppText>
@@ -163,7 +163,7 @@ export default function CheckInScreen() {
               {checkInsThisWeek}
             </AppText>
             <AppText variant="sm" colorVariant="muted">
-              check-ins this week
+              {t('stats.checkInsThisWeek')}
             </AppText>
           </View>
           <View style={styles.statDivider} />
@@ -172,7 +172,7 @@ export default function CheckInScreen() {
               {currentStreak}
             </AppText>
             <AppText variant="sm" colorVariant="muted">
-              day streak
+              {t('stats.dayStreak')}
             </AppText>
           </View>
         </Surface>
@@ -284,5 +284,9 @@ const styles = StyleSheet.create((theme) => ({
   },
   obsText: {
     flex: 1,
+  },
+  dateLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 }));

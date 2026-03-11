@@ -22,11 +22,19 @@
     "projects_count_one": "You have one project",
     "projects_count_other": "You have {{count}} projects"
   },
+  "stats": {
+    "checkInsThisWeek": "check-ins this week",
+    "dayStreak": "day streak"
+  },
   "canvas": {
     "overview": "Overview",
     "year": "Yearly",
     "month": "Monthly",
     "loadingYear": "Loading {{year}}…",
+    "mode": {
+      "compact": "Compact",
+      "standard": "Standard"
+    },
     "demo": {
       "label": "Demo",
       "accessibilityLive": "Switch to live data",

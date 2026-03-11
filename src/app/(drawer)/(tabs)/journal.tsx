@@ -142,7 +142,7 @@ const dhStyles = StyleSheet.create((theme) => ({
   ordinal: {
     fontSize: 11,
     fontWeight: '700' as const,
-    marginTop: 3,
+    marginTop: theme.spacing[1],
   },
 }));
 

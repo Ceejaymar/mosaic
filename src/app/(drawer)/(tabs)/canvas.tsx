@@ -21,7 +21,11 @@ import { TopFade } from '@/src/components/top-fade';
 import { LAYOUT } from '@/src/constants/layout';
 import { MonthGrid } from '@/src/features/canvas/components/month-grid';
 import { YearView } from '@/src/features/canvas/components/year-view';
-import { invalidateMonthCache, useCanvasDbData } from '@/src/features/canvas/hooks/useCanvasDbData';
+import {
+  invalidateMonthCache,
+  prefetchMonth,
+  useCanvasDbData,
+} from '@/src/features/canvas/hooks/useCanvasDbData';
 import { getDowLabels, getMonthName } from '@/src/features/canvas/utils/date-labels';
 import { useRefreshOnFocus } from '@/src/hooks/useRefreshOnFocus';
 import { useAppStore } from '@/src/store/useApp';
@@ -51,6 +55,7 @@ const AnimatedMonth = memo(function AnimatedMonth({
   tileSize,
   onDayPress,
   refreshKey,
+  reduceMotion,
 }: {
   item: MonthItem;
   index: number;
@@ -59,6 +64,7 @@ const AnimatedMonth = memo(function AnimatedMonth({
   tileSize: number;
   onDayPress: (date: string) => void;
   refreshKey: number;
+  reduceMotion: boolean;
 }) {
   const { i18n } = useTranslation();
   const { days: data, loading } = useCanvasDbData(item.month, item.year, refreshKey);
@@ -82,9 +88,9 @@ const AnimatedMonth = memo(function AnimatedMonth({
   // biome-ignore lint/correctness/useExhaustiveDependencies: dataOpacity is a stable shared value ref
   useEffect(() => {
     if (!loading) {
-      dataOpacity.value = withTiming(1, { duration: 300 });
+      dataOpacity.value = reduceMotion ? 1 : withTiming(1, { duration: 300 });
     }
-  }, [loading]);
+  }, [loading, reduceMotion]);
 
   return (
     <View style={{ height: itemHeight, paddingHorizontal: GRID_H_PAD, justifyContent: 'center' }}>
@@ -197,12 +203,15 @@ export default function CanvasScreen() {
   }, [monthOpacity, yearOpacity, rm]);
 
   // Preload adjacent months to prevent visual pop-in
-  const currentMonth = monthList[monthList.length - 1];
-  const prevMonth = monthList[monthList.length - 2];
-  const prePrevMonth = monthList[monthList.length - 3];
-  useCanvasDbData(currentMonth.month, currentMonth.year, refreshKey);
-  useCanvasDbData(prevMonth.month, prevMonth.year, refreshKey);
-  useCanvasDbData(prePrevMonth.month, prePrevMonth.year, refreshKey);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: refreshKey is an intentional cache-bust trigger
+  useEffect(() => {
+    const current = monthList[monthList.length - 1];
+    const prev = monthList[monthList.length - 2];
+    const prePrev = monthList[monthList.length - 3];
+    prefetchMonth(current.year, current.month);
+    prefetchMonth(prev.year, prev.month);
+    prefetchMonth(prePrev.year, prePrev.month);
+  }, [monthList, refreshKey]);
 
   return (
     <View style={styles.screen}>
@@ -232,7 +241,7 @@ export default function CanvasScreen() {
                 color={theme.colors.textMuted}
               />
               <AppText variant="sm" font="mono" colorVariant="muted" style={styles.compactLabel}>
-                {isCompact ? 'Standard' : 'Compact'}
+                {isCompact ? t('canvas.mode.standard') : t('canvas.mode.compact')}
               </AppText>
             </Pressable>
           )}
@@ -278,6 +287,7 @@ export default function CanvasScreen() {
                   tileSize={tileSize}
                   onDayPress={handleDayPress}
                   refreshKey={refreshKey}
+                  reduceMotion={reduceMotion}
                 />
               )}
               getItemLayout={getItemLayout}

@@ -19,11 +19,19 @@
     "projects_count_one": "Tienes un proyecto",
     "projects_count_other": "Tienes {{count}} proyectos"
   },
+  "stats": {
+    "checkInsThisWeek": "check-ins esta semana",
+    "dayStreak": "racha de días"
+  },
   "canvas": {
     "overview": "Resumen",
     "year": "Anual",
     "month": "Mensual",
     "loadingYear": "Cargando {{year}}…",
+    "mode": {
+      "compact": "Compacto",
+      "standard": "Estándar"
+    },
     "demo": {
       "label": "Demo",
       "accessibilityLive": "Cambiar a datos reales",
