@@ -1,13 +1,12 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { type Href, router } from 'expo-router';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   type FlatList,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
   Pressable,
   ScrollView,
-  Text,
   useWindowDimensions,
   View,
 } from 'react-native';
@@ -24,9 +23,10 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
 import { DemoBadge } from '@/src/components/demo-badge';
+import { Surface } from '@/src/components/surface';
 import { LAYOUT } from '@/src/constants/layout';
 import { ContextMatrix } from '@/src/features/insights/components/context-matrix';
-import { EmotionalFootprint } from '@/src/features/insights/components/emotional-footprint';
+import { HeroMosaic } from '@/src/features/insights/components/hero-mosaic';
 import { MicroGrid } from '@/src/features/insights/components/micro-grid';
 import { RhythmBar } from '@/src/features/insights/components/rhythm-bar';
 import { useInsightsData } from '@/src/features/insights/hooks/useInsightsData';
@@ -107,9 +107,13 @@ function TimeFrameDropdown({
         onPress={() => setIsOpen(!isOpen)}
         style={({ pressed }) => [styles.dropdownTrigger, pressed && { opacity: 0.5 }]}
       >
-        <Text style={[styles.dropdownTriggerText, { color: theme.colors.mosaicGold }]}>
+        <AppText
+          font="mono"
+          variant="md"
+          style={[styles.dropdownTriggerText, { color: theme.colors.mosaicGold }]}
+        >
           {value.charAt(0).toUpperCase() + value.slice(1)} ▾
-        </Text>
+        </AppText>
       </Pressable>
 
       {isOpen && (
@@ -129,14 +133,15 @@ function TimeFrameDropdown({
               }}
               style={styles.dropdownItem}
             >
-              <Text
+              <AppText
+                font="mono"
                 style={[
                   styles.dropdownItemText,
                   { color: value === tf ? theme.colors.mosaicGold : theme.colors.typography },
                 ]}
               >
                 {tf.charAt(0).toUpperCase() + tf.slice(1)}
-              </Text>
+              </AppText>
             </Pressable>
           ))}
         </View>
@@ -147,7 +152,7 @@ function TimeFrameDropdown({
 
 // ─── 2. Horizontal Date Snapper ───────────────────────────────────────────────
 
-function DateSnapperItem({
+const DateSnapperItem = memo(function DateSnapperItem({
   offset,
   index,
   timeFrame,
@@ -160,7 +165,6 @@ function DateSnapperItem({
   scrollX: SharedValue<number>;
   itemWidth: number;
 }) {
-  const { theme } = useUnistyles();
   const label = getFormattedDateRange(timeFrame, offset);
 
   const animStyle = useAnimatedStyle(() => {
@@ -173,10 +177,12 @@ function DateSnapperItem({
 
   return (
     <Animated.View style={[styles.snapperItem, animStyle, { width: itemWidth }]}>
-      <Text style={[styles.snapperText, { color: theme.colors.typography }]}>{label}</Text>
+      <AppText font="mono" variant="md" colorVariant="primary" style={styles.snapperText}>
+        {label}
+      </AppText>
     </Animated.View>
   );
-}
+});
 
 function DateSnapper({
   timeFrame,
@@ -206,15 +212,36 @@ function DateSnapper({
 
   const offsets = useMemo(() => Array.from({ length: 52 }, (_, i) => -i), []);
 
-  const handleMomentumEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const x = e.nativeEvent.contentOffset.x;
-    const index = Math.round(x / itemWidth);
+  const contentStyle = useMemo(
+    () => ({ paddingHorizontal: horizontalPadding }),
+    [horizontalPadding],
+  );
 
-    if (offsets[index] !== undefined && offsets[index] !== currentOffset) {
-      hapticSelection();
-      onChange(offsets[index]);
-    }
-  };
+  const handleMomentumEnd = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const x = e.nativeEvent.contentOffset.x;
+      const index = Math.round(x / itemWidth);
+
+      if (offsets[index] !== undefined && offsets[index] !== currentOffset) {
+        hapticSelection();
+        onChange(offsets[index]);
+      }
+    },
+    [itemWidth, offsets, currentOffset, onChange],
+  );
+
+  const renderItem = useCallback(
+    ({ item, index }: { item: number; index: number }) => (
+      <DateSnapperItem
+        offset={item}
+        index={index}
+        timeFrame={timeFrame}
+        scrollX={scrollX}
+        itemWidth={itemWidth}
+      />
+    ),
+    [timeFrame, scrollX, itemWidth],
+  );
 
   return (
     <View style={styles.snapperContainer}>
@@ -227,19 +254,11 @@ function DateSnapper({
         showsHorizontalScrollIndicator={false}
         snapToInterval={itemWidth}
         decelerationRate="fast"
-        contentContainerStyle={{ paddingHorizontal: horizontalPadding }}
+        contentContainerStyle={contentStyle}
         onScroll={scrollHandler}
         scrollEventThrottle={16}
         onMomentumScrollEnd={handleMomentumEnd}
-        renderItem={({ item, index }) => (
-          <DateSnapperItem
-            offset={item}
-            index={index}
-            timeFrame={timeFrame}
-            scrollX={scrollX}
-            itemWidth={itemWidth}
-          />
-        )}
+        renderItem={renderItem}
       />
     </View>
   );
@@ -250,7 +269,6 @@ function DateSnapper({
 export default function InsightsScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useUnistyles();
-  const colors = useAccessibleColors();
 
   const [timeFrame, setTimeFrame] = useState<TimeFrame>('week');
   const [offset, setOffset] = useState(0);
@@ -273,7 +291,9 @@ export default function InsightsScreen() {
       <View style={[styles.headerOverlay, { paddingTop: insets.top }]}>
         <View style={styles.topBar}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Text style={styles.pageTitle}>Insights</Text>
+            <AppText font="heading" variant="2xl" colorVariant="primary" style={styles.pageTitle}>
+              Insights
+            </AppText>
             <DemoBadge />
           </View>
           <TimeFrameDropdown value={timeFrame} onChange={handleTimeFrameChange} />
@@ -303,9 +323,24 @@ export default function InsightsScreen() {
       >
         {hasEnoughData ? (
           <>
+            <HeroMosaic entries={entries} />
+            <RhythmBar entries={entries} />
+            <ContextMatrix entries={entries} category="people" title="Who you were with" />
+            <ContextMatrix entries={entries} category="activities" title="What you were doing" />
+            <ContextMatrix entries={entries} category="places" title="Where you were" />
+
+            {timeFrame === 'week' && <MicroGrid entries={entries} />}
+
             {observations.length > 0 && (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Observations</Text>
+                <AppText
+                  font="heading"
+                  variant="xl"
+                  colorVariant="primary"
+                  style={styles.sectionTitle}
+                >
+                  Observations
+                </AppText>
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
@@ -315,44 +350,34 @@ export default function InsightsScreen() {
                     <Pressable
                       key={obs.id}
                       onPress={() => router.push(`/insights/observation/${obs.id}` as Href)}
-                      style={({ pressed }) => [
-                        styles.observationCard,
-                        {
-                          backgroundColor: theme.colors.tileBackground,
-                          shadowColor: theme.colors.tileShadowColor,
-                          borderColor: colors.divider,
-                        },
-                        pressed && { opacity: 0.8 },
-                      ]}
+                      style={({ pressed }) => pressed && { opacity: 0.8 }}
                     >
-                      <View
-                        style={[
-                          styles.colorAccent,
-                          { backgroundColor: obs.highlightColor ?? theme.colors.mosaicGold },
-                        ]}
-                      />
-                      <Text style={[styles.observationText, { color: theme.colors.typography }]}>
-                        {obs.text}
-                      </Text>
+                      <Surface variant="card" style={styles.observationCard}>
+                        <View
+                          style={[
+                            styles.colorAccent,
+                            { backgroundColor: obs.highlightColor ?? theme.colors.mosaicGold },
+                          ]}
+                        />
+                        <AppText
+                          font="heading"
+                          colorVariant="primary"
+                          style={styles.observationText}
+                        >
+                          {obs.text}
+                        </AppText>
+                      </Surface>
                     </Pressable>
                   ))}
                 </ScrollView>
               </View>
             )}
-
-            <EmotionalFootprint entries={entries} />
-            <RhythmBar entries={entries} />
-            <ContextMatrix entries={entries} category="people" title="Who you were with" />
-            <ContextMatrix entries={entries} category="activities" title="What you were doing" />
-            <ContextMatrix entries={entries} category="places" title="Where you were" />
-
-            {timeFrame === 'week' && <MicroGrid entries={entries} />}
           </>
         ) : (
           <View style={styles.emptyState}>
-            <Text style={[styles.emptyTitle, { color: theme.colors.typography }]}>
+            <AppText font="heading" colorVariant="primary" style={styles.emptyTitle}>
               Not enough data yet
-            </Text>
+            </AppText>
             <AppText colorVariant="muted" style={styles.emptyText}>
               Log at least 3 check-ins this {timeFrame} to unlock your emotional patterns.
             </AppText>
@@ -384,63 +409,48 @@ const styles = StyleSheet.create((theme) => ({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingTop: 12,
-    paddingBottom: 4,
+    paddingHorizontal: theme.spacing[6],
+    paddingTop: theme.spacing[3],
+    paddingBottom: theme.spacing[1],
     zIndex: 10,
   },
-  pageTitle: {
-    fontSize: theme.fontSize['2xl'],
-    fontFamily: 'Fraunces',
-    fontWeight: '700',
-    color: theme.colors.typography,
-    letterSpacing: -0.4,
-  },
-  dropdownTrigger: { paddingVertical: 8, paddingLeft: 16 },
-  dropdownTriggerText: { fontSize: theme.fontSize.md, fontWeight: '600', fontFamily: 'SpaceMono' },
+  pageTitle: { fontWeight: '700' },
+  dropdownTrigger: { paddingVertical: theme.spacing[2], paddingLeft: theme.spacing[4] },
+  dropdownTriggerText: { fontWeight: '600' },
   dropdownMenu: {
     position: 'absolute',
     top: 40,
     right: 0,
     borderWidth: 1,
     borderRadius: 12,
-    padding: 4,
+    padding: theme.spacing[1],
     minWidth: 120,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
     elevation: 5,
   },
-  dropdownItem: { paddingVertical: 10, paddingHorizontal: 16, borderRadius: 8 },
-  dropdownItemText: { fontSize: 14, fontWeight: '600', fontFamily: 'SpaceMono' },
+  dropdownItem: { paddingVertical: 10, paddingHorizontal: theme.spacing[4], borderRadius: 8 },
+  dropdownItemText: { fontSize: 14, fontWeight: '600' },
   snapperContainer: { height: 44, justifyContent: 'center', marginBottom: 0 },
   snapperItem: { alignItems: 'center', justifyContent: 'center' },
-  snapperText: { fontSize: theme.fontSize.md, fontWeight: '700', fontFamily: 'SpaceMono' },
+  snapperText: { fontWeight: '700' },
   scrollContent: { paddingBottom: 40 },
-  section: { marginTop: 16, marginBottom: 24 },
+  section: { marginTop: theme.spacing[4], marginBottom: theme.spacing[6] },
   sectionTitle: {
-    fontSize: 22,
     fontWeight: '700',
-    fontFamily: 'Fraunces',
-    color: theme.colors.typography,
-    paddingHorizontal: 24,
-    marginBottom: 16,
-    letterSpacing: -0.4,
+    paddingHorizontal: theme.spacing[6],
+    marginBottom: theme.spacing[4],
   },
-  carouselContent: { paddingHorizontal: 24, gap: 12 },
-  observationCard: {
-    width: 240,
-    padding: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    elevation: 2,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
+  carouselContent: { paddingHorizontal: theme.spacing[6], gap: theme.spacing[3] },
+  observationCard: { width: 240, padding: theme.spacing[4] },
+  colorAccent: { width: 12, height: 12, borderRadius: 6, marginBottom: theme.spacing[3] },
+  observationText: { fontSize: 16, lineHeight: 22, fontWeight: '500' },
+  emptyState: {
+    paddingHorizontal: theme.spacing[6],
+    paddingVertical: theme.spacing[16],
+    alignItems: 'center',
   },
-  colorAccent: { width: 12, height: 12, borderRadius: 6, marginBottom: 12 },
-  observationText: { fontSize: 16, lineHeight: 22, fontFamily: 'Fraunces', fontWeight: '500' },
-  emptyState: { paddingHorizontal: 24, paddingVertical: 64, alignItems: 'center' },
-  emptyTitle: { fontSize: 18, fontFamily: 'Fraunces', fontWeight: '600', marginBottom: 8 },
+  emptyTitle: { fontSize: 18, fontWeight: '600', marginBottom: theme.spacing[2] },
   emptyText: { fontSize: theme.fontSize.md, textAlign: 'center', lineHeight: 22 },
 }));
