@@ -35,7 +35,8 @@ function getTimeOfDay(isoStr: string): InsightEntry['timeOfDay'] {
 
 function moodEntryToInsight(entry: MoodEntry): InsightEntry {
   const node = getEmotionNode(entry.primaryMood);
-  const color = getMoodDisplayInfo(entry.primaryMood)?.color ?? '#888888';
+  const moodInfo = getMoodDisplayInfo(entry.primaryMood);
+  const color = moodInfo?.color ?? '#888888';
   const tags = parseStoredTags(entry.tags);
 
   const activities: string[] = [];
@@ -57,6 +58,7 @@ function moodEntryToInsight(entry: MoodEntry): InsightEntry {
     date: entry.dateKey,
     emotions: [color],
     coreEmotions: [coreColor],
+    specificMood: { name: moodInfo?.label ?? entry.primaryMood, color },
     timeOfDay: getTimeOfDay(entry.occurredAt),
     activities,
     people,

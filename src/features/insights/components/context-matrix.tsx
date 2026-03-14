@@ -18,7 +18,7 @@ export function ContextMatrix({ entries, category, title }: Props) {
         if (!itemStats[item]) itemStats[item] = { total: 0, colors: {} };
         itemStats[item].total += 1;
 
-        for (const color of entry.emotions) {
+        for (const color of entry.coreEmotions) {
           itemStats[item].colors[color] = (itemStats[item].colors[color] || 0) + 1;
         }
       }

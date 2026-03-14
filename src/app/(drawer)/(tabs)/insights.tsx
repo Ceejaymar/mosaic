@@ -29,6 +29,7 @@ import { ContextMatrix } from '@/src/features/insights/components/context-matrix
 import { HeroMosaic } from '@/src/features/insights/components/hero-mosaic';
 import { MicroGrid } from '@/src/features/insights/components/micro-grid';
 import { RhythmBar } from '@/src/features/insights/components/rhythm-bar';
+import { TopFeelings } from '@/src/features/insights/components/top-feelings';
 import { useInsightsData } from '@/src/features/insights/hooks/useInsightsData';
 import type { TimeFrame } from '@/src/features/insights/types';
 import { generateObservations } from '@/src/features/insights/utils/observations';
@@ -324,6 +325,7 @@ export default function InsightsScreen() {
         {hasEnoughData ? (
           <>
             <HeroMosaic entries={entries} />
+            <TopFeelings entries={entries} timeFrame={timeFrame} />
             <RhythmBar entries={entries} />
             <ContextMatrix entries={entries} category="people" title="Who you were with" />
             <ContextMatrix entries={entries} category="activities" title="What you were doing" />

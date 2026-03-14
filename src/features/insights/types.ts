@@ -5,6 +5,7 @@ export type InsightEntry = {
   date: string; // YYYY-MM-DD
   emotions: string[];
   coreEmotions: string[];
+  specificMood: { name: string; color: string };
   timeOfDay: 'morning' | 'afternoon' | 'evening' | 'night';
   activities: string[];
   people: string[];
