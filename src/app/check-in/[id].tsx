@@ -5,18 +5,54 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
-import { deleteMoodEntry, fetchMoodEntryById } from '@/src/db/repos/moodRepo';
+import {
+  deleteMoodEntry,
+  fetchMoodEntryById,
+  type MoodEntry,
+  updateMoodEntry,
+} from '@/src/db/repos/moodRepo';
 import { invalidateMonthCache } from '@/src/features/canvas/hooks/useCanvasDbData';
+import { CheckInSheet } from '@/src/features/check-in/components/check-in-sheet';
+
 export default function EditCheckInScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
+  const [entry, setEntry] = useState<MoodEntry | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
   useEffect(() => {
-    if (!id) router.replace('/');
+    if (!id) {
+      router.replace('/');
+      return;
+    }
+    fetchMoodEntryById(id).then((result) => {
+      if (!result) router.replace('/');
+      else setEntry(result);
+    });
   }, [id, router]);
 
-  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const handleSave = useCallback(
+    async (nodeId: string, note?: string, tags?: string[]) => {
+      if (!id) return;
+      await updateMoodEntry(id, {
+        primaryMood: nodeId,
+        note: note ?? null,
+        tags: tags && tags.length > 0 ? JSON.stringify(tags) : null,
+      });
+      if (entry) {
+        const [yearStr, monthStr] = entry.dateKey.split('-');
+        invalidateMonthCache(parseInt(yearStr, 10), parseInt(monthStr, 10) - 1);
+      }
+      router.back();
+    },
+    [id, entry, router],
+  );
+
+  const handleClose = useCallback(() => {
+    router.back();
+  }, [router]);
 
   const handleDelete = useCallback(() => {
     Alert.alert('Remove check-in', 'This will permanently delete this mood entry.', [
@@ -27,7 +63,6 @@ export default function EditCheckInScreen() {
         onPress: async () => {
           try {
             setDeleteError(null);
-            const entry = await fetchMoodEntryById(id as string);
             await deleteMoodEntry(id as string);
             if (entry) {
               const [yearStr, monthStr] = entry.dateKey.split('-');
@@ -41,7 +76,7 @@ export default function EditCheckInScreen() {
         },
       },
     ]);
-  }, [id, router]);
+  }, [id, entry, router]);
 
   if (!id) return null;
 
@@ -59,12 +94,6 @@ export default function EditCheckInScreen() {
       <AppText font="heading" style={styles.title}>
         Edit Check-in
       </AppText>
-      <AppText font="mono" colorVariant="muted" style={styles.meta}>
-        Entry {id}
-      </AppText>
-      <AppText colorVariant="muted" style={styles.body}>
-        Edit flow coming soon.
-      </AppText>
 
       <View style={styles.spacer} />
 
@@ -77,6 +106,15 @@ export default function EditCheckInScreen() {
       >
         <AppText style={styles.deleteBtnText}>Delete check-in</AppText>
       </Pressable>
+
+      {entry && (
+        <CheckInSheet
+          visible
+          onSave={handleSave}
+          onClose={handleClose}
+          initialData={{ existingEntry: entry, targetDate: entry.dateKey }}
+        />
+      )}
     </View>
   );
 }
@@ -92,8 +130,6 @@ const styles = StyleSheet.create((theme) => ({
     letterSpacing: -0.5,
     marginBottom: 8,
   },
-  meta: { fontSize: 13, marginBottom: 24 },
-  body: { fontSize: 15, lineHeight: 22 },
   spacer: { flex: 1 },
   deleteError: {
     fontSize: 13,

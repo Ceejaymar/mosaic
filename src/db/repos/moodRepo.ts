@@ -17,6 +17,16 @@ export async function insertMoodEntry(entry: NewMoodEntry): Promise<string> {
   return entry.id;
 }
 
+export async function updateMoodEntry(
+  id: string,
+  updates: Partial<Omit<NewMoodEntry, 'id' | 'createdAt' | 'updatedAt'>>,
+): Promise<void> {
+  await db
+    .update(moodEntries)
+    .set({ ...updates, updatedAt: new Date().toISOString() })
+    .where(eq(moodEntries.id, id));
+}
+
 export async function insertTestMoodEntry(overrides?: Partial<NewMoodEntry>) {
   const now = new Date().toISOString();
 

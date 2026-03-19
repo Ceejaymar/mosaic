@@ -1,33 +1,69 @@
 import { useCallback, useState } from 'react';
+import type { MoodEntry } from '@/src/db/repos/moodRepo';
+import {
+  ACTIVITY_TAGS,
+  LOCATION_TAGS,
+  PEOPLE_TAGS,
+} from '@/src/features/check-in/data/context-tags';
 import type { EmotionGroupId } from '@/src/features/emotion-accordion/types';
 import { triggerSpringLayoutAnimation } from '@/src/utils/animations';
 
 export type Step = 'emotion' | 'context';
 
+export type CheckInFormInitialData = {
+  targetDate?: string;
+  existingEntry?: MoodEntry;
+};
+
+function parseTagSets(entry?: MoodEntry) {
+  const raw: string[] = entry?.tags ? JSON.parse(entry.tags) : [];
+  return {
+    activitySet: new Set(raw.filter((t) => (ACTIVITY_TAGS as readonly string[]).includes(t))),
+    peopleSet: new Set(raw.filter((t) => (PEOPLE_TAGS as readonly string[]).includes(t))),
+    locationSet: new Set(raw.filter((t) => (LOCATION_TAGS as readonly string[]).includes(t))),
+  };
+}
+
 export function useCheckInForm(
   onSaveCallback: (nodeId: string, note?: string, tags?: string[]) => void,
   onCloseCallback: () => void,
+  initialData?: CheckInFormInitialData,
 ) {
-  const [step, setStep] = useState<Step>('emotion');
+  const existingEntry = initialData?.existingEntry;
+  const targetDate = initialData?.targetDate;
+  const isEditing = !!existingEntry;
+
+  const [step, setStep] = useState<Step>(() => (existingEntry ? 'context' : 'emotion'));
   const [activeGroupId, setActiveGroupId] = useState<EmotionGroupId | null>(null);
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-  const [note, setNote] = useState('');
-  const [activities, setActivities] = useState<Set<string>>(new Set());
-  const [people, setPeople] = useState<Set<string>>(new Set());
-  const [locations, setLocations] = useState<Set<string>>(new Set());
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(
+    () => existingEntry?.primaryMood ?? null,
+  );
+  const [note, setNote] = useState(() => existingEntry?.note ?? '');
+  const [activities, setActivities] = useState<Set<string>>(
+    () => parseTagSets(existingEntry).activitySet,
+  );
+  const [people, setPeople] = useState<Set<string>>(() => parseTagSets(existingEntry).peopleSet);
+  const [locations, setLocations] = useState<Set<string>>(
+    () => parseTagSets(existingEntry).locationSet,
+  );
 
   const resetState = useCallback(() => {
-    setStep('emotion');
+    const sets = parseTagSets(existingEntry);
+    setStep(existingEntry ? 'context' : 'emotion');
     setActiveGroupId(null);
-    setSelectedNodeId(null);
-    setNote('');
-    setActivities(new Set());
-    setPeople(new Set());
-    setLocations(new Set());
-  }, []);
+    setSelectedNodeId(existingEntry?.primaryMood ?? null);
+    setNote(existingEntry?.note ?? '');
+    setActivities(sets.activitySet);
+    setPeople(sets.peopleSet);
+    setLocations(sets.locationSet);
+  }, [existingEntry]);
 
   const handleToggleGroup = useCallback(
-    (groupId: EmotionGroupId) => {
+    (groupId: EmotionGroupId | null) => {
+      if (!groupId) {
+        setActiveGroupId(null);
+        return;
+      }
       triggerSpringLayoutAnimation();
       const isOpening = activeGroupId !== groupId;
       if (isOpening) setSelectedNodeId(groupId);
@@ -86,6 +122,8 @@ export function useCheckInForm(
     activities,
     people,
     locations,
+    isEditing,
+    targetDate,
     resetState,
     handleToggleGroup,
     toggleActivity,

@@ -19,6 +19,7 @@ import { AppText } from '@/src/components/app-text';
 import { DemoBadge } from '@/src/components/demo-badge';
 import { TopFade } from '@/src/components/top-fade';
 import { LAYOUT } from '@/src/constants/layout';
+import { insertMoodEntry, type NewMoodEntry } from '@/src/db/repos/moodRepo';
 import { MonthGrid } from '@/src/features/canvas/components/month-grid';
 import { YearView } from '@/src/features/canvas/components/year-view';
 import {
@@ -27,7 +28,9 @@ import {
   useCanvasDbData,
 } from '@/src/features/canvas/hooks/useCanvasDbData';
 import { getDowLabels, getMonthName } from '@/src/features/canvas/utils/date-labels';
+import { CheckInSheet } from '@/src/features/check-in/components/check-in-sheet';
 import { useRefreshOnFocus } from '@/src/hooks/useRefreshOnFocus';
+import { uuid } from '@/src/lib/uuid';
 import { useAppStore } from '@/src/store/useApp';
 import { LETTER_SPACING } from '@/src/styles/design-tokens';
 
@@ -54,6 +57,7 @@ const AnimatedMonth = memo(function AnimatedMonth({
   itemHeight,
   tileSize,
   onDayPress,
+  onEmptyDayPress,
   refreshKey,
   reduceMotion,
 }: {
@@ -63,6 +67,7 @@ const AnimatedMonth = memo(function AnimatedMonth({
   itemHeight: number;
   tileSize: number;
   onDayPress: (date: string) => void;
+  onEmptyDayPress?: (date: string) => void;
   refreshKey: number;
   reduceMotion: boolean;
 }) {
@@ -121,6 +126,7 @@ const AnimatedMonth = memo(function AnimatedMonth({
             tileSize={tileSize}
             tileGap={TILE_GAP}
             onDayPress={onDayPress}
+            onEmptyDayPress={onEmptyDayPress}
           />
         </Animated.View>
       </Animated.View>
@@ -187,6 +193,39 @@ export default function CanvasScreen() {
   const handleDayPress = useCallback((d: string) => {
     Alert.alert('Day', d);
   }, []);
+
+  const [checkInTargetDate, setCheckInTargetDate] = useState<string | null>(null);
+
+  const handleEmptyDayPress = useCallback((dateKey: string) => {
+    setCheckInTargetDate(dateKey);
+  }, []);
+
+  const handleSheetClose = useCallback(() => {
+    setCheckInTargetDate(null);
+  }, []);
+
+  const handleSheetSave = useCallback(
+    async (nodeId: string, note?: string, tags?: string[]) => {
+      if (!checkInTargetDate) return;
+      const now = new Date();
+      const newEntry: NewMoodEntry = {
+        id: uuid(),
+        dateKey: checkInTargetDate,
+        primaryMood: nodeId,
+        note: note ?? null,
+        tags: tags && tags.length > 0 ? JSON.stringify(tags) : null,
+        occurredAt: `${checkInTargetDate}T12:00:00.000Z`,
+        createdAt: now.toISOString(),
+        updatedAt: now.toISOString(),
+      };
+      await insertMoodEntry(newEntry);
+      const [yearStr, monthStr] = checkInTargetDate.split('-');
+      invalidateMonthCache(parseInt(yearStr, 10), parseInt(monthStr, 10) - 1);
+      setRefreshKey((k) => k + 1);
+      setCheckInTargetDate(null);
+    },
+    [checkInTargetDate],
+  );
 
   const toggleViewMode = useCallback(() => {
     setIsYearMounted(true);
@@ -286,6 +325,7 @@ export default function CanvasScreen() {
                   itemHeight={itemHeight}
                   tileSize={tileSize}
                   onDayPress={handleDayPress}
+                  onEmptyDayPress={handleEmptyDayPress}
                   refreshKey={refreshKey}
                   reduceMotion={reduceMotion}
                 />
@@ -346,6 +386,7 @@ export default function CanvasScreen() {
             >
               <YearView
                 onDayPress={handleDayPress}
+                onEmptyDayPress={handleEmptyDayPress}
                 contentWidth={screenWidth}
                 onYearChange={setOverviewYear}
                 viewportHeight={
@@ -358,6 +399,13 @@ export default function CanvasScreen() {
           )}
         </Animated.View>
       </View>
+
+      <CheckInSheet
+        visible={!!checkInTargetDate}
+        initialData={checkInTargetDate ? { targetDate: checkInTargetDate } : undefined}
+        onSave={handleSheetSave}
+        onClose={handleSheetClose}
+      />
     </View>
   );
 }

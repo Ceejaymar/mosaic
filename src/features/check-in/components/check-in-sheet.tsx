@@ -19,8 +19,22 @@ import {
   LOCATION_TAGS,
   PEOPLE_TAGS,
 } from '@/src/features/check-in/data/context-tags';
-import { useCheckInForm } from '@/src/features/check-in/hooks/useCheckInForm';
+import {
+  type CheckInFormInitialData,
+  useCheckInForm,
+} from '@/src/features/check-in/hooks/useCheckInForm';
 import { getTimeSubtitle } from '@/src/features/check-in/utils/time-of-day';
+
+function formatHistoricalDate(dateKey: string): string {
+  const [y, m, d] = dateKey.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+}
+
+const TODAY_KEY = (() => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+})();
+
 import { EmotionSelector } from '@/src/features/emotion-accordion/components/emotion-selector';
 import {
   getEmotionColor,
@@ -33,6 +47,8 @@ type Props = {
   visible: boolean;
   onClose: () => void;
   onSave: (nodeId: string, note?: string, tags?: string[]) => void;
+  initialData?: CheckInFormInitialData;
+  onViewFullDay?: () => void;
 };
 
 function CloseButton({ onPress }: { onPress: () => void }) {
@@ -56,16 +72,34 @@ function CloseButton({ onPress }: { onPress: () => void }) {
   );
 }
 
-export const CheckInSheet = memo(function CheckInSheet({ visible, onClose, onSave }: Props) {
+export const CheckInSheet = memo(function CheckInSheet({
+  visible,
+  onClose,
+  onSave,
+  initialData,
+  onViewFullDay,
+}: Props) {
   const insets = useSafeAreaInsets();
   const { theme } = useUnistyles();
   const colors = useAccessibleColors();
 
-  const form = useCheckInForm(onSave, onClose);
+  const form = useCheckInForm(onSave, onClose, initialData);
 
   const selectedNode = useMemo(() => getEmotionNode(form.selectedNodeId), [form.selectedNodeId]);
-
   const selectedColor = useMemo(() => getEmotionColor(selectedNode), [selectedNode]);
+
+  const isHistorical = !!form.targetDate && form.targetDate !== TODAY_KEY;
+  const headerTitle = form.isEditing
+    ? 'Edit Check-in'
+    : isHistorical && form.targetDate
+      ? `How were you feeling on ${formatHistoricalDate(form.targetDate)}?`
+      : 'What are you feeling?';
+  const headerSubtitle =
+    form.isEditing && form.targetDate
+      ? formatHistoricalDate(form.targetDate)
+      : isHistorical
+        ? null
+        : getTimeSubtitle();
 
   const bannerBg = selectedColor ?? colors.divider;
   const bannerTextColor = isLightColor(bannerBg) ? theme.colors.onAccent : '#ffffff';
@@ -89,11 +123,23 @@ export const CheckInSheet = memo(function CheckInSheet({ visible, onClose, onSav
             <View style={styles.header}>
               <View style={styles.flex1}>
                 <AppText font="heading" style={styles.title}>
-                  What are you feeling?
+                  {headerTitle}
                 </AppText>
-                <AppText font="mono" colorVariant="muted" style={styles.subtitle}>
-                  {getTimeSubtitle()}
-                </AppText>
+                {headerSubtitle && (
+                  <AppText font="mono" colorVariant="muted" style={styles.subtitle}>
+                    {headerSubtitle}
+                  </AppText>
+                )}
+                {form.isEditing && onViewFullDay && (
+                  <Pressable
+                    onPress={onViewFullDay}
+                    style={({ pressed }) => pressed && { opacity: 0.6 }}
+                  >
+                    <AppText font="mono" colorVariant="muted" style={styles.viewFullDay}>
+                      View Full Day →
+                    </AppText>
+                  </Pressable>
+                )}
               </View>
               <CloseButton onPress={form.handleClose} />
             </View>
@@ -205,7 +251,11 @@ export const CheckInSheet = memo(function CheckInSheet({ visible, onClose, onSav
                 { paddingBottom: Math.max(insets.bottom, 20), borderTopColor: colors.divider },
               ]}
             >
-              <PillButton label="Save check-in" onPress={form.handleSave} elevated />
+              <PillButton
+                label={form.isEditing ? 'Save changes' : 'Save check-in'}
+                onPress={form.handleSave}
+                elevated
+              />
             </View>
           </>
         )}
@@ -239,6 +289,7 @@ const styles = StyleSheet.create((theme) => ({
     letterSpacing: -0.66,
   },
   subtitle: { fontSize: theme.fontSize.sm, marginTop: 4, lineHeight: 22 },
+  viewFullDay: { fontSize: theme.fontSize.xs, marginTop: theme.spacing[2] },
   closeBtn: {
     width: 32,
     height: 32,
