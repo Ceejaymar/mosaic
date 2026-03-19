@@ -8,6 +8,10 @@ import {
 } from '@/src/features/check-in/data/context-tags';
 import { parseStoredTags } from '@/src/features/check-in/utils/parse-tags';
 import { getAllDemoEntries } from '@/src/features/demo/generateDemoData';
+import {
+  getEmotionNode,
+  getGroupPalette,
+} from '@/src/features/emotion-accordion/utils/emotion-utils';
 import { getMoodDisplayInfo } from '@/src/features/emotion-accordion/utils/mood-display';
 import { useAppStore } from '@/src/store/useApp';
 
@@ -30,7 +34,9 @@ function getTimeOfDay(isoStr: string): InsightEntry['timeOfDay'] {
 }
 
 function moodEntryToInsight(entry: MoodEntry): InsightEntry {
-  const color = getMoodDisplayInfo(entry.primaryMood)?.color ?? '#888888';
+  const node = getEmotionNode(entry.primaryMood);
+  const moodInfo = getMoodDisplayInfo(entry.primaryMood);
+  const color = moodInfo?.color ?? '#888888';
   const tags = parseStoredTags(entry.tags);
 
   const activities: string[] = [];
@@ -43,10 +49,16 @@ function moodEntryToInsight(entry: MoodEntry): InsightEntry {
     else if (LOCATION_SET.has(tag)) places.push(tag);
   }
 
+  // Core color = palette[0] for the parent group (the 7 canonical emotion colors)
+  const palette = node ? getGroupPalette(node.groupId) : null;
+  const coreColor = palette?.[0] ?? color;
+
   return {
     id: entry.id,
     date: entry.dateKey,
     emotions: [color],
+    coreEmotions: [coreColor],
+    specificMood: { name: moodInfo?.label ?? entry.primaryMood, color },
     timeOfDay: getTimeOfDay(entry.occurredAt),
     activities,
     people,

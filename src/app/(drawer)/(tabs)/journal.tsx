@@ -1,23 +1,25 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { FlashList } from '@shopify/flash-list';
-import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { memo, useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
 import { DemoBadge } from '@/src/components/demo-badge';
+import { Screen } from '@/src/components/screen';
+import { Surface } from '@/src/components/surface';
 import { TopFade } from '@/src/components/top-fade';
 import { LAYOUT } from '@/src/constants/layout';
 import { fetchMoodEntriesPage, type MoodEntry } from '@/src/db/repos/moodRepo';
 import { parseStoredTags } from '@/src/features/check-in/utils/parse-tags';
 import { getDemoEntriesPage } from '@/src/features/demo/generateDemoData';
 import { getMoodDisplayInfo } from '@/src/features/emotion-accordion/utils/mood-display';
-import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
+import { hapticLight } from '@/src/lib/haptics/haptics';
 import { useAppStore } from '@/src/store/useApp';
+import { LETTER_SPACING } from '@/src/styles/design-tokens';
 import { formatDayLabel, formatEntryTime } from '@/src/utils/format-date';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -58,20 +60,89 @@ function buildListItems(entries: MoodEntry[], notesOnly: boolean): ListItem[] {
 
 // ─── DayHeaderRow ─────────────────────────────────────────────────────────────
 
+const ORDINAL_RE = /^(.*?\d+)(st|nd|rd|th)(.*)$/;
+
 function DayHeaderRow({ label }: { label: string }) {
-  return <Text style={dhStyles.label}>{label}</Text>;
+  const match = label.match(ORDINAL_RE);
+
+  if (!match) {
+    return (
+      <AppText
+        font="heading"
+        variant="xl"
+        colorVariant="primary"
+        style={dhStyles.label}
+        accessibilityRole="header"
+      >
+        {label}
+      </AppText>
+    );
+  }
+
+  const [, before, suffix, after] = match;
+  return (
+    <View
+      style={dhStyles.row}
+      accessible={true}
+      accessibilityLabel={label}
+      accessibilityRole="header"
+    >
+      <AppText
+        font="heading"
+        variant="xl"
+        colorVariant="primary"
+        style={dhStyles.mainText}
+        accessibilityElementsHidden={true}
+        importantForAccessibility="no"
+      >
+        {before}
+      </AppText>
+      <AppText
+        font="heading"
+        colorVariant="primary"
+        style={dhStyles.ordinal}
+        accessibilityElementsHidden={true}
+        importantForAccessibility="no"
+      >
+        {suffix}
+      </AppText>
+      {after ? (
+        <AppText
+          font="heading"
+          variant="xl"
+          colorVariant="primary"
+          style={dhStyles.mainText}
+          accessibilityElementsHidden={true}
+          importantForAccessibility="no"
+        >
+          {after}
+        </AppText>
+      ) : null}
+    </View>
+  );
 }
 
 const dhStyles = StyleSheet.create((theme) => ({
   label: {
-    fontSize: 22,
-    fontFamily: 'Fraunces',
-    fontWeight: '600' as const,
-    letterSpacing: -0.5,
-    color: theme.colors.typography,
+    fontWeight: '700' as const,
     paddingHorizontal: theme.spacing[5],
     paddingTop: 28,
-    paddingBottom: 8,
+    paddingBottom: theme.spacing[2],
+  },
+  row: {
+    flexDirection: 'row' as const,
+    alignItems: 'flex-start' as const,
+    paddingHorizontal: theme.spacing[5],
+    paddingTop: 28,
+    paddingBottom: theme.spacing[2],
+  },
+  mainText: {
+    fontWeight: '700' as const,
+  },
+  ordinal: {
+    fontSize: 11,
+    fontWeight: '700' as const,
+    marginTop: theme.spacing[1],
   },
 }));
 
@@ -84,107 +155,85 @@ type EntryCardProps = {
 
 const EntryCard = memo(function EntryCard({ entry, onPress }: EntryCardProps) {
   const { theme } = useUnistyles();
-  const colors = useAccessibleColors();
-  const { t } = useTranslation();
   const info = getMoodDisplayInfo(entry.primaryMood);
   const accentColor = info?.color ?? theme.colors.mosaicGold;
   const label = info?.label ?? entry.primaryMood;
   const tags = parseStoredTags(entry.tags);
 
-  const handlePress = useCallback(() => onPress(entry.id), [entry.id, onPress]);
+  const handlePress = useCallback(() => {
+    hapticLight();
+    onPress(entry.id);
+  }, [entry.id, onPress]);
 
-  const gradientColors = [hexAlpha(accentColor, 0.1), hexAlpha(accentColor, 0)] as const;
+  // Mood gradient passed to Surface — eliminates a stacked LinearGradient inside the card body.
+  const gradientColors = [hexAlpha(accentColor, 0), hexAlpha(accentColor, 0.2)] as const;
 
   return (
     <Pressable
       onPress={handlePress}
-      style={({ pressed }) => [
-        cardStyles.card,
-        {
-          backgroundColor: theme.colors.tileBackground,
-          shadowColor: theme.colors.tileShadowColor,
-          opacity: pressed ? 0.78 : 1,
-        },
-      ]}
+      style={({ pressed }) => [cardStyles.pressable, { opacity: pressed ? 0.7 : 1 }]}
     >
-      <LinearGradient
-        colors={gradientColors}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[StyleSheet.absoluteFill, { borderRadius: theme.radius.sheet }]}
-      />
-
-      <View style={cardStyles.body}>
-        <View style={cardStyles.headlineRow}>
-          <AppText colorVariant="muted" style={cardStyles.iAmFeeling}>
-            {t('journal.im_feeling')}
+      <Surface
+        variant="sheet"
+        surfaceGradientColors={gradientColors}
+        style={{ backgroundColor: theme.colors.tileBackground }}
+      >
+        <View style={cardStyles.body}>
+          <AppText font="heading" style={[cardStyles.emotion, { color: accentColor }]}>
+            {label}
           </AppText>
-          <Text style={[cardStyles.emotion, { color: accentColor }]}>{label}</Text>
+
+          {entry.note ? (
+            <AppText
+              font="heading"
+              colorVariant="primary"
+              style={cardStyles.note}
+              numberOfLines={3}
+              ellipsizeMode="tail"
+            >
+              {entry.note}
+            </AppText>
+          ) : null}
+
+          {tags.length > 0 && (
+            <View style={cardStyles.tagRow}>
+              {tags.map((tag) => (
+                <View
+                  key={tag}
+                  style={[cardStyles.tag, { backgroundColor: hexAlpha(accentColor, 0.15) }]}
+                >
+                  <AppText style={[cardStyles.tagText, { color: accentColor }]}>{tag}</AppText>
+                </View>
+              ))}
+            </View>
+          )}
+
+          <AppText colorVariant="muted" style={cardStyles.time}>
+            {formatEntryTime(entry.occurredAt)}
+          </AppText>
         </View>
-
-        {entry.note ? (
-          <Text
-            style={[cardStyles.note, { color: theme.colors.typography }]}
-            numberOfLines={3}
-            ellipsizeMode="tail"
-          >
-            {entry.note}
-          </Text>
-        ) : null}
-
-        {tags.length > 0 && (
-          <View style={cardStyles.tagRow}>
-            {tags.map((tag) => (
-              <View key={tag} style={[cardStyles.tag, { borderColor: colors.divider }]}>
-                <AppText colorVariant="muted" style={cardStyles.tagText}>
-                  {tag}
-                </AppText>
-              </View>
-            ))}
-          </View>
-        )}
-
-        <AppText colorVariant="muted" style={cardStyles.time}>
-          {formatEntryTime(entry.occurredAt)}
-        </AppText>
-      </View>
+      </Surface>
     </Pressable>
   );
 });
 
 const cardStyles = StyleSheet.create((theme) => ({
-  card: {
+  pressable: {
     marginHorizontal: theme.spacing[4],
     marginVertical: theme.spacing[2],
     borderRadius: theme.radius.sheet,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.14,
-    shadowRadius: 10,
-    elevation: 3,
   },
   body: {
     padding: theme.spacing[5],
     gap: theme.spacing[2],
   },
-  headlineRow: {
-    flexDirection: 'row' as const,
-    flexWrap: 'wrap' as const,
-    alignItems: 'baseline' as const,
-  },
-  iAmFeeling: {
-    fontSize: 14,
-    fontFamily: 'Fraunces',
-    fontStyle: 'italic' as const,
-  },
   emotion: {
-    fontSize: 14,
-    fontFamily: 'Fraunces',
+    fontSize: theme.fontSize.md,
     fontWeight: '700' as const,
   },
   note: {
     fontSize: theme.fontSize.lg,
     lineHeight: 28,
-    fontFamily: 'Fraunces',
     fontWeight: '400' as const,
     letterSpacing: -0.2,
   },
@@ -194,10 +243,9 @@ const cardStyles = StyleSheet.create((theme) => ({
     gap: theme.spacing[2],
   },
   tag: {
-    borderWidth: 1,
     borderRadius: theme.radius.sheet,
     paddingHorizontal: theme.spacing[3],
-    paddingVertical: 4,
+    paddingVertical: theme.spacing[1],
   },
   tagText: {
     fontSize: 12,
@@ -205,9 +253,9 @@ const cardStyles = StyleSheet.create((theme) => ({
   },
   time: {
     fontSize: 12,
-    fontWeight: '400' as const,
+    fontWeight: '500' as const,
     letterSpacing: 0.2,
-    marginTop: 4,
+    marginTop: theme.spacing[1],
   },
 }));
 
@@ -217,7 +265,9 @@ function EmptyState() {
   const { t } = useTranslation();
   return (
     <View style={emptyStyles.container}>
-      <Text style={emptyStyles.title}>{t('journal.empty_title')}</Text>
+      <AppText font="heading" colorVariant="primary" style={emptyStyles.title}>
+        {t('journal.empty_title')}
+      </AppText>
       <AppText colorVariant="muted" style={emptyStyles.subtitle}>
         {t('journal.empty_subtitle')}
       </AppText>
@@ -227,15 +277,14 @@ function EmptyState() {
 
 const emptyStyles = StyleSheet.create((theme) => ({
   container: {
-    paddingTop: 80,
+    paddingTop: theme.spacing[20],
     alignItems: 'center' as const,
     gap: theme.spacing[2],
   },
   title: {
     fontSize: 18,
-    fontFamily: 'Fraunces',
     fontWeight: '600' as const,
-    color: theme.colors.typography,
+    letterSpacing: LETTER_SPACING.tight,
   },
   subtitle: {
     fontSize: 14,
@@ -252,18 +301,37 @@ function FilterToggle({ notesOnly, onToggle }: FilterToggleProps) {
   return (
     <Pressable
       onPress={onToggle}
-      style={({ pressed }) => ({ opacity: pressed ? 0.4 : 1 })}
+      style={({ pressed }) => [ftStyles.row, { opacity: pressed ? 0.5 : 1 }]}
       accessibilityRole="button"
       accessibilityLabel={
         notesOnly ? t('journal.filter_a11y_show_all') : t('journal.filter_a11y_with_notes')
       }
     >
-      <Text style={{ fontSize: 15, fontWeight: '500', color: theme.colors.mosaicGold }}>
-        {notesOnly ? t('journal.filter_with_notes') : t('journal.filter_show_all')}
-      </Text>
+      <View style={[ftStyles.dot, { backgroundColor: theme.colors.mosaicGold }]} />
+      <AppText variant="sm" style={ftStyles.label}>
+        {notesOnly ? t('journal.filter_show_all') : t('journal.filter_with_notes')}
+      </AppText>
     </Pressable>
   );
 }
+
+const ftStyles = StyleSheet.create((theme) => ({
+  row: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: theme.spacing[2],
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  label: {
+    fontWeight: '500' as const,
+    color: theme.colors.mosaicGold,
+    lineHeight: 14,
+  },
+}));
 
 // ─── List utils ───────────────────────────────────────────────────────────────
 
@@ -392,15 +460,15 @@ export default function Journal() {
 
   if (isLoading) {
     return (
-      <View style={[styles.container, styles.centered, { paddingTop: insets.top }]}>
+      <Screen style={[styles.centered, { paddingTop: insets.top }]}>
         <ActivityIndicator color={theme.colors.mosaicGold} />
-      </View>
+      </Screen>
     );
   }
 
   if (error) {
     return (
-      <View style={[styles.container, styles.centered, { paddingTop: insets.top }]}>
+      <Screen style={[styles.centered, { paddingTop: insets.top }]}>
         <AppText colorVariant="muted" style={styles.errorText}>
           {t('journal.error_message')}
         </AppText>
@@ -408,21 +476,26 @@ export default function Journal() {
           onPress={refreshEntries}
           style={({ pressed }) => [styles.retryBtn, { opacity: pressed ? 0.6 : 1 }]}
         >
-          <Text style={{ color: theme.colors.mosaicGold, fontWeight: '600', fontSize: 15 }}>
+          <AppText
+            variant="md"
+            style={{ color: theme.colors.mosaicGold, fontWeight: '600' as const }}
+          >
             {t('journal.error_retry')}
-          </Text>
+          </AppText>
         </Pressable>
-      </View>
+      </Screen>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <Screen>
       <TopFade height={insets.top + 80} />
 
       <View style={[styles.topBar, { top: insets.top }]}>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <Text style={styles.pageTitle}>{t('journal.title', 'Journal')}</Text>
+        <View style={styles.headerLeft}>
+          <AppText font="heading" variant="2xl" colorVariant="primary" style={styles.pageTitle}>
+            {t('journal.title', 'Journal')}
+          </AppText>
           <DemoBadge />
         </View>
         <FilterToggle notesOnly={notesOnly} onToggle={toggleNotesOnly} />
@@ -438,38 +511,15 @@ export default function Journal() {
         ListEmptyComponent={EmptyState}
         contentContainerStyle={{
           paddingBottom,
-          paddingTop: insets.top + 60, // Pushed down past the absolute header
+          paddingTop: insets.top + 60,
         }}
         showsVerticalScrollIndicator={false}
       />
-    </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create((theme) => ({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  topBar: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    zIndex: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: theme.spacing[6],
-    paddingTop: theme.spacing[3],
-    paddingBottom: theme.spacing[4],
-  },
-  pageTitle: {
-    fontSize: theme.fontSize['2xl'],
-    fontFamily: 'Fraunces',
-    fontWeight: '700',
-    color: theme.colors.typography,
-    letterSpacing: -0.4,
-  },
   centered: {
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
@@ -481,5 +531,24 @@ const styles = StyleSheet.create((theme) => ({
   retryBtn: {
     paddingHorizontal: theme.spacing[5],
     paddingVertical: theme.spacing[2],
+  },
+  topBar: {
+    position: 'absolute' as const,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+    paddingHorizontal: theme.spacing[6],
+    paddingTop: theme.spacing[3],
+    paddingBottom: theme.spacing[4],
+  },
+  headerLeft: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+  },
+  pageTitle: {
+    fontWeight: '800' as const,
   },
 }));

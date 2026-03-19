@@ -24,7 +24,7 @@ export function RhythmBar({ entries }: Props) {
       let totalCount = 0;
 
       for (const entry of timeEntries) {
-        for (const rawColor of entry.emotions) {
+        for (const rawColor of entry.coreEmotions) {
           colorCounts[rawColor] = (colorCounts[rawColor] || 0) + 1;
           totalCount++;
         }
@@ -58,7 +58,7 @@ export function RhythmBar({ entries }: Props) {
               )}
             </View>
 
-            <AppText variant="mono" colorVariant="muted" style={styles.label} numberOfLines={1}>
+            <AppText font="mono" colorVariant="muted" style={styles.label} numberOfLines={1}>
               {block.label}
             </AppText>
           </View>

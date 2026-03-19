@@ -106,7 +106,7 @@ export function MicroGrid({ entries }: Props) {
 
           return (
             <View key={id} style={styles.col}>
-              <AppText variant="mono" colorVariant="muted" style={styles.label}>
+              <AppText font="mono" colorVariant="muted" style={styles.label}>
                 {label}
               </AppText>
               {renderMiniTile(colors)}

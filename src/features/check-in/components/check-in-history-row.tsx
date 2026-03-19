@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
@@ -33,9 +33,9 @@ export function CheckInHistoryRow({ occurredAt, label, color, tags, onPress }: P
 
       <View style={[styles.squircle, { backgroundColor: color }]} />
 
-      <Text style={styles.label} numberOfLines={1}>
+      <AppText font="heading" style={styles.label} numberOfLines={1}>
         {label}
-      </Text>
+      </AppText>
 
       {tags.length > 0 && (
         <View style={styles.tagsContainer}>
@@ -108,8 +108,8 @@ const styles = StyleSheet.create((theme) => ({
   tag: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.pill,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: theme.spacing[3],
+    paddingVertical: theme.spacing[1],
   },
   tagText: {
     fontSize: 12,

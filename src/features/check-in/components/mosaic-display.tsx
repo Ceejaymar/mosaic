@@ -1,12 +1,16 @@
 import type { StyleProp, ViewStyle } from 'react-native';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
+import { Surface } from '@/src/components/surface';
 import { formatTime } from '@/src/features/check-in/utils/format-time';
 import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
 
 const GAP = 4;
+
+// White sheen top-left → transparent center → dark shadow bottom-right over mood color = glass
+const TILE_SHIMMER = ['rgba(255,255,255,0.25)', 'rgba(255,255,255,0)', 'rgba(0,0,0,0.15)'] as const;
 
 export type MosaicTileData = {
   id: string;
@@ -32,13 +36,18 @@ type TileProps = {
 
 function Tile({ color, label, occurredAt, style }: TileProps) {
   return (
-    <View style={[styles.tile, { backgroundColor: color }, style]}>
+    <Surface
+      variant="card"
+      bordered={false}
+      surfaceGradientColors={TILE_SHIMMER}
+      style={[styles.tile, { backgroundColor: color }, style]}
+    >
       <View style={styles.scrim} />
-      <Text style={styles.tileLabel} numberOfLines={1}>
+      <AppText font="heading" style={styles.tileLabel} numberOfLines={1}>
         {label}
-      </Text>
-      <Text style={styles.tileTime}>{formatTime(occurredAt)}</Text>
-    </View>
+      </AppText>
+      <AppText style={styles.tileTime}>{formatTime(occurredAt)}</AppText>
+    </Surface>
   );
 }
 
@@ -104,20 +113,18 @@ export function MosaicDisplay({ tiles, onAddPress, onTilePress }: Props) {
     return (
       <Pressable
         onPress={onAddPress}
-        style={({ pressed }) => [
-          styles.emptyContainer,
-          { borderColor: colors.divider },
-          pressed && { opacity: 0.82 },
-        ]}
+        style={({ pressed }) => [styles.emptyPressable, pressed && { opacity: 0.82 }]}
         accessibilityRole="button"
         accessibilityLabel="Check in"
       >
-        <View style={[styles.plusCircle, { backgroundColor: colors.divider }]}>
-          <Text style={styles.plusIcon}>+</Text>
-        </View>
-        <AppText colorVariant="muted" style={styles.emptyHint}>
-          Tap to check in
-        </AppText>
+        <Surface variant="card" style={styles.emptyContainer}>
+          <View style={[styles.plusCircle, { backgroundColor: colors.divider }]}>
+            <AppText style={styles.plusIcon}>+</AppText>
+          </View>
+          <AppText colorVariant="muted" style={styles.emptyHint}>
+            Tap to check in
+          </AppText>
+        </Surface>
       </Pressable>
     );
   }
@@ -126,12 +133,13 @@ export function MosaicDisplay({ tiles, onAddPress, onTilePress }: Props) {
 }
 
 const styles = StyleSheet.create((theme) => ({
-  emptyContainer: {
+  emptyPressable: {
     width: '100%',
     aspectRatio: 1,
-    backgroundColor: theme.colors.surface,
+  },
+  emptyContainer: {
+    flex: 1,
     borderRadius: theme.radius.sheet,
-    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
     gap: theme.spacing[3],
@@ -171,9 +179,8 @@ const styles = StyleSheet.create((theme) => ({
   tileLabel: {
     fontSize: 18,
     fontWeight: '700',
-    fontFamily: 'Fraunces',
     color: theme.colors.onAccent,
     letterSpacing: -0.54,
   },
-  tileTime: { fontSize: 12, color: 'rgba(255,255,255,0.65)', marginTop: 4 },
+  tileTime: { fontSize: 12, color: 'rgba(255,255,255,0.65)', marginTop: theme.spacing[1] },
 }));

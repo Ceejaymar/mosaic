@@ -56,10 +56,10 @@ export default function EditCheckInScreen() {
         <AppText style={styles.backText}>← Back</AppText>
       </Pressable>
 
-      <AppText variant="heading" style={styles.title}>
+      <AppText font="heading" style={styles.title}>
         Edit Check-in
       </AppText>
-      <AppText variant="mono" colorVariant="muted" style={styles.meta}>
+      <AppText font="mono" colorVariant="muted" style={styles.meta}>
         Entry {id}
       </AppText>
       <AppText colorVariant="muted" style={styles.body}>

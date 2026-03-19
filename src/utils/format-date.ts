@@ -16,11 +16,20 @@ export function formatDayLabel(dateKey: string): string {
   if (dateKey === todayKey) return i18n.t('common.today');
   if (dateKey === yKey) return i18n.t('common.yesterday');
   const date = new Date(y, m - 1, d);
+  const lang = i18n.language;
+
+  // English: build "March 10th" / "March 10th, 2024" with ordinal suffix
+  if (lang.startsWith('en')) {
+    const month = date.toLocaleDateString(lang, { month: 'long' });
+    const dayOrdinal = getDayWithSuffix(d);
+    return y !== now.getFullYear() ? `${month} ${dayOrdinal}, ${y}` : `${month} ${dayOrdinal}`;
+  }
+
   const options: Intl.DateTimeFormatOptions =
     y !== now.getFullYear()
       ? { month: 'long', day: 'numeric', year: 'numeric' }
       : { month: 'long', day: 'numeric' };
-  return date.toLocaleDateString(i18n.language, options);
+  return date.toLocaleDateString(lang, options);
 }
 
 /**

@@ -1,4 +1,4 @@
-import { between, desc, eq } from 'drizzle-orm';
+import { between, count, desc, eq } from 'drizzle-orm';
 import { uuid } from '@/src/lib/uuid';
 import { db } from '../client';
 import { moodEntries } from '../schema';
@@ -85,4 +85,27 @@ export async function deleteMoodEntry(id: string): Promise<void> {
 
 export async function clearAllMoodEntries(): Promise<void> {
   await db.delete(moodEntries);
+}
+
+/**
+ * Returns the total number of mood entries within the given inclusive date range.
+ */
+export async function fetchCheckInCountForRange(from: string, to: string): Promise<number> {
+  const rows = await db
+    .select({ count: count() })
+    .from(moodEntries)
+    .where(between(moodEntries.dateKey, from, to));
+  return rows[0]?.count ?? 0;
+}
+
+/**
+ * Returns the distinct dateKeys (YYYY-MM-DD) that have at least one entry,
+ * within the given inclusive date range.
+ */
+export async function fetchDistinctCheckedInDays(from: string, to: string): Promise<string[]> {
+  const rows = await db
+    .selectDistinct({ dateKey: moodEntries.dateKey })
+    .from(moodEntries)
+    .where(between(moodEntries.dateKey, from, to));
+  return rows.map((r) => r.dateKey);
 }

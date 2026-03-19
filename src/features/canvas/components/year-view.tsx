@@ -392,7 +392,7 @@ export function YearView({
   );
 }
 
-const styles = StyleSheet.create(() => ({
+const styles = StyleSheet.create((theme) => ({
   wrapper: {
     flex: 1,
   },
@@ -413,8 +413,8 @@ const styles = StyleSheet.create(() => ({
     gap: 0,
   },
   loadingText: {
-    fontSize: 13,
+    fontSize: theme.fontSize.sm,
     position: 'absolute',
-    bottom: 20,
+    bottom: theme.spacing[5],
   },
 }));
