@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Pressable, View } from 'react-native';
+import { Alert, Pressable, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { dateToKey } from '@/src/db/repos/moodRepo';
@@ -57,9 +57,12 @@ export const MonthGrid = memo(function MonthGrid({
         const dayData = dayMap.get(day);
         const colors = dayData?.entries ?? [];
         const hasData = colors.length > 0;
-        const canLogHistorical =
-          !hasData && !isFuture && !!onEmptyDayPress && isWithinThreeMonths(dateKey);
-        const isInteractive = !isFuture && (hasData || canLogHistorical);
+
+        const isEmptyPast = !hasData && !isFuture;
+        const withinRange = isEmptyPast ? isWithinThreeMonths(dateKey) : false;
+        const canLogHistorical = isEmptyPast && withinRange && !!onEmptyDayPress;
+        const isTooOld = isEmptyPast && !withinRange;
+        const isInteractive = !isFuture && (hasData || canLogHistorical || isTooOld);
 
         return (
           <Pressable
@@ -68,8 +71,17 @@ export const MonthGrid = memo(function MonthGrid({
             onPress={() => {
               if (hasData && dayData) onDayPress(dayData.date);
               else if (canLogHistorical) onEmptyDayPress?.(dateKey);
+              else if (isTooOld)
+                Alert.alert(
+                  'Too far back',
+                  'You can only log check-ins up to 3 months in the past.',
+                );
             }}
-            style={({ pressed }) => [cellSize, isInteractive && pressed && { opacity: 0.7 }]}
+            style={({ pressed }) => [
+              cellSize,
+              isTooOld && { opacity: 0.4 },
+              isInteractive && !isTooOld && pressed && { opacity: 0.7 },
+            ]}
           >
             <DayTile colors={colors} day={day} size={tileSize} />
           </Pressable>

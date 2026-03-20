@@ -9,7 +9,14 @@ import {
   useState,
 } from 'react';
 import { useTranslation } from 'react-i18next';
-import { type DimensionValue, FlatList, Pressable, View, type ViewToken } from 'react-native';
+import {
+  Alert,
+  type DimensionValue,
+  FlatList,
+  Pressable,
+  View,
+  type ViewToken,
+} from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
@@ -99,30 +106,34 @@ const YearTile = memo(function YearTile({
 }: YearTileProps) {
   const { theme } = useUnistyles();
   const emptyBg = isEvenMonth ? theme.colors.surface : 'transparent';
-  const opacity = isFuture ? 0.25 : 1;
   const hasData = colors.length > 0;
   const canLogHistorical = !hasData && !isFuture && isWithin3Months && !!onEmptyDayPress;
-  const isInteractive = hasData || canLogHistorical;
+  const isTooOld = !hasData && !isFuture && !isWithin3Months;
+  const isInteractive = hasData || canLogHistorical || isTooOld;
+
+  const tileOpacity = isFuture ? 0.25 : isTooOld ? 0.4 : 1;
 
   const handlePress = () => {
     if (hasData) onPress(dateKey);
     else if (canLogHistorical) onEmptyDayPress?.(dateKey);
+    else if (isTooOld)
+      Alert.alert('Too far back', 'You can only log check-ins up to 3 months in the past.');
   };
 
   const flatStyle = {
     width,
     height,
-    opacity,
+    opacity: tileOpacity,
     backgroundColor: colors.length === 0 ? emptyBg : colors[0],
   };
-  const containerStyle = { width, height, overflow: 'hidden' as const, opacity };
+  const containerStyle = { width, height, overflow: 'hidden' as const, opacity: tileOpacity };
 
   if (colors.length <= 1) {
     return (
       <Pressable
         onPress={handlePress}
         disabled={!isInteractive}
-        style={({ pressed }) => (pressed ? [flatStyle, { opacity: opacity * 0.6 }] : flatStyle)}
+        style={({ pressed }) => (pressed ? [flatStyle, { opacity: tileOpacity * 0.6 }] : flatStyle)}
       />
     );
   }
@@ -132,7 +143,7 @@ const YearTile = memo(function YearTile({
       <Pressable
         onPress={handlePress}
         style={({ pressed }) =>
-          pressed ? [containerStyle, { opacity: opacity * 0.6 }] : containerStyle
+          pressed ? [containerStyle, { opacity: tileOpacity * 0.6 }] : containerStyle
         }
       >
         <View style={[PANELS.left, { backgroundColor: colors[0] }]} />
@@ -146,7 +157,7 @@ const YearTile = memo(function YearTile({
       <Pressable
         onPress={handlePress}
         style={({ pressed }) =>
-          pressed ? [containerStyle, { opacity: opacity * 0.6 }] : containerStyle
+          pressed ? [containerStyle, { opacity: tileOpacity * 0.6 }] : containerStyle
         }
       >
         <View style={[PANELS.tl, { backgroundColor: colors[0] }]} />
@@ -160,7 +171,7 @@ const YearTile = memo(function YearTile({
     <Pressable
       onPress={handlePress}
       style={({ pressed }) =>
-        pressed ? [containerStyle, { opacity: opacity * 0.6 }] : containerStyle
+        pressed ? [containerStyle, { opacity: tileOpacity * 0.6 }] : containerStyle
       }
     >
       <View style={[PANELS.tl, { backgroundColor: colors[0] }]} />
