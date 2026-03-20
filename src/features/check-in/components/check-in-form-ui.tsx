@@ -1,6 +1,13 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { memo, useMemo } from 'react';
-import { Pressable, ScrollView, TextInput, View } from 'react-native';
+import { Pressable, TextInput, View } from 'react-native';
+import Animated, {
+  Extrapolation,
+  interpolate,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useSharedValue,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
@@ -123,6 +130,18 @@ export const CheckInFormUI = memo(function CheckInFormUI({
   const bannerBg = selectedColor ?? colors.divider;
   const bannerTextColor = isLightColor(bannerBg) ? theme.colors.onAccent : '#ffffff';
 
+  const scrollY = useSharedValue(0);
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.value = event.contentOffset.y;
+    },
+  });
+  const headerPillAnimStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(scrollY.value, [50, 90], [0, 1], Extrapolation.CLAMP);
+    const translateY = interpolate(scrollY.value, [50, 90], [8, 0], Extrapolation.CLAMP);
+    return { opacity, transform: [{ translateY }] };
+  });
+
   return (
     <>
       {form.step === 'emotion' ? (
@@ -190,23 +209,25 @@ export const CheckInFormUI = memo(function CheckInFormUI({
               </AppText>
             </Pressable>
 
-            <View style={styles.selectedEmotionPill}>
+            <Animated.View style={[styles.selectedEmotionPill, headerPillAnimStyle]}>
               <View
                 style={[styles.emotionDot, { backgroundColor: selectedColor ?? colors.textMuted }]}
               />
               <AppText font="heading" style={styles.selectedEmotionText}>
                 {selectedNode?.label}
               </AppText>
-            </View>
+            </Animated.View>
 
             {isModal ? <CloseButton onPress={form.handleClose} /> : <HomeButton onPress={onHome} />}
           </View>
 
-          <ScrollView
+          <Animated.ScrollView
             style={styles.flex1}
             contentContainerStyle={styles.contextScroll}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
+            onScroll={scrollHandler}
+            scrollEventThrottle={16}
           >
             <Pressable
               onPress={() => form.setStep('emotion')}
@@ -284,7 +305,7 @@ export const CheckInFormUI = memo(function CheckInFormUI({
                 <AppText style={styles.deleteActionText}>Delete check-in</AppText>
               </Pressable>
             )}
-          </ScrollView>
+          </Animated.ScrollView>
 
           <View
             style={[
@@ -363,7 +384,7 @@ const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: theme.spacing[5],
     paddingTop: theme.spacing[5],
     paddingBottom: theme.spacing[4],
-    borderBottomWidth: 1,
+    borderBottomWidth: 0.5,
   },
   backBtn: { fontSize: theme.fontSize.md, fontWeight: '500' },
   selectedEmotionPill: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing[2] },
@@ -433,7 +454,7 @@ const styles = StyleSheet.create((theme) => ({
   footer: {
     paddingHorizontal: theme.spacing[5],
     paddingTop: theme.spacing[3],
-    borderTopWidth: 1,
+    borderTopWidth: 0.5,
   },
   deleteAction: {
     alignItems: 'center',
