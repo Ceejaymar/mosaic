@@ -36,6 +36,7 @@ import { generateObservations } from '@/src/features/insights/utils/observations
 import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
 import { useRefreshOnFocus } from '@/src/hooks/useRefreshOnFocus';
 import { hapticSelection } from '@/src/lib/haptics/haptics';
+import { useAppStore } from '@/src/store/useApp';
 import { getDayWithSuffix } from '@/src/utils/format-date';
 
 // ─── Utility: Dynamic Snapper Width ───────────────────────────────────────────
@@ -55,15 +56,17 @@ function getSnapperItemWidth(timeFrame: TimeFrame): number {
 
 // ─── Utility: Date Formatter ──────────────────────────────────────────────────
 
-function getFormattedDateRange(timeFrame: TimeFrame, offset: number): string {
+function getFormattedDateRange(
+  timeFrame: TimeFrame,
+  offset: number,
+  firstDayOfWeek: 'sunday' | 'monday',
+): string {
   const now = new Date();
 
   if (timeFrame === 'week') {
-    const start = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate() - now.getDay() + offset * 7,
-    );
+    const jsDow = now.getDay();
+    const diff = firstDayOfWeek === 'monday' ? (jsDow + 6) % 7 : jsDow;
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diff + offset * 7);
     const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 6);
 
     const startMonth = start.toLocaleDateString('en-US', { month: 'short' });
@@ -159,14 +162,16 @@ const DateSnapperItem = memo(function DateSnapperItem({
   timeFrame,
   scrollX,
   itemWidth,
+  firstDayOfWeek,
 }: {
   offset: number;
   index: number;
   timeFrame: TimeFrame;
   scrollX: SharedValue<number>;
   itemWidth: number;
+  firstDayOfWeek: 'sunday' | 'monday';
 }) {
-  const label = getFormattedDateRange(timeFrame, offset);
+  const label = getFormattedDateRange(timeFrame, offset, firstDayOfWeek);
 
   const animStyle = useAnimatedStyle(() => {
     const centerPosition = index * itemWidth;
@@ -189,10 +194,12 @@ function DateSnapper({
   timeFrame,
   currentOffset,
   onChange,
+  firstDayOfWeek,
 }: {
   timeFrame: TimeFrame;
   currentOffset: number;
   onChange: (offset: number) => void;
+  firstDayOfWeek: 'sunday' | 'monday';
 }) {
   const { width } = useWindowDimensions();
   const itemWidth = getSnapperItemWidth(timeFrame);
@@ -239,9 +246,10 @@ function DateSnapper({
         timeFrame={timeFrame}
         scrollX={scrollX}
         itemWidth={itemWidth}
+        firstDayOfWeek={firstDayOfWeek}
       />
     ),
-    [timeFrame, scrollX, itemWidth],
+    [timeFrame, scrollX, itemWidth, firstDayOfWeek],
   );
 
   return (
@@ -275,6 +283,8 @@ export default function InsightsScreen() {
   const [offset, setOffset] = useState(0);
   const [refreshKey, setRefreshKey] = useState(0);
 
+  const firstDayOfWeek = useAppStore((s) => s.preferences.firstDayOfWeek);
+
   useRefreshOnFocus(useCallback(() => setRefreshKey((k) => k + 1), []));
 
   const handleTimeFrameChange = useCallback((tf: TimeFrame) => {
@@ -300,7 +310,12 @@ export default function InsightsScreen() {
           <TimeFrameDropdown value={timeFrame} onChange={handleTimeFrameChange} />
         </View>
 
-        <DateSnapper timeFrame={timeFrame} currentOffset={offset} onChange={setOffset} />
+        <DateSnapper
+          timeFrame={timeFrame}
+          currentOffset={offset}
+          onChange={setOffset}
+          firstDayOfWeek={firstDayOfWeek}
+        />
 
         {/* THE SHORT FADE */}
         <View style={styles.shortFadeContainer} pointerEvents="none">

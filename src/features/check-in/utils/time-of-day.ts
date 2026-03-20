@@ -1,3 +1,5 @@
+import { formatTime } from '@/src/features/check-in/utils/format-time';
+
 export type TimeSlot = 'morning' | 'afternoon' | 'evening' | 'night';
 
 export const TIME_SLOTS: readonly TimeSlot[] = ['morning', 'afternoon', 'evening', 'night'];
@@ -31,10 +33,7 @@ export function getTimeSlotLabel(slot: TimeSlot): string {
 }
 
 export function getTimeSubtitle(): string {
-  const time = new Date().toLocaleTimeString([], {
-    hour: 'numeric',
-    minute: '2-digit',
-  });
+  const time = formatTime(new Date().toISOString());
   const slot = getTimeSlotLabel(getCurrentTimeSlot());
   return `${time} · ${slot}`;
 }

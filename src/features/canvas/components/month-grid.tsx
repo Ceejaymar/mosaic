@@ -4,6 +4,7 @@ import { StyleSheet } from 'react-native-unistyles';
 
 import { dateToKey } from '@/src/db/repos/moodRepo';
 import { isWithinThreeMonths } from '@/src/features/canvas/utils/date-utils';
+import { useAppStore } from '@/src/store/useApp';
 import type { CanvasDay } from '../hooks/useCanvasData';
 import { DayTile } from './day-tile';
 
@@ -29,7 +30,9 @@ export const MonthGrid = memo(function MonthGrid({
   onEmptyDayPress,
 }: Props) {
   const todayKey = dateToKey();
-  const firstDow = new Date(year, month, 1).getDay();
+  const firstDayOfWeek = useAppStore((s) => s.preferences.firstDayOfWeek);
+  const jsDow = new Date(year, month, 1).getDay();
+  const firstDow = firstDayOfWeek === 'monday' ? (jsDow === 0 ? 6 : jsDow - 1) : jsDow;
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const dayMap = new Map(data.map((d) => [Number(d.date.slice(8)), d]));
 

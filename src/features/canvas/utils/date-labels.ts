@@ -19,12 +19,20 @@ const MS_PER_DAY = 86_400_000;
  * en → [{ key: 'sun', label: 'S' }, { key: 'mon', label: 'M' }, …]
  * es → [{ key: 'sun', label: 'D' }, { key: 'mon', label: 'L' }, …]
  */
-export function getDowLabels(locale: string): { key: string; label: string }[] {
+export function getDowLabels(
+  locale: string,
+  firstDayOfWeek: 'sunday' | 'monday' = 'sunday',
+): { key: string; label: string }[] {
   const fmt = new Intl.DateTimeFormat(locale, { weekday: 'narrow' });
-  return DOW_KEYS.map((key, i) => ({
+  const labels = DOW_KEYS.map((key, i) => ({
     key,
     label: fmt.format(new Date(SUNDAY_REF.getTime() + i * MS_PER_DAY)),
   }));
+  if (firstDayOfWeek === 'monday') {
+    const sunday = labels.shift();
+    if (sunday) labels.push(sunday);
+  }
+  return labels;
 }
 
 /**

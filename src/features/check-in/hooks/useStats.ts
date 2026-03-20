@@ -24,19 +24,21 @@ function computeStreak(days: Set<string>): number {
   return streak;
 }
 
-/** Returns the Monday of the current ISO week in local time. */
-function getWeekStart(): Date {
+/** Returns the start of the current week in local time, respecting the firstDayOfWeek preference. */
+function getWeekStart(firstDayOfWeek: 'sunday' | 'monday'): Date {
   const today = new Date();
-  const dow = (today.getDay() + 6) % 7; // Mon=0 … Sun=6
-  const monday = new Date(today);
-  monday.setDate(today.getDate() - dow);
-  return monday;
+  const jsDow = today.getDay(); // Sun=0, Mon=1, ..., Sat=6
+  const diff = firstDayOfWeek === 'monday' ? (jsDow + 6) % 7 : jsDow;
+  const start = new Date(today);
+  start.setDate(today.getDate() - diff);
+  return start;
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useStats() {
   const isDemoMode = useAppStore((s) => s.isDemoMode);
+  const firstDayOfWeek = useAppStore((s) => s.preferences.firstDayOfWeek);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [checkInsThisWeek, setCheckInsThisWeek] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -45,7 +47,7 @@ export function useStats() {
     setIsLoading(true);
     try {
       const today = new Date();
-      const weekFrom = dateToKey(getWeekStart());
+      const weekFrom = dateToKey(getWeekStart(firstDayOfWeek));
       const todayKey = dateToKey(today);
 
       if (isDemoMode) {
@@ -71,7 +73,7 @@ export function useStats() {
     } finally {
       setIsLoading(false);
     }
-  }, [isDemoMode]);
+  }, [isDemoMode, firstDayOfWeek]);
 
   useEffect(() => {
     load();
