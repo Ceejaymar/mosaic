@@ -58,28 +58,50 @@ export async function requestNotificationPermissions(): Promise<boolean> {
 export async function rescheduleAllNotifications(
   times: string[],
   isEnabled: boolean,
+  isSurpriseMeEnabled = false,
 ): Promise<void> {
   await Notifications.cancelAllScheduledNotificationsAsync();
 
   if (!isEnabled) return;
 
-  for (const time of times) {
-    const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(time);
-    if (!match) continue;
-    const hour = Number(match[1]);
-    const minute = Number(match[2]);
-    const message = getRandomMessage(hour);
+  if (!isSurpriseMeEnabled) {
+    for (const time of times) {
+      const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(time);
+      if (!match) continue;
+      const hour = Number(match[1]);
+      const minute = Number(match[2]);
+      const message = getRandomMessage(hour);
 
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: 'Mosaic',
-        body: message,
-      },
-      trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.DAILY,
-        hour,
-        minute,
-      },
-    });
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: 'Mosaic',
+          body: message,
+        },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.DAILY,
+          hour,
+          minute,
+        },
+      });
+    }
+  }
+
+  if (isSurpriseMeEnabled) {
+    const now = new Date();
+    for (let i = 0; i < 14; i++) {
+      const targetDate = new Date(now);
+      targetDate.setDate(now.getDate() + i);
+      const randomHour = Math.floor(Math.random() * 11) + 9; // 9–19
+      const randomMinute = Math.floor(Math.random() * 60);
+      targetDate.setHours(randomHour, randomMinute, 0, 0);
+
+      // Skip today if the generated time has already passed
+      if (i === 0 && targetDate.getTime() <= now.getTime()) continue;
+
+      await Notifications.scheduleNotificationAsync({
+        content: { title: 'Mosaic', body: getRandomMessage(randomHour) },
+        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: targetDate },
+      });
+    }
   }
 }

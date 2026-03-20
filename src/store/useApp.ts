@@ -66,9 +66,11 @@ export const useAppStore = create<State & Actions>()(
       toggleDemoMode: () => set((s) => ({ isDemoMode: !s.isDemoMode })),
 
       isNotificationsEnabled: false,
+      isSurpriseMeEnabled: false,
       reminderTimes: ['09:00', '14:00', '20:00'],
       toggleNotifications: () =>
         set((s) => ({ isNotificationsEnabled: !s.isNotificationsEnabled })),
+      toggleSurpriseMe: () => set((s) => ({ isSurpriseMeEnabled: !s.isSurpriseMeEnabled })),
       addReminderTime: (time: string) =>
         set((s) => {
           if (s.reminderTimes.length >= 4 || s.reminderTimes.includes(time)) return s;
@@ -96,6 +98,7 @@ export const useAppStore = create<State & Actions>()(
         accessibility: state.accessibility,
         preferences: state.preferences,
         isNotificationsEnabled: state.isNotificationsEnabled,
+        isSurpriseMeEnabled: state.isSurpriseMeEnabled,
         reminderTimes: state.reminderTimes,
       }),
 
