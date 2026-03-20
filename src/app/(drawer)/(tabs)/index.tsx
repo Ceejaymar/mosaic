@@ -158,11 +158,11 @@ export default function CheckInScreen() {
         </View>
 
         {atLimit && (
-          <View style={styles.completionBanner}>
+          <Surface style={styles.completionBanner}>
             <AppText style={[styles.completionText, { color: theme.colors.mosaicGold }]}>
               ✨ All check-ins complete for today!
             </AppText>
-          </View>
+          </Surface>
         )}
 
         <Surface variant="card" style={styles.statsPill}>
@@ -261,8 +261,8 @@ const styles = StyleSheet.create((theme) => ({
   statsPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: theme.radius.pill,
-    paddingVertical: theme.spacing[3],
+    borderRadius: theme.radius.card,
+    paddingVertical: theme.spacing[4],
     paddingHorizontal: theme.spacing[5],
     marginBottom: theme.spacing[3],
   },
@@ -278,7 +278,7 @@ const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)',
   },
   observationCard: {
-    marginBottom: theme.spacing[4],
+    marginBottom: theme.spacing[3],
     padding: theme.spacing[4],
     gap: theme.spacing[3],
   },
@@ -293,9 +293,7 @@ const styles = StyleSheet.create((theme) => ({
   completionBanner: {
     alignItems: 'center',
     paddingVertical: theme.spacing[4],
-    marginBottom: theme.spacing[2],
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.card,
+    marginBottom: theme.spacing[3],
   },
   completionText: {
     fontSize: theme.fontSize.sm,
