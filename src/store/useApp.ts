@@ -87,6 +87,9 @@ export const useAppStore = create<State & Actions>()(
           const filtered = s.reminderTimes.filter((t) => t !== oldTime && t !== newTime);
           return { reminderTimes: [...filtered, newTime].sort() };
         }),
+
+      isAppLockEnabled: false,
+      toggleAppLock: (enabled: boolean) => set({ isAppLockEnabled: enabled }),
     }),
     {
       name: 'app-storage',
@@ -100,6 +103,7 @@ export const useAppStore = create<State & Actions>()(
         isNotificationsEnabled: state.isNotificationsEnabled,
         isSurpriseMeEnabled: state.isSurpriseMeEnabled,
         reminderTimes: state.reminderTimes,
+        isAppLockEnabled: state.isAppLockEnabled,
       }),
 
       merge: (persisted, current) => {

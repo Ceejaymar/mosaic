@@ -103,6 +103,10 @@ export async function clearAllMoodEntries(): Promise<void> {
   await db.delete(moodEntries);
 }
 
+export async function deleteAllData(): Promise<void> {
+  await db.delete(moodEntries);
+}
+
 /**
  * Returns the total number of mood entries within the given inclusive date range.
  */

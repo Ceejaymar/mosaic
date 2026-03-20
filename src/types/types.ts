@@ -10,6 +10,7 @@ export type State = {
   isNotificationsEnabled: boolean;
   isSurpriseMeEnabled: boolean;
   reminderTimes: string[];
+  isAppLockEnabled: boolean;
 };
 
 export type Actions = {
@@ -24,6 +25,7 @@ export type Actions = {
   addReminderTime: (time: string) => void;
   removeReminderTime: (time: string) => void;
   updateReminderTime: (oldTime: string, newTime: string) => void;
+  toggleAppLock: (enabled: boolean) => void;
 };
 
 export type Language = 'en' | 'es';

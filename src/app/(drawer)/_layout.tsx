@@ -83,11 +83,6 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
             onPress={() => router.push('/pages/roadmap')}
           />
           <DrawerRow
-            icon="document-text-outline"
-            label="Change log"
-            onPress={() => router.push('/pages/changelog')}
-          />
-          <DrawerRow
             icon="help-circle-outline"
             label="FAQs"
             onPress={() => router.push('/pages/faq')}
