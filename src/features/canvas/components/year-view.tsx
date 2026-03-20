@@ -9,12 +9,20 @@ import {
   useState,
 } from 'react';
 import { useTranslation } from 'react-i18next';
-import { type DimensionValue, FlatList, Pressable, View, type ViewToken } from 'react-native';
+import {
+  Alert,
+  type DimensionValue,
+  FlatList,
+  Pressable,
+  View,
+  type ViewToken,
+} from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
 import { fetchMoodEntriesForMonth } from '@/src/db/repos/moodRepo';
 import { buildCanvasDays } from '@/src/features/canvas/utils/buildCanvasDays';
+import { isWithinThreeMonths } from '@/src/features/canvas/utils/date-utils';
 import { getDemoEntriesForMonth } from '@/src/features/demo/generateDemoData';
 import { useAppStore } from '@/src/store/useApp';
 
@@ -77,7 +85,9 @@ type YearTileProps = {
   colors: string[];
   isEvenMonth: boolean;
   isFuture: boolean;
+  isWithin3Months: boolean;
   onPress: (dateKey: string) => void;
+  onEmptyDayPress?: (dateKey: string) => void;
   // Dynamic sizing for Compact Mode (Fixed to DimensionValue!)
   width: DimensionValue;
   height: DimensionValue;
@@ -88,29 +98,42 @@ const YearTile = memo(function YearTile({
   colors,
   isEvenMonth,
   isFuture,
+  isWithin3Months,
   onPress,
+  onEmptyDayPress,
   width,
   height,
 }: YearTileProps) {
   const { theme } = useUnistyles();
   const emptyBg = isEvenMonth ? theme.colors.surface : 'transparent';
-  const opacity = isFuture ? 0.25 : 1;
+  const hasData = colors.length > 0;
+  const canLogHistorical = !hasData && !isFuture && isWithin3Months && !!onEmptyDayPress;
+  const isTooOld = !hasData && !isFuture && !isWithin3Months;
+  const isInteractive = hasData || canLogHistorical || isTooOld;
+
+  const tileOpacity = isFuture ? 0.25 : isTooOld ? 0.4 : 1;
+
+  const handlePress = () => {
+    if (hasData) onPress(dateKey);
+    else if (canLogHistorical) onEmptyDayPress?.(dateKey);
+    else if (isTooOld)
+      Alert.alert('Too far back', 'You can only log check-ins up to 3 months in the past.');
+  };
 
   const flatStyle = {
     width,
     height,
-    opacity,
+    opacity: tileOpacity,
     backgroundColor: colors.length === 0 ? emptyBg : colors[0],
   };
-  const containerStyle = { width, height, overflow: 'hidden' as const, opacity };
-  const hasData = colors.length > 0;
+  const containerStyle = { width, height, overflow: 'hidden' as const, opacity: tileOpacity };
 
   if (colors.length <= 1) {
     return (
       <Pressable
-        onPress={() => onPress(dateKey)}
-        disabled={!hasData || isFuture}
-        style={({ pressed }) => (pressed ? [flatStyle, { opacity: opacity * 0.6 }] : flatStyle)}
+        onPress={handlePress}
+        disabled={!isInteractive}
+        style={({ pressed }) => (pressed ? [flatStyle, { opacity: tileOpacity * 0.6 }] : flatStyle)}
       />
     );
   }
@@ -118,9 +141,9 @@ const YearTile = memo(function YearTile({
   if (colors.length === 2) {
     return (
       <Pressable
-        onPress={() => onPress(dateKey)}
+        onPress={handlePress}
         style={({ pressed }) =>
-          pressed ? [containerStyle, { opacity: opacity * 0.6 }] : containerStyle
+          pressed ? [containerStyle, { opacity: tileOpacity * 0.6 }] : containerStyle
         }
       >
         <View style={[PANELS.left, { backgroundColor: colors[0] }]} />
@@ -132,9 +155,9 @@ const YearTile = memo(function YearTile({
   if (colors.length === 3) {
     return (
       <Pressable
-        onPress={() => onPress(dateKey)}
+        onPress={handlePress}
         style={({ pressed }) =>
-          pressed ? [containerStyle, { opacity: opacity * 0.6 }] : containerStyle
+          pressed ? [containerStyle, { opacity: tileOpacity * 0.6 }] : containerStyle
         }
       >
         <View style={[PANELS.tl, { backgroundColor: colors[0] }]} />
@@ -146,9 +169,9 @@ const YearTile = memo(function YearTile({
 
   return (
     <Pressable
-      onPress={() => onPress(dateKey)}
+      onPress={handlePress}
       style={({ pressed }) =>
-        pressed ? [containerStyle, { opacity: opacity * 0.6 }] : containerStyle
+        pressed ? [containerStyle, { opacity: tileOpacity * 0.6 }] : containerStyle
       }
     >
       <View style={[PANELS.tl, { backgroundColor: colors[0] }]} />
@@ -166,6 +189,7 @@ type FlatDay = {
   month: number;
   entries: string[];
   isFuture: boolean;
+  isWithin3Months: boolean;
 };
 
 const SingleYearBlock = memo(function SingleYearBlock({
@@ -175,6 +199,7 @@ const SingleYearBlock = memo(function SingleYearBlock({
   isCompact,
   maxTileSize,
   onDayPress,
+  onEmptyDayPress,
 }: {
   year: number;
   viewportHeight: number;
@@ -182,6 +207,7 @@ const SingleYearBlock = memo(function SingleYearBlock({
   isCompact: boolean;
   maxTileSize: number;
   onDayPress: (date: string) => void;
+  onEmptyDayPress?: (date: string) => void;
 }) {
   const { t } = useTranslation();
   const visibleYear = useContext(VisibleYearContext);
@@ -228,6 +254,7 @@ const SingleYearBlock = memo(function SingleYearBlock({
               month,
               entries: d.entries,
               isFuture: d.date > todayKey,
+              isWithin3Months: isWithinThreeMonths(d.date),
             });
           }
         }
@@ -280,12 +307,14 @@ const SingleYearBlock = memo(function SingleYearBlock({
         colors={day.entries}
         isEvenMonth={day.month % 2 === 0}
         isFuture={day.isFuture}
+        isWithin3Months={day.isWithin3Months}
         onPress={onDayPress}
+        onEmptyDayPress={onEmptyDayPress}
         width={dynamicW}
         height={dynamicH}
       />
     ));
-  }, [flatDays, isCompact, contentWidth, viewportHeight, maxTileSize, onDayPress]);
+  }, [flatDays, isCompact, contentWidth, viewportHeight, maxTileSize, onDayPress, onEmptyDayPress]);
 
   return (
     <View style={[styles.yearBlock, { height: viewportHeight }]}>
@@ -315,6 +344,7 @@ const SingleYearBlock = memo(function SingleYearBlock({
 
 type Props = {
   onDayPress: (date: string) => void;
+  onEmptyDayPress?: (date: string) => void;
   contentWidth: number;
   onYearChange: (year: number) => void;
   viewportHeight: number;
@@ -325,6 +355,7 @@ type Props = {
 
 export function YearView({
   onDayPress,
+  onEmptyDayPress,
   contentWidth,
   onYearChange,
   viewportHeight,
@@ -364,11 +395,12 @@ export function YearView({
         viewportHeight={viewportHeight}
         contentWidth={contentWidth}
         onDayPress={onDayPress}
+        onEmptyDayPress={onEmptyDayPress}
         isCompact={isCompact}
         maxTileSize={maxTileSize}
       />
     ),
-    [viewportHeight, contentWidth, onDayPress, isCompact, maxTileSize],
+    [viewportHeight, contentWidth, onDayPress, onEmptyDayPress, isCompact, maxTileSize],
   );
 
   return (

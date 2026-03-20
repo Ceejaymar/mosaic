@@ -1,7 +1,9 @@
 import { memo } from 'react';
-import { Pressable, View } from 'react-native';
+import { Alert, Pressable, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
+import { dateToKey } from '@/src/db/repos/moodRepo';
+import { isWithinThreeMonths } from '@/src/features/canvas/utils/date-utils';
 import type { CanvasDay } from '../hooks/useCanvasData';
 import { DayTile } from './day-tile';
 
@@ -14,6 +16,7 @@ type Props = {
   tileSize: number;
   tileGap: number;
   onDayPress: (date: string) => void;
+  onEmptyDayPress?: (date: string) => void;
 };
 
 export const MonthGrid = memo(function MonthGrid({
@@ -23,7 +26,9 @@ export const MonthGrid = memo(function MonthGrid({
   tileSize,
   tileGap,
   onDayPress,
+  onEmptyDayPress,
 }: Props) {
+  const todayKey = dateToKey();
   const firstDow = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const dayMap = new Map(data.map((d) => [Number(d.date.slice(8)), d]));
@@ -44,16 +49,38 @@ export const MonthGrid = memo(function MonthGrid({
 
         if (day === null) return <View key={key} style={cellSize} />;
 
+        const mm = String(month + 1).padStart(2, '0');
+        const dd = String(day).padStart(2, '0');
+        const dateKey = `${year}-${mm}-${dd}`;
+        const isFuture = dateKey > todayKey;
         const dayData = dayMap.get(day);
         const colors = dayData?.entries ?? [];
         const hasData = colors.length > 0;
 
+        const isEmptyPast = !hasData && !isFuture;
+        const withinRange = isEmptyPast ? isWithinThreeMonths(dateKey) : false;
+        const canLogHistorical = isEmptyPast && withinRange && !!onEmptyDayPress;
+        const isTooOld = isEmptyPast && !withinRange;
+        const isInteractive = !isFuture && (hasData || canLogHistorical || isTooOld);
+
         return (
           <Pressable
             key={key}
-            disabled={!hasData}
-            onPress={() => dayData && onDayPress(dayData.date)}
-            style={({ pressed }) => [cellSize, hasData && pressed && { opacity: 0.7 }]}
+            disabled={!isInteractive}
+            onPress={() => {
+              if (hasData && dayData) onDayPress(dayData.date);
+              else if (canLogHistorical) onEmptyDayPress?.(dateKey);
+              else if (isTooOld)
+                Alert.alert(
+                  'Too far back',
+                  'You can only log check-ins up to 3 months in the past.',
+                );
+            }}
+            style={({ pressed }) => [
+              cellSize,
+              isTooOld && { opacity: 0.4 },
+              isInteractive && !isTooOld && pressed && { opacity: 0.7 },
+            ]}
           >
             <DayTile colors={colors} day={day} size={tileSize} />
           </Pressable>

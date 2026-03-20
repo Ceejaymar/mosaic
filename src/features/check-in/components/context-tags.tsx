@@ -1,8 +1,9 @@
 import { Pressable, View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
 import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
+import { isLightColor } from '@/src/utils/color-ui';
 
 interface TagChipProps {
   label: string;
@@ -13,6 +14,9 @@ interface TagChipProps {
 
 export function TagChip({ label, isSelected, color, onPress }: TagChipProps) {
   const colors = useAccessibleColors();
+  const { theme } = useUnistyles();
+  const activeBg = color ?? theme.colors.typography;
+  const activeText = isLightColor(activeBg) ? theme.colors.onAccent : '#ffffff';
 
   return (
     <Pressable
@@ -20,8 +24,8 @@ export function TagChip({ label, isSelected, color, onPress }: TagChipProps) {
       style={({ pressed }) => [
         styles.chip,
         {
-          borderColor: isSelected ? (color ?? colors.textMuted) : colors.divider,
-          backgroundColor: isSelected ? colors.divider : 'transparent',
+          borderColor: isSelected ? activeBg : colors.divider,
+          backgroundColor: isSelected ? activeBg : 'transparent',
         },
         pressed && { opacity: 0.75 },
       ]}
@@ -33,8 +37,8 @@ export function TagChip({ label, isSelected, color, onPress }: TagChipProps) {
         style={[
           styles.chipText,
           {
-            color: isSelected ? (color ?? colors.typography) : colors.textMuted,
-            fontWeight: isSelected ? '600' : '400',
+            color: isSelected ? activeText : colors.textMuted,
+            fontWeight: '500',
           },
         ]}
       >

@@ -115,7 +115,7 @@ export default function CheckInScreen() {
           styles.scrollContent,
           {
             paddingTop: insets.top + 72,
-            paddingBottom: LAYOUT.TAB_BAR_HEIGHT + insets.bottom + 20,
+            paddingBottom: LAYOUT.TAB_BAR_HEIGHT + insets.bottom + 60,
           },
         ]}
         showsVerticalScrollIndicator={false}
@@ -156,6 +156,14 @@ export default function CheckInScreen() {
             />
           )}
         </View>
+
+        {atLimit && (
+          <Surface style={styles.completionBanner}>
+            <AppText style={[styles.completionText, { color: theme.colors.mosaicGold }]}>
+              {t('completion.all_checkins_complete')}
+            </AppText>
+          </Surface>
+        )}
 
         <Surface variant="card" style={styles.statsPill}>
           <View style={styles.statItem}>
@@ -253,8 +261,8 @@ const styles = StyleSheet.create((theme) => ({
   statsPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: theme.radius.pill,
-    paddingVertical: theme.spacing[3],
+    borderRadius: theme.radius.card,
+    paddingVertical: theme.spacing[4],
     paddingHorizontal: theme.spacing[5],
     marginBottom: theme.spacing[3],
   },
@@ -270,7 +278,7 @@ const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)',
   },
   observationCard: {
-    marginBottom: theme.spacing[4],
+    marginBottom: theme.spacing[3],
     padding: theme.spacing[4],
     gap: theme.spacing[3],
   },
@@ -281,6 +289,16 @@ const styles = StyleSheet.create((theme) => ({
   },
   obsBullet: {
     opacity: 0.4,
+  },
+  completionBanner: {
+    alignItems: 'center',
+    paddingVertical: theme.spacing[4],
+    marginBottom: theme.spacing[3],
+  },
+  completionText: {
+    fontSize: theme.fontSize.sm,
+    fontWeight: '600',
+    letterSpacing: 0.3,
   },
   obsText: {
     flex: 1,

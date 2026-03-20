@@ -21,21 +21,23 @@ export function CheckInHistoryRow({ occurredAt, label, color, tags, onPress }: P
   const formattedTime = formatTime(occurredAt);
 
   return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [styles.row, pressed && { opacity: 0.7 }]}
-      accessibilityRole="button"
-      accessibilityLabel={`${label} at ${formattedTime}, tap to edit`}
-    >
-      <AppText colorVariant="muted" style={styles.time}>
-        {formattedTime}
-      </AppText>
+    <View style={styles.row}>
+      <Pressable
+        onPress={onPress}
+        style={({ pressed }) => [styles.leftContent, pressed && { opacity: 0.7 }]}
+        accessibilityRole="button"
+        accessibilityLabel={`${label} at ${formattedTime}, tap to edit`}
+      >
+        <AppText colorVariant="muted" style={styles.time}>
+          {formattedTime}
+        </AppText>
 
-      <View style={[styles.squircle, { backgroundColor: color }]} />
+        <View style={[styles.squircle, { backgroundColor: color }]} />
 
-      <AppText font="heading" style={styles.label} numberOfLines={1}>
-        {label}
-      </AppText>
+        <AppText font="heading" style={styles.label} numberOfLines={1}>
+          {label}
+        </AppText>
+      </Pressable>
 
       {tags.length > 0 && (
         <View style={styles.tagsContainer}>
@@ -45,11 +47,15 @@ export function CheckInHistoryRow({ occurredAt, label, color, tags, onPress }: P
             contentContainerStyle={styles.tagsContent}
           >
             {tags.map((tag) => (
-              <View key={tag} style={styles.tag}>
+              <Pressable
+                key={tag}
+                onPress={onPress}
+                style={({ pressed }) => [styles.tag, pressed && { opacity: 0.7 }]}
+              >
                 <AppText colorVariant="muted" style={styles.tagText}>
                   {tag}
                 </AppText>
-              </View>
+              </Pressable>
             ))}
           </ScrollView>
 
@@ -62,7 +68,7 @@ export function CheckInHistoryRow({ occurredAt, label, color, tags, onPress }: P
           />
         </View>
       )}
-    </Pressable>
+    </View>
   );
 }
 
@@ -71,7 +77,12 @@ const styles = StyleSheet.create((theme) => ({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: theme.spacing[4],
+  },
+  leftContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing[2],
+    flexShrink: 1,
   },
   time: {
     fontSize: 12,

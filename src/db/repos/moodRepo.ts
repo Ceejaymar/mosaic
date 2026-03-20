@@ -17,6 +17,18 @@ export async function insertMoodEntry(entry: NewMoodEntry): Promise<string> {
   return entry.id;
 }
 
+export async function updateMoodEntry(
+  id: string,
+  updates: Partial<Omit<NewMoodEntry, 'id' | 'createdAt' | 'updatedAt'>>,
+): Promise<void> {
+  const rows = await db
+    .update(moodEntries)
+    .set({ ...updates, updatedAt: new Date().toISOString() })
+    .where(eq(moodEntries.id, id))
+    .returning({ id: moodEntries.id });
+  if (rows.length === 0) throw new Error(`updateMoodEntry: no entry found with id ${id}`);
+}
+
 export async function insertTestMoodEntry(overrides?: Partial<NewMoodEntry>) {
   const now = new Date().toISOString();
 
@@ -80,7 +92,11 @@ export async function fetchMoodEntryById(id: string): Promise<MoodEntry | null> 
 }
 
 export async function deleteMoodEntry(id: string): Promise<void> {
-  await db.delete(moodEntries).where(eq(moodEntries.id, id));
+  const rows = await db
+    .delete(moodEntries)
+    .where(eq(moodEntries.id, id))
+    .returning({ id: moodEntries.id });
+  if (rows.length === 0) throw new Error(`deleteMoodEntry: no entry found with id ${id}`);
 }
 
 export async function clearAllMoodEntries(): Promise<void> {

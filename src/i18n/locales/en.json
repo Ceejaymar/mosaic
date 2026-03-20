@@ -53,6 +53,9 @@
     "error_message": "Could not load entries",
     "error_retry": "Retry"
   },
+  "completion": {
+    "all_checkins_complete": "✨ All check-ins complete for today!"
+  },
   "settings": {
     "theme": {
       "title": "Appearance",

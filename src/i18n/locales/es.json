@@ -50,6 +50,9 @@
     "error_message": "No se pudieron cargar las entradas",
     "error_retry": "Reintentar"
   },
+  "completion": {
+    "all_checkins_complete": "✨ ¡Todos los check-ins completos por hoy!"
+  },
   "settings": {
     "theme": {
       "title": "Apariencia",

@@ -1,6 +1,7 @@
-import { Text, View } from 'react-native';
+import { StyleSheet as RNStyleSheet, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
+import { AppText } from '@/src/components/app-text';
 import type { MoodEntry } from '@/src/db/repos/moodRepo';
 import { getMoodDisplayInfo } from '@/src/features/check-in/utils/mood-helpers';
 import { parseStoredTags } from '@/src/features/check-in/utils/parse-tags';
@@ -20,7 +21,9 @@ export function CheckInHistory({ entries, onEntryPress }: Props) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Today</Text>
+      <AppText font="mono" colorVariant="muted" style={styles.heading}>
+        Check-ins
+      </AppText>
 
       {entries
         .flatMap((entry) => {
@@ -50,15 +53,14 @@ const styles = StyleSheet.create((theme) => ({
     marginTop: 32,
   },
   heading: {
-    fontSize: 28,
-    fontWeight: '700',
-    fontFamily: 'Fraunces',
-    color: theme.colors.typography,
-    letterSpacing: -0.5,
-    marginBottom: 4,
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 1.4,
+    textTransform: 'uppercase',
+    marginBottom: theme.spacing[2],
   },
   divider: {
-    height: 1,
+    height: RNStyleSheet.hairlineWidth,
     marginLeft: 64,
   },
 }));

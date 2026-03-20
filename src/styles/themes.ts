@@ -23,14 +23,14 @@ const lightTheme = {
     textMuted: '#8E8E93',
     surface: '#F2F2F7',
     divider: '#D1D1D6',
-    mosaicGold: '#E0C097',
+    mosaicGold: '#CE8F24',
     lightGrey: '#808080',
     /** Dark text for use on accent/gold backgrounds */
     onAccent: '#050505',
     /** Card background that differs from page background */
     tileBackground: '#ffffff',
     /** Shadow color for cards (brand-tinted) */
-    tileShadowColor: '#E0C097',
+    tileShadowColor: '#CE8F24',
     /** Destructive action color (delete, remove) */
     destructive: '#FF3B30',
     headerGradient: ['rgba(255,255,255,0.9)', 'rgba(255,255,255,0.1)'],
@@ -59,7 +59,7 @@ const darkTheme = {
     textMuted: '#A1A1A6',
     surface: '#1C1C1E',
     divider: '#3A3A3C',
-    mosaicGold: '#E0C097',
+    mosaicGold: '#C09040',
     lightGrey: '#808080',
     /** Dark text for use on accent/gold backgrounds */
     onAccent: '#050505',
@@ -72,7 +72,7 @@ const darkTheme = {
     headerGradient: ['rgba(0,0,0,0.9)', 'rgba(0,0,0,0.1)'],
     tabBarGradient: ['rgba(0,0,0,0)', 'rgba(0,0,0,0.9)'],
     /** Tab bar label/icon when not selected (dark background) */
-    tabInactive: 'rgba(255,255,255,0.45)',
+    tabInactive: 'rgba(255,255,255,0.5)',
     /** Light (white-tinted) overlay — gradient highlights, surface shimmer */
     overlayLight: 'rgba(255,255,255,0.12)',
     /** Dark (black-tinted) overlay — tile scrims, shadow gradients (stronger in dark) */
