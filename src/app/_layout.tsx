@@ -8,16 +8,19 @@ import { useFonts } from 'expo-font';
 import * as Notifications from 'expo-notifications';
 import { Stack, useNavigationContainerRef } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { AppState } from 'react-native';
 import { SystemBars } from 'react-native-edge-to-edge';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useUnistyles } from 'react-native-unistyles';
 
 import migrations from '@/drizzle/migrations';
 
+import { AppLockOverlay } from '@/src/components/app-lock-overlay';
 import { db } from '@/src/db/client';
 import { storage } from '@/src/services/storage/mmkv';
 import { useAppStore } from '@/src/store/useApp';
+import { authenticateUser } from '@/src/utils/auth-helper';
 
 import '@/src/i18n/index';
 
@@ -130,9 +133,49 @@ function RootLayout() {
 
 function RootLayoutNav() {
   const { rt } = useUnistyles();
-
   const currentTheme = rt.themeName;
   const isDarkTheme = currentTheme === 'dark';
+
+  const isAppLockEnabled = useAppStore((s) => s.isAppLockEnabled);
+  const [isLocked, setIsLocked] = useState(false);
+  const isChecking = useRef(false);
+  const justUnlockedRef = useRef(false);
+
+  const performUnlock = useCallback(async () => {
+    if (isChecking.current) return;
+
+    isChecking.current = true;
+    try {
+      const success = await authenticateUser();
+      if (success) {
+        justUnlockedRef.current = true;
+        setIsLocked(false);
+      }
+    } finally {
+      isChecking.current = false;
+    }
+  }, []);
+
+  useEffect(() => {
+    setIsLocked(isAppLockEnabled);
+    if (!isAppLockEnabled) justUnlockedRef.current = false;
+  }, [isAppLockEnabled]);
+
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'background') {
+        justUnlockedRef.current = false;
+      }
+      if (nextState === 'active' && isAppLockEnabled) {
+        if (justUnlockedRef.current) {
+          justUnlockedRef.current = false;
+          return;
+        }
+        setIsLocked(true);
+      }
+    });
+    return () => sub.remove();
+  }, [isAppLockEnabled]);
 
   return (
     <>
@@ -154,6 +197,7 @@ function RootLayoutNav() {
           </Stack>
         </GestureHandlerRootView>
       </ThemeProvider>
+      {isLocked && <AppLockOverlay onUnlock={performUnlock} />}
     </>
   );
 }
