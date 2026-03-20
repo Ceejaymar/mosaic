@@ -19,8 +19,6 @@ type Props = {
   onEmptyDayPress?: (date: string) => void;
 };
 
-const TODAY_KEY = dateToKey();
-
 export const MonthGrid = memo(function MonthGrid({
   month,
   year,
@@ -30,6 +28,7 @@ export const MonthGrid = memo(function MonthGrid({
   onDayPress,
   onEmptyDayPress,
 }: Props) {
+  const todayKey = dateToKey();
   const firstDow = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const dayMap = new Map(data.map((d) => [Number(d.date.slice(8)), d]));
@@ -53,7 +52,7 @@ export const MonthGrid = memo(function MonthGrid({
         const mm = String(month + 1).padStart(2, '0');
         const dd = String(day).padStart(2, '0');
         const dateKey = `${year}-${mm}-${dd}`;
-        const isFuture = dateKey > TODAY_KEY;
+        const isFuture = dateKey > todayKey;
         const dayData = dayMap.get(day);
         const colors = dayData?.entries ?? [];
         const hasData = colors.length > 0;

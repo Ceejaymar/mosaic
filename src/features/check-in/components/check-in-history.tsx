@@ -1,4 +1,4 @@
-import { View } from 'react-native';
+import { StyleSheet as RNStyleSheet, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
@@ -60,7 +60,7 @@ const styles = StyleSheet.create((theme) => ({
     marginBottom: theme.spacing[2],
   },
   divider: {
-    height: 0.5,
+    height: RNStyleSheet.hairlineWidth,
     marginLeft: 64,
   },
 }));

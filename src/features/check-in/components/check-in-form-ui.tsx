@@ -1,5 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { memo, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { KeyboardAvoidingView, Modal, Platform, Pressable, TextInput, View } from 'react-native';
 import Animated, {
   Extrapolation,
@@ -33,10 +34,10 @@ import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
 import { hexToRgba, isLightColor } from '@/src/utils/color-ui';
 import { getDayWithSuffix } from '@/src/utils/format-date';
 
-function formatHistoricalDate(dateKey: string): string {
+function formatHistoricalDate(dateKey: string, locale = 'en-US'): string {
   const [y, m, d] = dateKey.split('-').map(Number);
   const date = new Date(y, m - 1, d);
-  const month = date.toLocaleDateString('en-US', { month: 'long' });
+  const month = date.toLocaleDateString(locale, { month: 'long' });
   return `${month} ${getDayWithSuffix(d)}`;
 }
 
@@ -108,6 +109,7 @@ export const CheckInFormUI = memo(function CheckInFormUI({
   const insets = useSafeAreaInsets();
   const { theme } = useUnistyles();
   const colors = useAccessibleColors();
+  const { i18n } = useTranslation();
 
   const form = useCheckInForm(onSave, onClose, initialData);
 
@@ -118,11 +120,11 @@ export const CheckInFormUI = memo(function CheckInFormUI({
   const headerTitle = form.isEditing
     ? 'Edit Check-in'
     : isHistorical && form.targetDate
-      ? `How were you feeling on ${formatHistoricalDate(form.targetDate)}?`
+      ? `How were you feeling on ${formatHistoricalDate(form.targetDate, i18n.language)}?`
       : 'What are you feeling?';
   const headerSubtitle =
     form.isEditing && form.targetDate
-      ? formatHistoricalDate(form.targetDate)
+      ? formatHistoricalDate(form.targetDate, i18n.language)
       : isHistorical
         ? null
         : getTimeSubtitle();
@@ -343,7 +345,15 @@ export const CheckInFormUI = memo(function CheckInFormUI({
               behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
               style={[styles.noteModal, { backgroundColor: theme.colors.background }]}
             >
-              <View style={[styles.noteModalHeader, { borderBottomColor: colors.divider }]}>
+              <View
+                style={[
+                  styles.noteModalHeader,
+                  {
+                    borderBottomColor: colors.divider,
+                    paddingTop: Math.max(insets.top, theme.spacing[4]),
+                  },
+                ]}
+              >
                 <Pressable
                   onPress={handleCancelNote}
                   hitSlop={8}

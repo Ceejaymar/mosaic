@@ -25,10 +25,19 @@ export default function EditCheckInScreen() {
       router.replace('/');
       return;
     }
-    fetchMoodEntryById(id).then((result) => {
-      if (!result) router.replace('/');
-      else setEntry(result);
-    });
+    let cancelled = false;
+    fetchMoodEntryById(id)
+      .then((result) => {
+        if (cancelled) return;
+        if (!result) router.replace('/');
+        else setEntry(result);
+      })
+      .catch(() => {
+        if (!cancelled) router.replace('/');
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [id, router]);
 
   const handleSave = useCallback(

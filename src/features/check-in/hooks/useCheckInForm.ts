@@ -16,7 +16,15 @@ export type CheckInFormInitialData = {
 };
 
 function parseTagSets(entry?: MoodEntry) {
-  const raw: string[] = entry?.tags ? JSON.parse(entry.tags) : [];
+  let raw: string[] = [];
+  try {
+    const parsed = entry?.tags ? JSON.parse(entry.tags) : [];
+    if (Array.isArray(parsed) && parsed.every((t) => typeof t === 'string')) {
+      raw = parsed;
+    }
+  } catch {
+    raw = [];
+  }
   return {
     activitySet: new Set(raw.filter((t) => (ACTIVITY_TAGS as readonly string[]).includes(t))),
     peopleSet: new Set(raw.filter((t) => (PEOPLE_TAGS as readonly string[]).includes(t))),
@@ -25,7 +33,7 @@ function parseTagSets(entry?: MoodEntry) {
 }
 
 export function useCheckInForm(
-  onSaveCallback: (nodeId: string, note?: string, tags?: string[]) => void,
+  onSaveCallback: (nodeId: string, note?: string, tags?: string[]) => void | Promise<void>,
   onCloseCallback: () => void,
   initialData?: CheckInFormInitialData,
 ) {
@@ -99,11 +107,19 @@ export function useCheckInForm(
     });
   }, []);
 
-  const handleSave = useCallback(() => {
+  const handleSave = useCallback(async () => {
     if (!selectedNodeId) return;
     const tags = [...activities, ...people, ...locations];
-    onSaveCallback(selectedNodeId, note.trim() || undefined, tags.length > 0 ? tags : undefined);
-    resetState();
+    try {
+      await onSaveCallback(
+        selectedNodeId,
+        note.trim() || undefined,
+        tags.length > 0 ? tags : undefined,
+      );
+      resetState();
+    } catch (err) {
+      console.error('Failed to save check-in', err);
+    }
   }, [selectedNodeId, note, activities, people, locations, onSaveCallback, resetState]);
 
   const handleClose = useCallback(() => {

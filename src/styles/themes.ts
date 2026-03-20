@@ -30,7 +30,7 @@ const lightTheme = {
     /** Card background that differs from page background */
     tileBackground: '#ffffff',
     /** Shadow color for cards (brand-tinted) */
-    tileShadowColor: '#E0C097',
+    tileShadowColor: '#CE8F24',
     /** Destructive action color (delete, remove) */
     destructive: '#FF3B30',
     headerGradient: ['rgba(255,255,255,0.9)', 'rgba(255,255,255,0.1)'],
@@ -59,7 +59,6 @@ const darkTheme = {
     textMuted: '#A1A1A6',
     surface: '#1C1C1E',
     divider: '#3A3A3C',
-    // mosaicGold: '#DDA100',
     mosaicGold: '#C09040',
     lightGrey: '#808080',
     /** Dark text for use on accent/gold backgrounds */

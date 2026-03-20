@@ -160,7 +160,7 @@ export default function CheckInScreen() {
         {atLimit && (
           <Surface style={styles.completionBanner}>
             <AppText style={[styles.completionText, { color: theme.colors.mosaicGold }]}>
-              ✨ All check-ins complete for today!
+              {t('completion.all_checkins_complete')}
             </AppText>
           </Surface>
         )}
