@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { memo, useMemo } from 'react';
-import { Pressable, TextInput, View } from 'react-native';
+import { memo, useMemo, useState } from 'react';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, TextInput, View } from 'react-native';
 import Animated, {
   Extrapolation,
   interpolate,
@@ -129,6 +129,20 @@ export const CheckInFormUI = memo(function CheckInFormUI({
 
   const bannerBg = selectedColor ?? colors.divider;
   const bannerTextColor = isLightColor(bannerBg) ? theme.colors.onAccent : '#ffffff';
+
+  const [isNoteModalVisible, setNoteModalVisible] = useState(false);
+  const [draftNote, setDraftNote] = useState('');
+  const handleOpenNote = () => {
+    setDraftNote(form.note || '');
+    setNoteModalVisible(true);
+  };
+  const handleSaveNote = () => {
+    form.setNote(draftNote.trim());
+    setNoteModalVisible(false);
+  };
+  const handleCancelNote = () => {
+    setNoteModalVisible(false);
+  };
 
   const scrollY = useSharedValue(0);
   const scrollHandler = useAnimatedScrollHandler({
@@ -259,19 +273,18 @@ export const CheckInFormUI = memo(function CheckInFormUI({
             <AppText font="mono" colorVariant="muted" style={styles.inputLabel}>
               What's on your mind?
             </AppText>
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.textInput}
-                placeholder="Add a note... (optional)"
-                placeholderTextColor={colors.textMuted}
-                value={form.note}
-                onChangeText={form.setNote}
-                multiline
-                maxLength={200}
-                returnKeyType="done"
-                submitBehavior="blurAndSubmit"
-              />
-            </View>
+            <Pressable
+              onPress={handleOpenNote}
+              style={({ pressed }) => [styles.inputContainer, pressed && { opacity: 0.7 }]}
+            >
+              {form.note ? (
+                <AppText style={styles.notePreviewText} numberOfLines={5}>
+                  {form.note}
+                </AppText>
+              ) : (
+                <AppText style={styles.notePlaceholder}>Add a note... (optional)</AppText>
+              )}
+            </Pressable>
 
             <TagSection
               title="What are you doing?"
@@ -319,6 +332,49 @@ export const CheckInFormUI = memo(function CheckInFormUI({
               elevated
             />
           </View>
+
+          <Modal
+            visible={isNoteModalVisible}
+            animationType="slide"
+            presentationStyle={Platform.OS === 'ios' ? 'pageSheet' : 'overFullScreen'}
+            onRequestClose={handleCancelNote}
+          >
+            <KeyboardAvoidingView
+              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+              style={[styles.noteModal, { backgroundColor: theme.colors.background }]}
+            >
+              <View style={[styles.noteModalHeader, { borderBottomColor: colors.divider }]}>
+                <Pressable
+                  onPress={handleCancelNote}
+                  hitSlop={8}
+                  style={({ pressed }) => pressed && { opacity: 0.5 }}
+                >
+                  <AppText font="mono" colorVariant="muted" style={styles.noteModalCancel}>
+                    Cancel
+                  </AppText>
+                </Pressable>
+                <Pressable
+                  onPress={handleSaveNote}
+                  hitSlop={8}
+                  style={({ pressed }) => pressed && { opacity: 0.5 }}
+                >
+                  <AppText style={[styles.noteModalSave, { color: theme.colors.mosaicGold }]}>
+                    Save
+                  </AppText>
+                </Pressable>
+              </View>
+              <TextInput
+                style={[styles.noteModalInput, { color: theme.colors.typography }]}
+                multiline
+                autoFocus
+                value={draftNote}
+                onChangeText={setDraftNote}
+                placeholder="What's on your mind?"
+                placeholderTextColor={colors.textMuted}
+                textAlignVertical="top"
+              />
+            </KeyboardAvoidingView>
+          </Modal>
         </>
       )}
     </>
@@ -445,11 +501,31 @@ const styles = StyleSheet.create((theme) => ({
     shadowRadius: 8,
     elevation: 2,
   },
-  textInput: {
+  notePreviewText: {
     fontSize: theme.fontSize.md,
     color: theme.colors.typography,
-    minHeight: 56,
-    lineHeight: 25,
+    lineHeight: 24,
+  },
+  notePlaceholder: {
+    fontSize: theme.fontSize.md,
+    color: theme.colors.textMuted,
+  },
+  noteModal: { flex: 1 },
+  noteModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: theme.spacing[5],
+    paddingVertical: theme.spacing[4],
+    borderBottomWidth: 0.5,
+  },
+  noteModalCancel: { fontSize: theme.fontSize.md },
+  noteModalSave: { fontSize: theme.fontSize.md, fontWeight: '700' },
+  noteModalInput: {
+    flex: 1,
+    padding: theme.spacing[5],
+    fontSize: 18,
+    lineHeight: 28,
   },
   footer: {
     paddingHorizontal: theme.spacing[5],
