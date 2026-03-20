@@ -1,4 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useEffect, useRef } from 'react';
 import { Pressable, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
@@ -6,6 +7,18 @@ import { AppText } from '@/src/components/app-text';
 
 export function AppLockOverlay({ onUnlock }: { onUnlock: () => void }) {
   const { theme } = useUnistyles();
+  const hasAttemptedAuth = useRef(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!hasAttemptedAuth.current) {
+        hasAttemptedAuth.current = true;
+        onUnlock();
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [onUnlock]);
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
