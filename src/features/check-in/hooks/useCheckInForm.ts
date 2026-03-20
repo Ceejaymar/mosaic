@@ -47,13 +47,10 @@ export function useCheckInForm(
     () => existingEntry?.primaryMood ?? null,
   );
   const [note, setNote] = useState(() => existingEntry?.note ?? '');
-  const [activities, setActivities] = useState<Set<string>>(
-    () => parseTagSets(existingEntry).activitySet,
-  );
-  const [people, setPeople] = useState<Set<string>>(() => parseTagSets(existingEntry).peopleSet);
-  const [locations, setLocations] = useState<Set<string>>(
-    () => parseTagSets(existingEntry).locationSet,
-  );
+  const [initialSets] = useState(() => parseTagSets(existingEntry));
+  const [activities, setActivities] = useState<Set<string>>(initialSets.activitySet);
+  const [people, setPeople] = useState<Set<string>>(initialSets.peopleSet);
+  const [locations, setLocations] = useState<Set<string>>(initialSets.locationSet);
 
   const resetState = useCallback(() => {
     const sets = parseTagSets(existingEntry);
@@ -107,8 +104,11 @@ export function useCheckInForm(
     });
   }, []);
 
+  const [isSaving, setIsSaving] = useState(false);
+
   const handleSave = useCallback(async () => {
-    if (!selectedNodeId) return;
+    if (!selectedNodeId || isSaving) return;
+    setIsSaving(true);
     const tags = [...activities, ...people, ...locations];
     try {
       await onSaveCallback(
@@ -119,8 +119,10 @@ export function useCheckInForm(
       resetState();
     } catch (err) {
       console.error('Failed to save check-in', err);
+    } finally {
+      setIsSaving(false);
     }
-  }, [selectedNodeId, note, activities, people, locations, onSaveCallback, resetState]);
+  }, [selectedNodeId, isSaving, note, activities, people, locations, onSaveCallback, resetState]);
 
   const handleClose = useCallback(() => {
     onCloseCallback();
@@ -145,6 +147,7 @@ export function useCheckInForm(
     toggleActivity,
     togglePerson,
     toggleLocation,
+    isSaving,
     handleSave,
     handleClose,
   };

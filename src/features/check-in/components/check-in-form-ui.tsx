@@ -331,6 +331,7 @@ export const CheckInFormUI = memo(function CheckInFormUI({
             <PillButton
               label={form.isEditing ? 'Save changes' : 'Save check-in'}
               onPress={form.handleSave}
+              disabled={form.isSaving}
               elevated
             />
           </View>

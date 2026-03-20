@@ -43,16 +43,21 @@ export default function EditCheckInScreen() {
   const handleSave = useCallback(
     async (nodeId: string, note?: string, tags?: string[]) => {
       if (!id) return;
-      await updateMoodEntry(id, {
-        primaryMood: nodeId,
-        note: note ?? null,
-        tags: tags && tags.length > 0 ? JSON.stringify(tags) : null,
-      });
-      if (entry) {
-        const [yearStr, monthStr] = entry.dateKey.split('-');
-        invalidateMonthCache(parseInt(yearStr, 10), parseInt(monthStr, 10) - 1);
+      try {
+        await updateMoodEntry(id, {
+          primaryMood: nodeId,
+          note: note ?? null,
+          tags: tags && tags.length > 0 ? JSON.stringify(tags) : null,
+        });
+        if (entry) {
+          const [yearStr, monthStr] = entry.dateKey.split('-');
+          invalidateMonthCache(parseInt(yearStr, 10), parseInt(monthStr, 10) - 1);
+        }
+        router.back();
+      } catch (err) {
+        console.error('Failed to update mood entry', err);
+        Alert.alert('Error', 'Could not save changes. Please try again.');
       }
-      router.back();
     },
     [id, entry, router],
   );
