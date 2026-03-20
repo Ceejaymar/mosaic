@@ -157,6 +157,14 @@ export default function CheckInScreen() {
           )}
         </View>
 
+        {atLimit && (
+          <View style={styles.completionBanner}>
+            <AppText style={[styles.completionText, { color: theme.colors.mosaicGold }]}>
+              ✨ All check-ins complete for today!
+            </AppText>
+          </View>
+        )}
+
         <Surface variant="card" style={styles.statsPill}>
           <View style={styles.statItem}>
             <AppText font="heading" variant="xl" colorVariant="primary">
@@ -281,6 +289,18 @@ const styles = StyleSheet.create((theme) => ({
   },
   obsBullet: {
     opacity: 0.4,
+  },
+  completionBanner: {
+    alignItems: 'center',
+    paddingVertical: theme.spacing[4],
+    marginBottom: theme.spacing[2],
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.card,
+  },
+  completionText: {
+    fontSize: theme.fontSize.sm,
+    fontWeight: '600',
+    letterSpacing: 0.3,
   },
   obsText: {
     flex: 1,
