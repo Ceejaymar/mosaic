@@ -4,7 +4,14 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { mmkvAdapter } from '@/src/services/storage/mmkv';
 
-import type { AccessibilitySettings, Actions, Language, State, Theme } from '@/src/types/types';
+import type {
+  AccessibilitySettings,
+  Actions,
+  Language,
+  PreferencesState,
+  State,
+  Theme,
+} from '@/src/types/types';
 import i18n from '../i18n';
 
 const applyTheme = (mode: Theme) => {
@@ -46,6 +53,15 @@ export const useAppStore = create<State & Actions>()(
         set({ accessibility: { ...get().accessibility, [key]: value } });
       },
 
+      preferences: {
+        firstDayOfWeek: 'sunday',
+        timeFormat: 'device',
+        hideStreaks: false,
+      },
+      setPreference: <K extends keyof PreferencesState>(key: K, value: PreferencesState[K]) => {
+        set((s) => ({ preferences: { ...s.preferences, [key]: value } }));
+      },
+
       isDemoMode: false,
       toggleDemoMode: () => set((s) => ({ isDemoMode: !s.isDemoMode })),
 
@@ -78,6 +94,7 @@ export const useAppStore = create<State & Actions>()(
         hasOnboarded: state.hasOnboarded,
         language: state.language,
         accessibility: state.accessibility,
+        preferences: state.preferences,
         isNotificationsEnabled: state.isNotificationsEnabled,
         reminderTimes: state.reminderTimes,
       }),
@@ -87,9 +104,10 @@ export const useAppStore = create<State & Actions>()(
         return {
           ...current,
           ...p,
-          // Deep-merge accessibility so new default keys are never dropped
-          // when the persisted snapshot pre-dates a new field being added.
+          // Deep-merge so new default keys are never dropped when the persisted
+          // snapshot pre-dates a new field being added.
           accessibility: { ...current.accessibility, ...(p.accessibility ?? {}) },
+          preferences: { ...current.preferences, ...(p.preferences ?? {}) },
         };
       },
 

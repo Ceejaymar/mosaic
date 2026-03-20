@@ -5,6 +5,7 @@ export type State = {
   hasOnboarded: boolean;
   language: Language;
   accessibility: AccessibilitySettings;
+  preferences: PreferencesState;
   isDemoMode: boolean;
   isNotificationsEnabled: boolean;
   reminderTimes: string[];
@@ -15,6 +16,7 @@ export type Actions = {
   setHasOnboarded: (hasOnboarded: boolean) => void;
   setLanguage: (language: Language) => void;
   setAccessibilitySetting: (key: keyof AccessibilitySettings, value: boolean) => void;
+  setPreference: <K extends keyof PreferencesState>(key: K, value: PreferencesState[K]) => void;
   toggleDemoMode: () => void;
   toggleNotifications: () => void;
   addReminderTime: (time: string) => void;
@@ -31,4 +33,10 @@ export interface AccessibilitySettings {
   highContrastText: boolean;
   reduceMotion: boolean;
   disableHaptics: boolean;
+}
+
+export interface PreferencesState {
+  firstDayOfWeek: 'sunday' | 'monday';
+  timeFormat: 'device' | '12h' | '24h';
+  hideStreaks: boolean;
 }

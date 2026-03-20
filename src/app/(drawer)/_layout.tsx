@@ -3,43 +3,16 @@ import {
   type DrawerContentComponentProps,
   DrawerContentScrollView,
 } from '@react-navigation/drawer';
-import * as Device from 'expo-device';
-import * as MailComposer from 'expo-mail-composer';
 import { type Href, useRouter } from 'expo-router';
 import { Drawer } from 'expo-router/drawer';
-import { Linking, Platform, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
+import { DrawerRow } from '@/src/components/drawer-row';
 import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
-
-// ─── Reusable Drawer Row Component ────────────────────────────────────────────
-
-function DrawerRow({
-  icon,
-  label,
-  onPress,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  onPress: () => void;
-}) {
-  const { theme } = useUnistyles();
-
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [styles.row, pressed && { backgroundColor: theme.colors.surface }]}
-    >
-      <View style={styles.rowLeft}>
-        <Ionicons name={icon} size={24} color={theme.colors.typography} style={{ opacity: 0.4 }} />
-        <Text style={[styles.rowLabel, { color: theme.colors.typography }]}>{label}</Text>
-      </View>
-      {/* <Ionicons name="arrow-forward" size={20} color={theme.colors.textMuted} /> */}
-    </Pressable>
-  );
-}
+import { openSupportEmail, openSurvey } from '@/src/utils/support-links';
 
 // ─── Custom Drawer Content ────────────────────────────────────────────────────
 
@@ -52,43 +25,6 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
   const handleHomePress = () => {
     props.navigation.closeDrawer();
     router.navigate('/(tabs)/' as Href);
-  };
-
-  const openSupportEmail = async () => {
-    const os = Device.osName ?? Platform.OS;
-    const osVersion = Device.osVersion ?? 'Unknown';
-    const model = Device.modelName ?? 'Unknown';
-    const appVersion = '1.0.0';
-
-    const email = 'support@marceedigital.com';
-    const subject = 'Mosaic Support Request';
-    const body = `Please describe your issue or question below:\n\n\nDiagnostic Info (Please leave this for the developer):\nApp Version: ${appVersion}\nDevice: ${model}\nOS: ${os} ${osVersion}`;
-
-    try {
-      const isAvailable = await MailComposer.isAvailableAsync();
-      if (isAvailable) {
-        await MailComposer.composeAsync({ recipients: [email], subject, body });
-      } else {
-        const mailto = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-        await Linking.openURL(mailto);
-      }
-    } catch (err) {
-      console.error('Failed to open email client:', err);
-    } finally {
-      props.navigation.closeDrawer();
-    }
-  };
-
-  const openSurvey = async () => {
-    const SURVEY_URL = 'https://tally.so/r/XxeY6z';
-
-    try {
-      await Linking.openURL(SURVEY_URL);
-    } catch (err) {
-      console.error('Failed to open URL:', err);
-    } finally {
-      props.navigation.closeDrawer();
-    }
   };
 
   return (
@@ -115,9 +51,9 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
         <DrawerContentScrollView {...props} contentContainerStyle={styles.scrollContent}>
           {/* Group 1: Preferences */}
           <DrawerRow
-            icon="person-outline"
-            label="Account"
-            onPress={() => router.push('/pages/account')}
+            icon="options-outline"
+            label="Preferences"
+            onPress={() => router.push('/pages/preferences')}
           />
           <DrawerRow
             icon="notifications-outline"
@@ -171,9 +107,19 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
           <DrawerRow
             icon="chatbubble-ellipses-outline"
             label="Share your feedback"
-            onPress={openSurvey}
+            onPress={() => {
+              props.navigation.closeDrawer();
+              openSurvey();
+            }}
           />
-          <DrawerRow icon="mail-outline" label="Contact support" onPress={openSupportEmail} />
+          <DrawerRow
+            icon="mail-outline"
+            label="Contact support"
+            onPress={() => {
+              props.navigation.closeDrawer();
+              openSupportEmail();
+            }}
+          />
 
           <DrawerRow icon="star-outline" label="Rate Mosaic" onPress={() => {}} />
           <DrawerRow icon="share-outline" label="Share with a friend" onPress={() => {}} />
@@ -203,7 +149,7 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
 export default function Layout() {
   return (
     <Drawer
-      drawerContent={CustomDrawerContent} // <-- FIX: Pass the reference directly! No arrow function.
+      drawerContent={CustomDrawerContent}
       screenOptions={{
         headerShown: false,
         drawerStyle: { width: '85%' },
@@ -239,14 +185,6 @@ const styles = StyleSheet.create((theme) => ({
     letterSpacing: -0.5,
   },
   scrollContent: { paddingTop: 8, paddingBottom: theme.spacing[6] },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: theme.spacing[2],
-  },
-  rowLeft: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  rowLabel: { fontSize: 18, fontWeight: '500' },
   divider: { height: 1, marginRight: 16, marginVertical: 12 },
   sectionTitle: {
     fontSize: 14,
