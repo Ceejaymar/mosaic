@@ -38,7 +38,7 @@ function formatHistoricalDate(dateKey: string, locale = 'en-US'): string {
   const [y, m, d] = dateKey.split('-').map(Number);
   const date = new Date(y, m - 1, d);
   const month = date.toLocaleDateString(locale, { month: 'long' });
-  return `${month} ${getDayWithSuffix(d)}`;
+  return `${month} ${getDayWithSuffix(d, locale)}`;
 }
 
 const TODAY_KEY = (() => {

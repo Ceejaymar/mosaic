@@ -71,8 +71,12 @@ export const formatDateShort = (date: Date, locale = 'en-US') => {
   });
 };
 
-// Returns standard lowercase suffixes (e.g., "1st", "2nd") for general reuse
-export const getDayWithSuffix = (day: number): string => {
+// Returns locale-aware day string. English gets ordinal suffixes (1st, 2nd…);
+// other locales get a numeric day via Intl.DateTimeFormat.
+export const getDayWithSuffix = (day: number, locale = 'en'): string => {
+  if (!locale.startsWith('en')) {
+    return new Intl.DateTimeFormat(locale, { day: 'numeric' }).format(new Date(2000, 0, day));
+  }
   if (day > 3 && day < 21) return `${day}th`;
   switch (day % 10) {
     case 1:
