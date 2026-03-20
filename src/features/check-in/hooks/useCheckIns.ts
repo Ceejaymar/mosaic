@@ -1,3 +1,4 @@
+import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useEffect, useState } from 'react';
 import { AppState } from 'react-native';
 import {
@@ -57,10 +58,12 @@ export function useTodayCheckIns() {
     }
   }, [isDemoMode]);
 
-  // Initial load
-  useEffect(() => {
-    loadTodayEntries();
-  }, [loadTodayEntries]);
+  // Reload every time the screen comes into focus (handles back-navigation after edits)
+  useFocusEffect(
+    useCallback(() => {
+      loadTodayEntries();
+    }, [loadTodayEntries]),
+  );
 
   // Refresh when the app becomes active (handles midnight crossover)
   useEffect(() => {

@@ -115,7 +115,7 @@ export default function CheckInScreen() {
           styles.scrollContent,
           {
             paddingTop: insets.top + 72,
-            paddingBottom: LAYOUT.TAB_BAR_HEIGHT + insets.bottom + 20,
+            paddingBottom: LAYOUT.TAB_BAR_HEIGHT + insets.bottom + 60,
           },
         ]}
         showsVerticalScrollIndicator={false}
