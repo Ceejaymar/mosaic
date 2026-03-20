@@ -12,7 +12,12 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { AppText } from '@/src/components/app-text';
 import { DrawerRow } from '@/src/components/drawer-row';
 import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
-import { openSupportEmail, openSurvey } from '@/src/utils/support-links';
+import {
+  openPrivacyPolicy,
+  openSupportEmail,
+  openSurvey,
+  openTermsOfService,
+} from '@/src/utils/support-links';
 
 // ─── Custom Drawer Content ────────────────────────────────────────────────────
 
@@ -92,13 +97,8 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
 
           {/* Group 3: Resources */}
           <AppText colorVariant="muted" style={styles.sectionTitle}>
-            Resources
+            Support & feedback
           </AppText>
-          <DrawerRow
-            icon="heart-half-outline"
-            label="Mental health hotlines"
-            onPress={() => router.push('/pages/resources')}
-          />
           <DrawerRow
             icon="chatbubble-ellipses-outline"
             label="Share your feedback"
@@ -118,6 +118,29 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
 
           <DrawerRow icon="star-outline" label="Rate Mosaic" onPress={() => {}} />
           <DrawerRow icon="share-outline" label="Share with a friend" onPress={() => {}} />
+
+          <View style={[styles.divider, { backgroundColor: colors.divider }]} />
+
+          {/* Group 4: Legal */}
+          <AppText colorVariant="muted" style={styles.sectionTitle}>
+            Legal
+          </AppText>
+          <DrawerRow
+            icon="shield-checkmark-outline"
+            label="Privacy policy"
+            onPress={() => {
+              props.navigation.closeDrawer();
+              openPrivacyPolicy();
+            }}
+          />
+          <DrawerRow
+            icon="document-text-outline"
+            label="Terms of service"
+            onPress={() => {
+              props.navigation.closeDrawer();
+              openTermsOfService();
+            }}
+          />
         </DrawerContentScrollView>
 
         {/* 3. FOOTER */}

@@ -1,5 +1,6 @@
 import * as Device from 'expo-device';
 import * as MailComposer from 'expo-mail-composer';
+import * as WebBrowser from 'expo-web-browser';
 import { Linking, Platform } from 'react-native';
 
 export async function openSupportEmail() {
@@ -34,3 +35,13 @@ export async function openSurvey() {
     console.error('Failed to open URL:', err);
   }
 }
+
+export const openPrivacyPolicy = async () => {
+  // TODO: Replace with your actual Privacy Policy URL before launch
+  await WebBrowser.openBrowserAsync('https://yourwebsite.com/privacy');
+};
+
+export const openTermsOfService = async () => {
+  // TODO: Replace with your actual Terms of Service URL before launch
+  await WebBrowser.openBrowserAsync('https://yourwebsite.com/terms');
+};

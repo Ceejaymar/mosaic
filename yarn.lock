@@ -1903,6 +1903,13 @@
   resolved "https://registry.yarnpkg.com/@pkgjs/parseargs/-/parseargs-0.11.0.tgz#a77ea742fab25775145434eb1d2328cf5013ac33"
   integrity sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==
 
+"@posthog/core@1.24.1":
+  version "1.24.1"
+  resolved "https://registry.yarnpkg.com/@posthog/core/-/core-1.24.1.tgz#7faa7f4c094d1d480b872f79430a88080cbcaf43"
+  integrity sha512-e8AciAnc6MRFws89ux8lJKFAaI03yEon0ASDoUO7yS91FVqbUGXYekObUUR3LHplcg+pmyiJBI0jolY0SFbGRA==
+  dependencies:
+    cross-spawn "^7.0.6"
+
 "@radix-ui/primitive@1.1.3":
   version "1.1.3"
   resolved "https://registry.yarnpkg.com/@radix-ui/primitive/-/primitive-1.1.3.tgz#e2dbc13bdc5e4168f4334f75832d7bdd3e2de5ba"
@@ -4067,6 +4074,11 @@ expo-file-system@~19.0.16:
   resolved "https://registry.yarnpkg.com/expo-file-system/-/expo-file-system-19.0.16.tgz#86010578b19d6c0b688d30c3dfee12b553c5ca3d"
   integrity sha512-9Ee6HpcUEfO7dOet/on9yAg7ysegBua35Q0oGrJzoRc+xW6IlTxoSFbmK8QhjA3MZpkukP3DhaiYENYOzkw9SQ==
 
+expo-file-system@~19.0.21:
+  version "19.0.21"
+  resolved "https://registry.yarnpkg.com/expo-file-system/-/expo-file-system-19.0.21.tgz#e96a68107fb629cf0dd1906fe7b46b566ff13e10"
+  integrity sha512-s3DlrDdiscBHtab/6W1osrjGL+C2bvoInPJD7sOwmxfJ5Woynv2oc+Fz1/xVXaE/V7HE/+xrHC/H45tu6lZzzg==
+
 expo-font@~14.0.8:
   version "14.0.8"
   resolved "https://registry.yarnpkg.com/expo-font/-/expo-font-14.0.8.tgz#3971507cedaa8da7f0ac21f4c4c4d2b62ca754cc"
@@ -4207,6 +4219,11 @@ expo-server@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/expo-server/-/expo-server-1.0.0.tgz#b505dbb96b8da269a938c25790691b433ae4a3d9"
   integrity sha512-fAAI0ZXxayc2Rt5KfQjULv+TFreuLRZ+hdpc5TxZJ7CDpW1ZIqaVzELHh1rYTRVEBDFDiCBXtioS9WWTEAX+fg==
+
+expo-sharing@~14.0.8:
+  version "14.0.8"
+  resolved "https://registry.yarnpkg.com/expo-sharing/-/expo-sharing-14.0.8.tgz#cfd5fcf77ab5f64cf3d192a40a925abb316d3545"
+  integrity sha512-A1pPr2iBrxypFDCWVAESk532HK+db7MFXbvO2sCV9ienaFXAk7lIBm6bkqgE6vzRd9O3RGdEGzYx80cYlc089Q==
 
 expo-splash-screen@~31.0.13:
   version "31.0.13"
@@ -6679,6 +6696,13 @@ postcss@~8.4.32:
     nanoid "^3.3.7"
     picocolors "^1.1.1"
     source-map-js "^1.2.1"
+
+posthog-react-native@^4.37.5:
+  version "4.37.5"
+  resolved "https://registry.yarnpkg.com/posthog-react-native/-/posthog-react-native-4.37.5.tgz#c137ff306c8f1dd1e1c89601fae6841479bc16df"
+  integrity sha512-5q5cFcu7541nXrsoWaRtCbmYrbd0IqYPm8FhRO3uMquPj2900+2777Xhwi89HuXLpq5XsrPEr2hR/8SL1MZttA==
+  dependencies:
+    "@posthog/core" "1.24.1"
 
 pretty-bytes@^5.6.0:
   version "5.6.0"

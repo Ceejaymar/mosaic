@@ -44,5 +44,12 @@ export const ROADMAP_DATA = {
         'Create custom mood types and colors to build a mosaic that is entirely unique to you.',
       icon: 'color-palette-outline' as const,
     },
+    {
+      id: '7',
+      title: 'Mental health resources',
+      description:
+        'Quick, in-app access to emergency crisis hotlines and professional mental health support directories.',
+      icon: 'heart-half-outline' as const,
+    },
   ],
 };
