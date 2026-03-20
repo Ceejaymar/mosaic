@@ -14,19 +14,9 @@ import { useAppStore } from '@/src/store/useApp';
 
 const TOGGLES = [
   {
-    key: 'isDyslexicFont' as const,
-    label: 'Dyslexia-friendly font',
-    sub: 'Changes all text to OpenDyslexic.',
-  },
-  {
-    key: 'disableItalics' as const,
-    label: 'Disable italics',
-    sub: 'Removes italic styling to improve readability.',
-  },
-  {
     key: 'highContrastText' as const,
     label: 'High contrast text',
-    sub: 'Darkens muted text and thickens borders.',
+    sub: 'Makes subtle text and borders easier to see.',
   },
   {
     key: 'reduceMotion' as const,
@@ -96,7 +86,11 @@ export default function AccessibilityScreen() {
 
       {/* ─── Toggle List ─── */}
       <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}>
-        <View style={styles.listBlock}>
+        <AppText colorVariant="muted" style={styles.sectionLabel}>
+          Display & Interaction
+        </AppText>
+
+        <View style={[styles.flatCard, { backgroundColor: theme.colors.surface }]}>
           {TOGGLES.map((item, index) => (
             <View key={item.key}>
               {index > 0 && <View style={[styles.divider, { backgroundColor: colors.divider }]} />}
@@ -152,16 +146,29 @@ const styles = StyleSheet.create((theme) => ({
     letterSpacing: -0.5,
   },
   content: {
+    paddingHorizontal: theme.spacing[4],
     paddingTop: 8,
   },
-  listBlock: {},
-  divider: { height: 1, marginHorizontal: theme.spacing[4] },
+  sectionLabel: {
+    fontSize: 11,
+    fontFamily: 'SpaceMono',
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
+    marginBottom: 8,
+    marginLeft: 4,
+  },
+  flatCard: {
+    borderRadius: theme.radius.card,
+    paddingHorizontal: theme.spacing[4],
+    overflow: 'hidden',
+    marginBottom: 24,
+  },
+  divider: { height: 1 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: theme.spacing[4],
-    paddingVertical: theme.spacing[4],
+    paddingVertical: 16,
   },
   rowText: { flex: 1, paddingRight: 16 },
   rowLabel: { fontSize: theme.fontSize.base, fontWeight: '600', marginBottom: 2 },
