@@ -14,25 +14,28 @@ export function DrawerRow({
   const { theme } = useUnistyles();
 
   return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [styles.row, pressed && { backgroundColor: theme.colors.surface }]}
-    >
+    <Pressable onPress={onPress} style={({ pressed }) => [styles.row, pressed && { opacity: 0.5 }]}>
       <View style={styles.rowLeft}>
-        <Ionicons name={icon} size={24} color={theme.colors.typography} style={{ opacity: 0.4 }} />
+        <Ionicons name={icon} size={20} color={theme.colors.typography} style={{ opacity: 0.5 }} />
         <Text style={[styles.rowLabel, { color: theme.colors.typography }]}>{label}</Text>
       </View>
+      <Ionicons
+        name="chevron-forward"
+        size={14}
+        color={theme.colors.typography}
+        style={{ opacity: 0.25 }}
+      />
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create((theme) => ({
+const styles = StyleSheet.create(() => ({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: theme.spacing[2],
+    paddingVertical: 11,
   },
-  rowLeft: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  rowLabel: { fontSize: 18, fontWeight: '500' },
+  rowLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  rowLabel: { fontSize: 18, fontWeight: '500', letterSpacing: -0.1 },
 }));

@@ -145,10 +145,7 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
 
         {/* 3. FOOTER */}
         <View
-          style={[
-            styles.footer,
-            { paddingBottom: insets.bottom + 20, borderTopColor: colors.divider },
-          ]}
+          style={[styles.footer, { paddingBottom: insets.bottom, borderTopColor: colors.divider }]}
         >
           <AppText colorVariant="muted" style={styles.versionText}>
             Mosaic
@@ -202,20 +199,20 @@ const styles = StyleSheet.create((theme) => ({
     fontWeight: '700',
     letterSpacing: -0.5,
   },
-  scrollContent: { paddingTop: 8, paddingBottom: theme.spacing[6] },
-  divider: { height: 1, marginRight: 16, marginVertical: 12 },
+  scrollContent: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: theme.spacing[6] },
+  divider: { height: 0.5, marginVertical: 8 },
   sectionTitle: {
-    fontSize: 14,
+    fontSize: 11,
     fontFamily: 'SpaceMono',
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginTop: 8,
+    letterSpacing: 1.2,
+    marginTop: 16,
     marginBottom: 4,
   },
   footer: {
     paddingHorizontal: 16,
-    paddingTop: 8,
-    borderTopWidth: 1,
+    paddingTop: 4,
+    borderTopWidth: 0.5,
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing[2],
