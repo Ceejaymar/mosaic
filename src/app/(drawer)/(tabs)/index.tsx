@@ -26,6 +26,7 @@ import { generateDailyObservation } from '@/src/features/check-in/utils/daily-ob
 import { getMoodDisplayInfo } from '@/src/features/check-in/utils/mood-helpers';
 import { getCurrentTimeSlot } from '@/src/features/check-in/utils/time-of-day';
 import { hapticLight } from '@/src/lib/haptics/haptics';
+import { useAppStore } from '@/src/store/useApp';
 import { LETTER_SPACING } from '@/src/styles/design-tokens';
 import { enableAndroidLayoutAnimations } from '@/src/utils/animations';
 import { getFormattedDateLabel } from '@/src/utils/format-date';
@@ -44,7 +45,8 @@ export default function CheckInScreen() {
 
   const [sheetVisible, setSheetVisible] = useState(false);
   const { todayEntries, isLoading, loadError, saveEntry, refresh } = useTodayCheckIns();
-  const { currentStreak, checkInsThisWeek } = useStats();
+  const { currentStreak } = useStats();
+  const hideStreaks = useAppStore((s) => s.preferences.hideStreaks);
 
   const currentSlot = getCurrentTimeSlot();
   const atLimit = todayEntries.length >= CHECK_IN_CONSTANTS.MAX_DAILY_ENTRIES;
@@ -125,10 +127,17 @@ export default function CheckInScreen() {
         </AppText>
 
         <View style={styles.dateLabelRow}>
-          <AppText font="mono" colorVariant="muted" style={styles.dateLabel}>
-            {getFormattedDateLabel()}
-          </AppText>
-          <DemoBadge />
+          <View style={styles.dateLeft}>
+            <AppText font="mono" colorVariant="muted" style={styles.dateLabel}>
+              {getFormattedDateLabel()}
+            </AppText>
+            <DemoBadge />
+          </View>
+          {!hideStreaks && currentStreak > 0 && (
+            <AppText font="mono" style={[styles.streakLabel, { color: theme.colors.mosaicGold }]}>
+              {currentStreak} DAY STREAK
+            </AppText>
+          )}
         </View>
 
         <View style={styles.mosaicWrapper}>
@@ -164,26 +173,6 @@ export default function CheckInScreen() {
             </AppText>
           </Surface>
         )}
-
-        <Surface variant="card" style={styles.statsPill}>
-          <View style={styles.statItem}>
-            <AppText font="heading" variant="xl" colorVariant="primary">
-              {checkInsThisWeek}
-            </AppText>
-            <AppText variant="sm" colorVariant="muted">
-              {t('stats.checkInsThisWeek')}
-            </AppText>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <AppText font="heading" variant="xl" colorVariant="primary">
-              {currentStreak}
-            </AppText>
-            <AppText variant="sm" colorVariant="muted">
-              {t('stats.dayStreak')}
-            </AppText>
-          </View>
-        </Surface>
 
         {dailyObservation.length > 0 && (
           <Surface
@@ -232,12 +221,28 @@ const styles = StyleSheet.create((theme) => ({
     letterSpacing: LETTER_SPACING.tight,
     marginBottom: theme.spacing[2],
   },
+  dateLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: theme.spacing[6],
+  },
+  dateLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing[2],
+  },
   dateLabel: {
     fontSize: 12,
     fontWeight: '600',
     letterSpacing: 1.5,
-    marginBottom: theme.spacing[6],
     fontStyle: 'italic',
+  },
+  streakLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
   },
   mosaicWrapper: { marginBottom: theme.spacing[6] },
   loadingContainer: {
@@ -258,25 +263,6 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius.sheet,
   },
   errorText: { fontSize: 14, textAlign: 'center' },
-  statsPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: theme.radius.card,
-    paddingVertical: theme.spacing[4],
-    paddingHorizontal: theme.spacing[5],
-    marginBottom: theme.spacing[3],
-  },
-  statItem: {
-    flex: 1,
-    alignItems: 'center',
-    gap: theme.spacing[1],
-  },
-  statDivider: {
-    width: 1,
-    height: 28,
-    marginHorizontal: theme.spacing[3],
-    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)',
-  },
   observationCard: {
     marginBottom: theme.spacing[3],
     padding: theme.spacing[4],
@@ -302,9 +288,5 @@ const styles = StyleSheet.create((theme) => ({
   },
   obsText: {
     flex: 1,
-  },
-  dateLabelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
   },
 }));
