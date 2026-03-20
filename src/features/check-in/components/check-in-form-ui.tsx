@@ -132,6 +132,10 @@ export const CheckInFormUI = memo(function CheckInFormUI({
 
   const bannerBg = selectedColor ?? colors.divider;
   const bannerTextColor = isLightColor(bannerBg) ? theme.colors.onAccent : '#ffffff';
+  const backBtnColor =
+    selectedColor && (theme.isDark ? isLightColor(selectedColor) : !isLightColor(selectedColor))
+      ? selectedColor
+      : theme.colors.typography;
 
   const [isNoteModalVisible, setNoteModalVisible] = useState(false);
   const [draftNote, setDraftNote] = useState('');
@@ -219,11 +223,7 @@ export const CheckInFormUI = memo(function CheckInFormUI({
               onPress={() => (isModal ? form.setStep('emotion') : onBack?.())}
               style={({ pressed }) => pressed && { opacity: 0.7 }}
             >
-              <AppText
-                style={[styles.backBtn, { color: selectedColor ?? theme.colors.typography }]}
-              >
-                ← Back
-              </AppText>
+              <AppText style={[styles.backBtn, { color: backBtnColor }]}>← Back</AppText>
             </Pressable>
 
             <Animated.View style={[styles.selectedEmotionPill, headerPillAnimStyle]}>
