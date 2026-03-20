@@ -41,10 +41,10 @@ function formatHistoricalDate(dateKey: string, locale = 'en-US'): string {
   return `${month} ${getDayWithSuffix(d, locale)}`;
 }
 
-const TODAY_KEY = (() => {
+function getTodayKey(): string {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-})();
+}
 
 export type CheckInFormUIProps = {
   initialData?: CheckInFormInitialData;
@@ -116,7 +116,8 @@ export const CheckInFormUI = memo(function CheckInFormUI({
   const selectedNode = useMemo(() => getEmotionNode(form.selectedNodeId), [form.selectedNodeId]);
   const selectedColor = useMemo(() => getEmotionColor(selectedNode), [selectedNode]);
 
-  const isHistorical = !!form.targetDate && form.targetDate !== TODAY_KEY;
+  const todayKey = getTodayKey();
+  const isHistorical = !!form.targetDate && form.targetDate !== todayKey;
   const headerTitle = form.isEditing
     ? 'Edit Check-in'
     : isHistorical && form.targetDate
@@ -457,7 +458,7 @@ const styles = StyleSheet.create((theme) => ({
   selectedEmotionPill: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing[2] },
   emotionDot: { width: 8, height: 8, borderRadius: 4 },
   selectedEmotionText: {
-    fontSize: 16,
+    fontSize: theme.fontSize.base,
     fontWeight: '700',
     color: theme.colors.typography,
     textTransform: 'capitalize',
@@ -535,7 +536,7 @@ const styles = StyleSheet.create((theme) => ({
   noteModalInput: {
     flex: 1,
     padding: theme.spacing[5],
-    fontSize: 18,
+    fontSize: theme.fontSize.lg,
     lineHeight: 28,
   },
   footer: {

@@ -95,7 +95,7 @@ export const getFormattedDateLabel = (date: Date = new Date(), locale = 'en-US')
   const weekday = date.toLocaleDateString(locale, { weekday: 'long' }).toUpperCase();
   const month = date.toLocaleDateString(locale, { month: 'long' }).toUpperCase();
   const day = date.getDate();
-  const dayWithSuffix = getDayWithSuffix(day).toUpperCase();
+  const dayWithSuffix = getDayWithSuffix(day, locale).toUpperCase();
 
   return `${weekday}, ${month} ${dayWithSuffix}`;
 };
