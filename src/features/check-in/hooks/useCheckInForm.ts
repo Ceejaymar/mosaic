@@ -118,15 +118,17 @@ export function useCheckInForm(
         note.trim() || undefined,
         tags.length > 0 ? tags : undefined,
       );
-      posthog.capture('check_in_saved', {
-        mood: selectedNodeId,
-        has_note: !!note.trim(),
-        tag_count: tags.length,
-        activity_tags: [...activities],
-        people_tags: [...people],
-        location_tags: [...locations],
-        date_key: targetDate ?? null,
-      });
+      if (!isEditing) {
+        posthog.capture('check_in_saved', {
+          mood: selectedNodeId,
+          has_note: !!note.trim(),
+          tag_count: tags.length,
+          activity_tags: [...activities],
+          people_tags: [...people],
+          location_tags: [...locations],
+          date_key: targetDate ?? null,
+        });
+      }
       resetState();
     } catch (err) {
       console.error('Failed to save check-in', err);
@@ -141,6 +143,7 @@ export function useCheckInForm(
     people,
     locations,
     targetDate,
+    isEditing,
     posthog,
     onSaveCallback,
     resetState,

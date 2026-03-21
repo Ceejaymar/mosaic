@@ -78,20 +78,11 @@ function RoadmapCard({
       withTiming(1, { duration: 100 }),
     );
 
-    // Format the feature name for PostHog (e.g., "Cloud Sync" -> "cloud_sync")
-    const formattedName = item.title.toLowerCase().replace(/[^a-z0-9]+/g, '_');
-
-    if (newState) {
-      posthog.capture(`upvoted_${formattedName}`, {
-        feature_id: item.id,
-        feature_name: item.title,
-      });
-    } else {
-      posthog.capture(`removed_upvote_${formattedName}`, {
-        feature_id: item.id,
-        feature_name: item.title,
-      });
-    }
+    posthog.capture('feature_upvote', {
+      action: newState ? 'upvoted' : 'removed',
+      feature_id: item.id,
+      feature_name: item.title,
+    });
   };
 
   return (

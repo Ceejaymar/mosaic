@@ -93,7 +93,14 @@ function RootLayout() {
 
   useEffect(() => {
     if (previousPathname.current !== pathname) {
-      posthog.screen(pathname, { previous_screen: previousPathname.current ?? null, ...params });
+      const safeParamKeys = new Set(['utm_source', 'utm_medium', 'utm_campaign', 'source']);
+      const safeParams = Object.fromEntries(
+        Object.entries(params).filter(([key, value]) => safeParamKeys.has(key) && value != null),
+      );
+      posthog.screen(pathname, {
+        previous_screen: previousPathname.current ?? null,
+        ...safeParams,
+      });
       previousPathname.current = pathname;
     }
   }, [pathname, params]);
