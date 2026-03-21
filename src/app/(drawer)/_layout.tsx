@@ -58,22 +58,34 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
           <DrawerRow
             icon="options-outline"
             label="Preferences"
-            onPress={() => router.push('/pages/preferences')}
+            onPress={() => {
+              props.navigation.closeDrawer();
+              router.push('/pages/preferences');
+            }}
           />
           <DrawerRow
             icon="notifications-outline"
             label="Notifications"
-            onPress={() => router.push('/pages/notifications')}
+            onPress={() => {
+              props.navigation.closeDrawer();
+              router.push('/pages/notifications');
+            }}
           />
           <DrawerRow
             icon="lock-closed-outline"
             label="Security & Data"
-            onPress={() => router.push('/pages/security')}
+            onPress={() => {
+              props.navigation.closeDrawer();
+              router.push('/pages/security');
+            }}
           />
           <DrawerRow
             icon="accessibility-outline"
             label="Accessibility"
-            onPress={() => router.push('/pages/accessibility')}
+            onPress={() => {
+              props.navigation.closeDrawer();
+              router.push('/pages/accessibility');
+            }}
           />
 
           <View style={[styles.divider, { backgroundColor: colors.divider }]} />
@@ -85,12 +97,18 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
           <DrawerRow
             icon="rocket-outline"
             label="Upcoming features"
-            onPress={() => router.push('/pages/roadmap')}
+            onPress={() => {
+              props.navigation.closeDrawer();
+              router.push('/pages/roadmap');
+            }}
           />
           <DrawerRow
             icon="help-circle-outline"
             label="FAQs"
-            onPress={() => router.push('/pages/faq')}
+            onPress={() => {
+              props.navigation.closeDrawer();
+              router.push('/pages/faq');
+            }}
           />
 
           <View style={[styles.divider, { backgroundColor: colors.divider }]} />
