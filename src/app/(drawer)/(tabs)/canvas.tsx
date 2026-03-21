@@ -1,7 +1,9 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { parseISO } from 'date-fns';
+import { useRouter } from 'expo-router';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Pressable, useWindowDimensions, View } from 'react-native';
+import { Pressable, useWindowDimensions, View } from 'react-native';
 import Animated, {
   Extrapolation,
   interpolate,
@@ -136,6 +138,7 @@ const AnimatedMonth = memo(function AnimatedMonth({
 });
 
 export default function CanvasScreen() {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width: screenWidth } = useWindowDimensions();
   const { t } = useTranslation();
@@ -191,9 +194,13 @@ export default function CanvasScreen() {
   const monthAnimStyle = useAnimatedStyle(() => ({ opacity: monthOpacity.value }));
   const yearAnimStyle = useAnimatedStyle(() => ({ opacity: yearOpacity.value }));
 
-  const handleDayPress = useCallback((d: string) => {
-    Alert.alert('Day', d);
-  }, []);
+  const handleDayPress = useCallback(
+    (d: string) => {
+      // biome-ignore lint/suspicious/noExplicitAny: expo-router typed routes
+      router.push(`/day/${d}` as any);
+    },
+    [router],
+  );
 
   const [checkInTargetDate, setCheckInTargetDate] = useState<string | null>(null);
 
@@ -209,13 +216,20 @@ export default function CanvasScreen() {
     async (nodeId: string, note?: string, tags?: string[]) => {
       if (!checkInTargetDate) return;
       const now = new Date();
+      const targetDate = parseISO(checkInTargetDate);
+      targetDate.setHours(
+        now.getHours(),
+        now.getMinutes(),
+        now.getSeconds(),
+        now.getMilliseconds(),
+      );
       const newEntry: NewMoodEntry = {
         id: uuid(),
         dateKey: checkInTargetDate,
         primaryMood: nodeId,
         note: note ?? null,
         tags: tags && tags.length > 0 ? JSON.stringify(tags) : null,
-        occurredAt: `${checkInTargetDate}T12:00:00.000Z`,
+        occurredAt: targetDate.toISOString(),
         createdAt: now.toISOString(),
         updatedAt: now.toISOString(),
       };

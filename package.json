@@ -46,6 +46,7 @@
     "@sentry/react-native": "^8.2.0",
     "@shopify/flash-list": "2.0.2",
     "@shopify/react-native-skia": "^2.4.21",
+    "date-fns": "^4.1.0",
     "drizzle-orm": "^0.45.1",
     "expo": "^54.0.12",
     "expo-application": "~7.0.8",
