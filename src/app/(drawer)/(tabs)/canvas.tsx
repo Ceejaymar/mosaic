@@ -1,7 +1,8 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useRouter } from 'expo-router';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Pressable, useWindowDimensions, View } from 'react-native';
+import { Pressable, useWindowDimensions, View } from 'react-native';
 import Animated, {
   Extrapolation,
   interpolate,
@@ -136,6 +137,7 @@ const AnimatedMonth = memo(function AnimatedMonth({
 });
 
 export default function CanvasScreen() {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width: screenWidth } = useWindowDimensions();
   const { t } = useTranslation();
@@ -191,9 +193,13 @@ export default function CanvasScreen() {
   const monthAnimStyle = useAnimatedStyle(() => ({ opacity: monthOpacity.value }));
   const yearAnimStyle = useAnimatedStyle(() => ({ opacity: yearOpacity.value }));
 
-  const handleDayPress = useCallback((d: string) => {
-    Alert.alert('Day', d);
-  }, []);
+  const handleDayPress = useCallback(
+    (d: string) => {
+      // biome-ignore lint/suspicious/noExplicitAny: expo-router typed routes
+      router.push(`/day/${d}` as any);
+    },
+    [router],
+  );
 
   const [checkInTargetDate, setCheckInTargetDate] = useState<string | null>(null);
 

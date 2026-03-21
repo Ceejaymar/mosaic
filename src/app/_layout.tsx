@@ -337,6 +337,14 @@ function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {
                   : 'slide_from_right',
               })}
             />
+            <Stack.Screen
+              name="day/[date]"
+              options={{
+                headerShown: false,
+                gestureEnabled: true,
+                animation: 'slide_from_right',
+              }}
+            />
           </Stack>
         </GestureHandlerRootView>
       </ThemeProvider>

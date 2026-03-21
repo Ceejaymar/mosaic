@@ -1,7 +1,7 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { FlashList } from '@shopify/flash-list';
 import { router } from 'expo-router';
-import { memo, useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -9,18 +9,15 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
 import { DemoBadge } from '@/src/components/demo-badge';
+import { EntryCard } from '@/src/components/entry-card';
 import { Screen } from '@/src/components/screen';
-import { Surface } from '@/src/components/surface';
 import { TopFade } from '@/src/components/top-fade';
 import { LAYOUT } from '@/src/constants/layout';
 import { fetchMoodEntriesPage, type MoodEntry } from '@/src/db/repos/moodRepo';
-import { parseStoredTags } from '@/src/features/check-in/utils/parse-tags';
 import { getDemoEntriesPage } from '@/src/features/demo/generateDemoData';
-import { getMoodDisplayInfo } from '@/src/features/emotion-accordion/utils/mood-display';
-import { hapticLight } from '@/src/lib/haptics/haptics';
 import { useAppStore } from '@/src/store/useApp';
 import { LETTER_SPACING } from '@/src/styles/design-tokens';
-import { formatDayLabel, formatEntryTime } from '@/src/utils/format-date';
+import { formatDayLabel } from '@/src/utils/format-date';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -33,12 +30,6 @@ type EntryItem = { type: 'entry'; id: string; entry: MoodEntry };
 type ListItem = DayHeader | EntryItem;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function hexAlpha(hex: string, a: number): string {
-  return `${hex}${Math.round(a * 255)
-    .toString(16)
-    .padStart(2, '0')}`;
-}
 
 function buildListItems(entries: MoodEntry[], notesOnly: boolean): ListItem[] {
   const src = notesOnly ? entries.filter((e) => (e.note ?? '').trim().length > 0) : entries;
@@ -142,119 +133,6 @@ const dhStyles = StyleSheet.create((theme) => ({
   ordinal: {
     fontSize: 11,
     fontWeight: '700' as const,
-    marginTop: theme.spacing[1],
-  },
-}));
-
-// ─── EntryCard ────────────────────────────────────────────────────────────────
-
-type EntryCardProps = {
-  entry: MoodEntry;
-  onPress: (id: string) => void;
-};
-
-const EntryCard = memo(function EntryCard({ entry, onPress }: EntryCardProps) {
-  const { theme } = useUnistyles();
-  const info = getMoodDisplayInfo(entry.primaryMood);
-  const accentColor = info?.color ?? theme.colors.mosaicGold;
-  const label = info?.label ?? entry.primaryMood;
-  const tags = parseStoredTags(entry.tags);
-
-  const handlePress = useCallback(() => {
-    hapticLight();
-    onPress(entry.id);
-  }, [entry.id, onPress]);
-
-  // Mood gradient passed to Surface — eliminates a stacked LinearGradient inside the card body.
-  const gradientColors = [hexAlpha(accentColor, 0), hexAlpha(accentColor, 0.2)] as const;
-
-  return (
-    <Pressable
-      onPress={handlePress}
-      style={({ pressed }) => [cardStyles.pressable, { opacity: pressed ? 0.7 : 1 }]}
-    >
-      <Surface
-        variant="sheet"
-        surfaceGradientColors={gradientColors}
-        style={{ backgroundColor: theme.colors.tileBackground }}
-      >
-        <View style={cardStyles.body}>
-          <AppText font="heading" style={[cardStyles.emotion, { color: accentColor }]}>
-            {label}
-          </AppText>
-
-          {entry.note ? (
-            <AppText
-              font="heading"
-              colorVariant="primary"
-              style={cardStyles.note}
-              numberOfLines={3}
-              ellipsizeMode="tail"
-            >
-              {entry.note}
-            </AppText>
-          ) : null}
-
-          {tags.length > 0 && (
-            <View style={cardStyles.tagRow}>
-              {tags.map((tag) => (
-                <View
-                  key={tag}
-                  style={[cardStyles.tag, { backgroundColor: hexAlpha(accentColor, 0.15) }]}
-                >
-                  <AppText style={[cardStyles.tagText, { color: accentColor }]}>{tag}</AppText>
-                </View>
-              ))}
-            </View>
-          )}
-
-          <AppText colorVariant="muted" style={cardStyles.time}>
-            {formatEntryTime(entry.occurredAt)}
-          </AppText>
-        </View>
-      </Surface>
-    </Pressable>
-  );
-});
-
-const cardStyles = StyleSheet.create((theme) => ({
-  pressable: {
-    marginHorizontal: theme.spacing[4],
-    marginVertical: theme.spacing[2],
-    borderRadius: theme.radius.sheet,
-  },
-  body: {
-    padding: theme.spacing[5],
-    gap: theme.spacing[2],
-  },
-  emotion: {
-    fontSize: theme.fontSize.md,
-    fontWeight: '700' as const,
-  },
-  note: {
-    fontSize: theme.fontSize.lg,
-    lineHeight: 28,
-    fontWeight: '400' as const,
-    letterSpacing: -0.2,
-  },
-  tagRow: {
-    flexDirection: 'row' as const,
-    flexWrap: 'wrap' as const,
-    gap: theme.spacing[2],
-  },
-  tag: {
-    borderRadius: theme.radius.sheet,
-    paddingHorizontal: theme.spacing[3],
-    paddingVertical: theme.spacing[1],
-  },
-  tagText: {
-    fontSize: 12,
-    fontWeight: '500' as const,
-  },
-  time: {
-    fontSize: 12,
-    fontWeight: '500' as const,
-    letterSpacing: 0.2,
     marginTop: theme.spacing[1],
   },
 }));
