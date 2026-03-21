@@ -167,6 +167,7 @@ function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {
   const [isBlurred, setIsBlurred] = useState(false);
   const didMountRef = useRef(false);
   const justUnlockedRef = useRef(true);
+  const pendingAuthTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const performUnlock = useCallback(async () => {
     const success = await authenticateUser();
@@ -195,6 +196,10 @@ function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {
   useEffect(() => {
     const sub = AppState.addEventListener('change', (nextState) => {
       if (nextState === 'background' || nextState === 'inactive') {
+        if (pendingAuthTimerRef.current) {
+          clearTimeout(pendingAuthTimerRef.current);
+          pendingAuthTimerRef.current = null;
+        }
         justUnlockedRef.current = false;
         if (isAppLockEnabled) setIsBlurred(true);
       }
@@ -207,7 +212,8 @@ function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {
 
         setIsBlurred(true);
         // Give iOS 250ms to fully wake the app from deep sleep before asking for Face ID
-        setTimeout(async () => {
+        pendingAuthTimerRef.current = setTimeout(async () => {
+          pendingAuthTimerRef.current = null;
           const success = await authenticateUser();
           if (success) {
             justUnlockedRef.current = true;
@@ -220,7 +226,13 @@ function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {
         }, 250);
       }
     });
-    return () => sub.remove();
+    return () => {
+      sub.remove();
+      if (pendingAuthTimerRef.current) {
+        clearTimeout(pendingAuthTimerRef.current);
+        pendingAuthTimerRef.current = null;
+      }
+    };
   }, [isAppLockEnabled]);
 
   return (

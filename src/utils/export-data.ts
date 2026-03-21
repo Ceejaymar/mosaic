@@ -4,7 +4,11 @@ import * as Sharing from 'expo-sharing';
 import { db } from '@/src/db/client';
 import { moodEntries } from '@/src/db/schema';
 
+let isExporting = false;
+
 export async function exportDataToCSV() {
+  if (isExporting) return;
+  isExporting = true;
   try {
     const allEntries = await db.select().from(moodEntries);
 
@@ -13,7 +17,9 @@ export async function exportDataToCSV() {
       return;
     }
 
-    const headers = Object.keys(allEntries[0]).join(',');
+    const headers = Object.keys(allEntries[0])
+      .map((key) => `"${key.replace(/"/g, '""')}"`)
+      .join(',');
 
     const rows = allEntries.map((entry) =>
       Object.values(entry)
@@ -57,5 +63,7 @@ export async function exportDataToCSV() {
     console.error('Error exporting data:', error);
     const message = error instanceof Error ? error.message : 'Unknown error occurred';
     alert(`Error: ${message}`);
+  } finally {
+    isExporting = false;
   }
 }

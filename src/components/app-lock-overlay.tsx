@@ -8,16 +8,23 @@ import { AppText } from '@/src/components/app-text';
 export function AppLockOverlay({ onUnlock }: { onUnlock: () => void }) {
   const { theme } = useUnistyles();
   const hasAttemptedAuth = useRef(false);
+  const autoUnlockTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
+    autoUnlockTimerRef.current = setTimeout(() => {
+      autoUnlockTimerRef.current = null;
       if (!hasAttemptedAuth.current) {
         hasAttemptedAuth.current = true;
         onUnlock();
       }
     }, 300);
 
-    return () => clearTimeout(timer);
+    return () => {
+      if (autoUnlockTimerRef.current) {
+        clearTimeout(autoUnlockTimerRef.current);
+        autoUnlockTimerRef.current = null;
+      }
+    };
   }, [onUnlock]);
 
   return (
@@ -36,7 +43,14 @@ export function AppLockOverlay({ onUnlock }: { onUnlock: () => void }) {
         </AppText>
 
         <Pressable
-          onPress={onUnlock}
+          onPress={() => {
+            if (autoUnlockTimerRef.current) {
+              clearTimeout(autoUnlockTimerRef.current);
+              autoUnlockTimerRef.current = null;
+            }
+            hasAttemptedAuth.current = true;
+            onUnlock();
+          }}
           style={({ pressed }) => [
             styles.unlockBtn,
             { backgroundColor: theme.colors.mosaicGold, opacity: pressed ? 0.8 : 1 },

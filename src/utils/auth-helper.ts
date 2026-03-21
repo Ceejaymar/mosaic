@@ -21,6 +21,8 @@ export async function authenticateUser(): Promise<boolean> {
 
     // No biometrics enrolled — allow access
     return true;
+  } catch {
+    return false;
   } finally {
     isAuthenticating = false;
   }

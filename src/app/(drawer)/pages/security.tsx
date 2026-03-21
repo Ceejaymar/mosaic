@@ -3,7 +3,7 @@ import { DrawerActions } from '@react-navigation/native';
 import * as LocalAuthentication from 'expo-local-authentication';
 import { type Href, useNavigation, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, Pressable, ScrollView, Switch, View } from 'react-native';
+import { Alert, Platform, Pressable, ScrollView, Switch, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
@@ -34,9 +34,9 @@ export default function SecurityScreen() {
       const supportedTypes = await LocalAuthentication.supportedAuthenticationTypesAsync();
       if (hasHardware && supportedTypes.length > 0) {
         if (supportedTypes.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION)) {
-          setBiometricName('Face ID');
+          setBiometricName(Platform.OS === 'ios' ? 'Face ID' : 'Face Unlock');
         } else if (supportedTypes.includes(LocalAuthentication.AuthenticationType.FINGERPRINT)) {
-          setBiometricName('Touch ID');
+          setBiometricName(Platform.OS === 'ios' ? 'Touch ID' : 'Fingerprint');
         } else {
           setBiometricName('Biometrics');
         }
@@ -63,9 +63,13 @@ export default function SecurityScreen() {
     toggleAppLock(enabled);
   };
 
-  const handleExport = () => {
+  const handleExport = async () => {
     hapticLight();
-    exportDataToCSV();
+    try {
+      await exportDataToCSV();
+    } catch (error) {
+      console.error('Export failed:', error);
+    }
   };
   const handleDelete = () => {
     Alert.alert(
