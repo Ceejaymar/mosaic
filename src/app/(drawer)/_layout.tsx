@@ -3,8 +3,10 @@ import {
   type DrawerContentComponentProps,
   DrawerContentScrollView,
 } from '@react-navigation/drawer';
+import * as Application from 'expo-application';
 import { type Href, useRouter } from 'expo-router';
 import { Drawer } from 'expo-router/drawer';
+import { usePostHog } from 'posthog-react-native';
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
@@ -28,6 +30,7 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
   const insets = useSafeAreaInsets();
   const { theme } = useUnistyles();
   const colors = useAccessibleColors();
+  const posthog = usePostHog();
 
   const handleHomePress = () => {
     props.navigation.closeDrawer();
@@ -124,6 +127,7 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
             label="Share your feedback"
             onPress={() => {
               props.navigation.closeDrawer();
+              posthog.capture('feedback_opened');
               openSurvey();
             }}
           />
@@ -141,6 +145,7 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
             label="Rate Mosaic"
             onPress={() => {
               props.navigation.closeDrawer();
+              posthog.capture('app_rated');
               rateApp();
             }}
           />
@@ -149,6 +154,7 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
             label="Share with a friend"
             onPress={() => {
               props.navigation.closeDrawer();
+              posthog.capture('app_shared');
               shareApp();
             }}
           />
@@ -185,7 +191,7 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
             Mosaic
           </AppText>
           <AppText colorVariant="muted" style={styles.versionText}>
-            v1.0.0
+            v{Application.nativeApplicationVersion || '1.0.0'}
           </AppText>
         </View>
       </View>

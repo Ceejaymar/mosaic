@@ -1,0 +1,73 @@
+export default {
+  expo: {
+    name: 'mosaic',
+    slug: 'mosaic',
+    description: 'A minimal emotion tracking app.',
+    owner: 'marceedigital',
+    version: '1.0.0',
+    orientation: 'portrait',
+    icon: './src/assets/images/icon.png',
+    scheme: 'mosaic',
+    userInterfaceStyle: 'automatic',
+    newArchEnabled: true,
+    splash: {
+      image: './src/assets/images/splash-icon.png',
+      resizeMode: 'contain',
+      backgroundColor: '#ffffff',
+    },
+    ios: {
+      supportsTablet: true,
+      bundleIdentifier: 'com.marceedigital.mosaic',
+      infoPlist: {
+        ITSAppUsesNonExemptEncryption: false,
+      },
+    },
+    android: {
+      adaptiveIcon: {
+        foregroundImage: './src/assets/images/adaptive-icon.png',
+        backgroundColor: '#ffffff',
+      },
+      edgeToEdgeEnabled: true,
+      package: 'com.marceedigital.mosaic',
+    },
+    web: {
+      bundler: 'metro',
+      output: 'static',
+      favicon: './assets/images/favicon.png',
+    },
+    plugins: [
+      'expo-router',
+      'expo-secure-store',
+      'expo-font',
+      'expo-web-browser',
+      'expo-localization',
+      'expo-sqlite',
+      [
+        '@sentry/react-native/expo',
+        {
+          url: 'https://sentry.io/',
+          project: 'react-native',
+          organization: 'marcee',
+        },
+      ],
+      'expo-mail-composer',
+    ],
+    experiments: {
+      typedRoutes: true,
+    },
+    extra: {
+      router: {},
+      eas: {
+        projectId: '6d4c33a3-bc65-4675-b4f7-e1835deaca5d',
+      },
+      posthogProjectToken: process.env.POSTHOG_PROJECT_TOKEN,
+      posthogHost: process.env.POSTHOG_HOST,
+    },
+    runtimeVersion: {
+      policy: 'appVersion',
+    },
+    updates: {
+      url: 'https://u.expo.dev/6d4c33a3-bc65-4675-b4f7-e1835deaca5d',
+    },
+  },
+};

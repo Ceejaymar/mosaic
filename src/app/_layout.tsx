@@ -7,15 +7,16 @@ import { BlurView } from 'expo-blur';
 import * as Device from 'expo-device';
 import { useFonts } from 'expo-font';
 import * as Notifications from 'expo-notifications';
-import { Stack, useNavigationContainerRef } from 'expo-router';
+import { Stack, useGlobalSearchParams, useNavigationContainerRef, usePathname } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { PostHogProvider } from 'posthog-react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, AppState, Platform, StyleSheet } from 'react-native';
 import { SystemBars } from 'react-native-edge-to-edge';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useUnistyles } from 'react-native-unistyles';
-
 import migrations from '@/drizzle/migrations';
+import { posthog } from '@/src/config/posthog';
 
 import { db } from '@/src/db/client';
 import { rescheduleAllNotifications } from '@/src/features/notifications/notificationService';
@@ -86,6 +87,24 @@ export const unstable_settings = {
 SplashScreen.preventAutoHideAsync();
 
 function RootLayout() {
+  const pathname = usePathname();
+  const params = useGlobalSearchParams();
+  const previousPathname = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (previousPathname.current !== pathname) {
+      const safeParamKeys = new Set(['utm_source', 'utm_medium', 'utm_campaign', 'source']);
+      const safeParams = Object.fromEntries(
+        Object.entries(params).filter(([key, value]) => safeParamKeys.has(key) && value != null),
+      );
+      posthog.screen(pathname, {
+        previous_screen: previousPathname.current ?? null,
+        ...safeParams,
+      });
+      previousPathname.current = pathname;
+    }
+  }, [pathname, params]);
+
   const [fontsLoaded, fontError] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     Fraunces: require('../assets/fonts/Fraunces-VariableFont.ttf'),
@@ -160,7 +179,14 @@ function RootLayout() {
 
   if (!isAppReady) return null;
 
-  return <RootLayoutNav startLocked={coldStartLocked} />;
+  return (
+    <PostHogProvider
+      client={posthog}
+      autocapture={{ captureScreens: false, captureTouches: true, propsToCapture: ['testID'] }}
+    >
+      <RootLayoutNav startLocked={coldStartLocked} />
+    </PostHogProvider>
+  );
 }
 
 function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {

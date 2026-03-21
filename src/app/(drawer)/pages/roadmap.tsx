@@ -1,12 +1,24 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { DrawerActions } from '@react-navigation/native';
 import { type Href, useNavigation, useRouter } from 'expo-router';
-import { Pressable, ScrollView, View } from 'react-native';
+import { usePostHog } from 'posthog-react-native';
+import { useState } from 'react';
+import { Pressable, ScrollView, Text, View } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
 import { ROADMAP_DATA } from '@/src/constants/roadmap-data';
+import { hapticLight } from '@/src/lib/haptics/haptics';
+import { storage } from '@/src/services/storage/mmkv';
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 // ─── Pastel Palette ───────────────────────────────────────────────────────────
 
@@ -42,6 +54,36 @@ function RoadmapCard({
   iconColor: string;
 }) {
   const { theme } = useUnistyles();
+  const posthog = usePostHog();
+
+  const storageKey = `upvoted_feature_${item.id}`;
+  const [isUpvoted, setIsUpvoted] = useState(() => storage.getBoolean(storageKey) || false);
+
+  // Animation value
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const handleToggleUpvote = () => {
+    hapticLight();
+    const newState = !isUpvoted;
+    setIsUpvoted(newState);
+    storage.set(storageKey, newState);
+
+    // Trigger a fast, immediate pulse — pure timing, no physics tail
+    scale.value = withSequence(
+      withTiming(0.85, { duration: 60 }),
+      withTiming(1, { duration: 100 }),
+    );
+
+    posthog.capture('feature_upvote', {
+      action: newState ? 'upvoted' : 'removed',
+      feature_id: item.id,
+      feature_name: item.title,
+    });
+  };
 
   return (
     <View style={[styles.card, { backgroundColor: theme.colors.surface }]}>
@@ -56,6 +98,26 @@ function RoadmapCard({
           {item.description}
         </AppText>
       </View>
+
+      {/* Floating Animated Badge */}
+      <AnimatedPressable
+        onPress={handleToggleUpvote}
+        hitSlop={16}
+        style={[
+          styles.upvoteBadge,
+          {
+            backgroundColor: isUpvoted ? iconColor : 'rgba(150, 150, 150, 0.9)',
+          },
+          !isUpvoted && { shadowOpacity: 0, elevation: 0 },
+          animatedStyle,
+        ]}
+      >
+        {isUpvoted ? (
+          <Text style={{ fontSize: 16 }}>👍</Text>
+        ) : (
+          <Ionicons name="thumbs-up-outline" size={16} color="#000000" />
+        )}
+      </AnimatedPressable>
     </View>
   );
 }
@@ -84,6 +146,9 @@ export default function RoadmapScreen() {
         </View>
         <AppText font="heading" style={[styles.title, { color: theme.colors.typography }]}>
           The path ahead
+        </AppText>
+        <AppText colorVariant="muted" style={styles.subtitle}>
+          Tap 👍 on any feature to let us know what you'd like to see sooner.
         </AppText>
       </View>
 
@@ -164,4 +229,20 @@ const styles = StyleSheet.create((theme) => ({
   textContainer: { flex: 1, marginLeft: 16 },
   cardTitle: { fontSize: 18, marginBottom: 4 },
   cardDesc: { fontSize: 13, lineHeight: 18 },
+  subtitle: { fontSize: 13, lineHeight: 18, marginTop: 6 },
+  upvoteBadge: {
+    position: 'absolute',
+    bottom: -6,
+    right: -6,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
+  },
 }));

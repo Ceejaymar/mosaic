@@ -1,4 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { usePostHog } from 'posthog-react-native';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -17,6 +18,7 @@ export default function EditCheckInScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const posthog = usePostHog();
 
   const [entry, setEntry] = useState<MoodEntry | null>(null);
 
@@ -49,6 +51,12 @@ export default function EditCheckInScreen() {
           note: note ?? null,
           tags: tags && tags.length > 0 ? JSON.stringify(tags) : null,
         });
+        posthog.capture('check_in_updated', {
+          mood: nodeId,
+          has_note: !!note,
+          tag_count: tags?.length ?? 0,
+          date_key: entry?.dateKey ?? null,
+        });
         if (entry) {
           const [yearStr, monthStr] = entry.dateKey.split('-');
           invalidateMonthCache(parseInt(yearStr, 10), parseInt(monthStr, 10) - 1);
@@ -59,7 +67,7 @@ export default function EditCheckInScreen() {
         Alert.alert('Error', 'Could not save changes. Please try again.');
       }
     },
-    [id, entry, router],
+    [id, entry, posthog, router],
   );
 
   const handleClose = useCallback(() => {
@@ -75,6 +83,10 @@ export default function EditCheckInScreen() {
         onPress: async () => {
           try {
             await deleteMoodEntry(id as string);
+            posthog.capture('check_in_deleted', {
+              mood: entry?.primaryMood ?? null,
+              date_key: entry?.dateKey ?? null,
+            });
             if (entry) {
               const [yearStr, monthStr] = entry.dateKey.split('-');
               invalidateMonthCache(parseInt(yearStr, 10), parseInt(monthStr, 10) - 1);
@@ -87,7 +99,7 @@ export default function EditCheckInScreen() {
         },
       },
     ]);
-  }, [id, entry, router]);
+  }, [id, entry, posthog, router]);
 
   if (!id) return null;
 
