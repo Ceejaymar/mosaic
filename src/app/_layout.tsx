@@ -339,11 +339,13 @@ function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {
             />
             <Stack.Screen
               name="day/[date]"
-              options={{
+              options={() => ({
                 headerShown: false,
                 gestureEnabled: true,
-                animation: 'slide_from_right',
-              }}
+                animation: useAppStore.getState().accessibility.reduceMotion
+                  ? 'none'
+                  : 'slide_from_right',
+              })}
             />
           </Stack>
         </GestureHandlerRootView>

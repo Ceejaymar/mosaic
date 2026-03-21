@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { addDays, differenceInDays, format, isSameDay, parseISO, subDays } from 'date-fns';
 import { type Href, useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
 import { Directions, Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -29,6 +29,7 @@ import {
 } from '@/src/features/check-in/components/mosaic-display';
 import { getMoodDisplayInfo } from '@/src/features/emotion-accordion/utils/mood-display';
 import { uuid } from '@/src/lib/uuid';
+import { useAppStore } from '@/src/store/useApp';
 
 const MAX_ENTRIES = 4;
 const MAX_BACKDATE_DAYS = 90;
@@ -49,8 +50,13 @@ export default function DaySummaryScreen() {
   const { theme } = useUnistyles();
   const { width } = useWindowDimensions();
   const { date } = useLocalSearchParams<{ date: string }>();
+  const reduceMotion = useAppStore((s) => s.accessibility.reduceMotion);
 
-  const currentDate = parseISO(date);
+  // Validate the param before deriving anything from it
+  const parsedDate = date ? parseISO(date) : null;
+  const isValidDate = parsedDate !== null && !Number.isNaN(parsedDate.getTime());
+  const currentDate = isValidDate ? parsedDate : new Date();
+
   const today = new Date();
   const isToday = isSameDay(currentDate, today);
   const daysDiff = differenceInDays(today, currentDate);
@@ -70,19 +76,24 @@ export default function DaySummaryScreen() {
     transform: [{ translateX: translateX.value }],
   }));
 
+  // Guard against stale fetch results when date changes rapidly
+  const requestIdRef = useRef(0);
+
   const loadEntries = useCallback(async () => {
+    const myId = ++requestIdRef.current;
     setIsLoading(true);
     try {
       const result = await fetchMoodEntriesForDate(date);
+      if (requestIdRef.current !== myId) return;
       setEntries(result);
     } catch (err) {
+      if (requestIdRef.current !== myId) return;
       console.error('Failed to load day entries', err);
     } finally {
-      setIsLoading(false);
+      if (requestIdRef.current === myId) setIsLoading(false);
     }
   }, [date]);
 
-  // Fires on initial mount and whenever date param changes via setParams
   useEffect(() => {
     loadEntries();
   }, [loadEntries]);
@@ -97,22 +108,24 @@ export default function DaySummaryScreen() {
   const navigateToDate = useCallback(
     (newDateObj: Date, direction: 'left' | 'right') => {
       const newDateStr = format(newDateObj, 'yyyy-MM-dd');
+
+      if (reduceMotion) {
+        updateDateParam(newDateStr);
+        return;
+      }
+
       const exitOffset = direction === 'left' ? -width : width;
       const enterOffset = direction === 'left' ? width : -width;
 
-      // 1. Animate out
       opacity.value = withTiming(0, { duration: 150 });
       translateX.value = withTiming(exitOffset, { duration: 150 }, () => {
-        // 2. Update URL param silently — triggers useEffect to reload data
         runOnJS(updateDateParam)(newDateStr);
-        // 3. Reset to opposite side
         translateX.value = enterOffset;
-        // 4. Animate back in
         opacity.value = withTiming(1, { duration: 250 });
         translateX.value = withTiming(0, { duration: 250 });
       });
     },
-    [width, translateX, opacity, updateDateParam],
+    [width, translateX, opacity, updateDateParam, reduceMotion],
   );
 
   const handlePrevDay = useCallback(() => {
@@ -167,6 +180,29 @@ export default function DaySummaryScreen() {
     });
   const swipes = Gesture.Exclusive(flingLeft, flingRight);
 
+  // Invalid date param — show minimal fallback rather than crashing
+  if (!isValidDate) {
+    return (
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <View style={[styles.headerContainer, { paddingTop: insets.top + 8 }]}>
+          <Pressable
+            onPress={() => router.back()}
+            hitSlop={12}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+            style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.6 }]}
+          >
+            <Ionicons name="arrow-back" size={20} color={theme.colors.typography} />
+            <AppText style={[styles.backLabel, { color: theme.colors.typography }]}>Back</AppText>
+          </Pressable>
+        </View>
+        <View style={styles.centered}>
+          <AppText colorVariant="muted">Invalid date.</AppText>
+        </View>
+      </View>
+    );
+  }
+
   const atLimit = entries.length >= MAX_ENTRIES;
   const tiles = entries.map(entryToTile);
   const formattedDate = format(currentDate, 'MMM d');
@@ -181,6 +217,8 @@ export default function DaySummaryScreen() {
             <Pressable
               onPress={() => router.back()}
               hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
               style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.6 }]}
             >
               <Ionicons name="arrow-back" size={20} color={theme.colors.typography} />
@@ -189,6 +227,8 @@ export default function DaySummaryScreen() {
             <Pressable
               onPress={() => router.navigate('/(tabs)/' as Href)}
               hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel="Home"
               style={({ pressed }) => [styles.iconBtn, pressed && { opacity: 0.6 }]}
             >
               <Ionicons name="home-outline" size={24} color={theme.colors.typography} />
@@ -200,6 +240,8 @@ export default function DaySummaryScreen() {
             <Pressable
               onPress={handlePrevDay}
               hitSlop={16}
+              accessibilityRole="button"
+              accessibilityLabel="Previous day"
               style={({ pressed }) => pressed && { opacity: 0.6 }}
             >
               <Ionicons name="chevron-back" size={20} color={theme.colors.textMuted} />
@@ -213,6 +255,9 @@ export default function DaySummaryScreen() {
               onPress={handleNextDay}
               hitSlop={16}
               disabled={isToday}
+              accessibilityRole="button"
+              accessibilityLabel="Next day"
+              accessibilityState={{ disabled: isToday }}
               style={({ pressed }) => pressed && !isToday && { opacity: 0.6 }}
             >
               <Ionicons name="chevron-forward" size={20} color={theme.colors.textMuted} />
@@ -245,6 +290,11 @@ export default function DaySummaryScreen() {
                 <Pressable
                   onPress={atLimit ? undefined : () => setSheetVisible(true)}
                   disabled={atLimit}
+                  accessibilityRole="button"
+                  accessibilityLabel={
+                    atLimit ? 'Daily limit reached' : `Add entry to ${formattedDate}`
+                  }
+                  accessibilityState={{ disabled: atLimit }}
                   style={({ pressed }) => [
                     styles.addButton,
                     atLimit
