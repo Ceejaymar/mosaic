@@ -1,6 +1,7 @@
 import { DrawerToggleButton } from '@react-navigation/drawer';
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { usePostHog } from 'posthog-react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -38,6 +39,7 @@ export default function CheckInScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useUnistyles();
   const router = useRouter();
+  const posthog = usePostHog();
 
   useEffect(() => {
     enableAndroidLayoutAnimations();
@@ -50,12 +52,21 @@ export default function CheckInScreen() {
 
   const currentSlot = getCurrentTimeSlot();
   const atLimit = todayEntries.length >= CHECK_IN_CONSTANTS.MAX_DAILY_ENTRIES;
+  const prevAtLimit = useRef(false);
+
+  useEffect(() => {
+    if (atLimit && !prevAtLimit.current) {
+      posthog.capture('daily_limit_reached', { entry_count: todayEntries.length });
+    }
+    prevAtLimit.current = atLimit;
+  }, [atLimit, todayEntries.length, posthog]);
 
   const handleOpenSheet = useCallback(() => {
     if (atLimit) return;
     hapticLight();
+    posthog.capture('check_in_sheet_opened', { time_slot: currentSlot, streak: currentStreak });
     setSheetVisible(true);
-  }, [atLimit]);
+  }, [atLimit, currentSlot, currentStreak, posthog]);
 
   const handleCloseSheet = useCallback(() => setSheetVisible(false), []);
 

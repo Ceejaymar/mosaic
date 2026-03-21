@@ -1,3 +1,4 @@
+import { usePostHog } from 'posthog-react-native';
 import { useCallback, useState } from 'react';
 import type { MoodEntry } from '@/src/db/repos/moodRepo';
 import {
@@ -37,6 +38,7 @@ export function useCheckInForm(
   onCloseCallback: () => void,
   initialData?: CheckInFormInitialData,
 ) {
+  const posthog = usePostHog();
   const existingEntry = initialData?.existingEntry;
   const targetDate = initialData?.targetDate;
   const isEditing = !!existingEntry;
@@ -116,13 +118,33 @@ export function useCheckInForm(
         note.trim() || undefined,
         tags.length > 0 ? tags : undefined,
       );
+      posthog.capture('check_in_saved', {
+        mood: selectedNodeId,
+        has_note: !!note.trim(),
+        tag_count: tags.length,
+        activity_tags: [...activities],
+        people_tags: [...people],
+        location_tags: [...locations],
+        date_key: targetDate ?? null,
+      });
       resetState();
     } catch (err) {
       console.error('Failed to save check-in', err);
     } finally {
       setIsSaving(false);
     }
-  }, [selectedNodeId, isSaving, note, activities, people, locations, onSaveCallback, resetState]);
+  }, [
+    selectedNodeId,
+    isSaving,
+    note,
+    activities,
+    people,
+    locations,
+    targetDate,
+    posthog,
+    onSaveCallback,
+    resetState,
+  ]);
 
   const handleClose = useCallback(() => {
     onCloseCallback();

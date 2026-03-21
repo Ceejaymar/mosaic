@@ -2,6 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { DrawerActions } from '@react-navigation/native';
 import * as LocalAuthentication from 'expo-local-authentication';
 import { type Href, useNavigation, useRouter } from 'expo-router';
+import { usePostHog } from 'posthog-react-native';
 import { useEffect, useState } from 'react';
 import { Alert, Platform, Pressable, ScrollView, Switch, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -22,6 +23,7 @@ export default function SecurityScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useUnistyles();
   const colors = useAccessibleColors();
+  const posthog = usePostHog();
 
   const isAppLockEnabled = useAppStore((s) => s.isAppLockEnabled);
   const toggleAppLock = useAppStore((s) => s.toggleAppLock);
@@ -61,12 +63,14 @@ export default function SecurityScreen() {
       }
     }
     toggleAppLock(enabled);
+    posthog.capture('app_lock_toggled', { enabled });
   };
 
   const handleExport = async () => {
     hapticLight();
     try {
       await exportDataToCSV();
+      posthog.capture('data_exported');
     } catch (error) {
       console.error('Export failed:', error);
     }
@@ -83,6 +87,7 @@ export default function SecurityScreen() {
           onPress: async () => {
             try {
               await deleteAllData();
+              posthog.capture('data_deleted');
               Alert.alert('Data Deleted', 'Your journal has been completely erased.');
             } catch (error) {
               console.error('Failed to delete data:', error);

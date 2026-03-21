@@ -3,6 +3,7 @@ import { Picker } from '@react-native-picker/picker';
 import { DrawerActions } from '@react-navigation/native';
 import { getCalendars } from 'expo-localization';
 import { type Href, useNavigation, useRouter } from 'expo-router';
+import { usePostHog } from 'posthog-react-native';
 import { useCallback, useState } from 'react';
 import { Linking, Modal, Pressable, ScrollView, Switch, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -51,6 +52,7 @@ export default function NotificationsScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useUnistyles();
   const colors = useAccessibleColors();
+  const posthog = usePostHog();
 
   const isEnabled = useAppStore((s) => s.isNotificationsEnabled);
   const isSurpriseMeEnabled = useAppStore((s) => s.isSurpriseMeEnabled);
@@ -104,6 +106,10 @@ export default function NotificationsScreen() {
       toggleNotifications();
       try {
         await rescheduleAllNotifications(reminderTimes, true, isSurpriseMeEnabled);
+        posthog.capture('notification_toggled', {
+          enabled: true,
+          reminder_count: reminderTimes.length,
+        });
       } catch (err) {
         console.error('Failed to schedule notifications:', err);
         toggleNotifications(); // revert
@@ -112,12 +118,13 @@ export default function NotificationsScreen() {
       toggleNotifications();
       try {
         await rescheduleAllNotifications(reminderTimes, false);
+        posthog.capture('notification_toggled', { enabled: false });
       } catch (err) {
         console.error('Failed to cancel notifications:', err);
         toggleNotifications(); // revert
       }
     }
-  }, [isEnabled, isSurpriseMeEnabled, reminderTimes, toggleNotifications]);
+  }, [isEnabled, isSurpriseMeEnabled, reminderTimes, posthog, toggleNotifications]);
 
   const openSheetForEdit = useCallback(
     (index: number) => {
