@@ -184,7 +184,7 @@ function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {
 
   // Resume lock: blur immediately on background, auth on foreground
   useEffect(() => {
-    const sub = AppState.addEventListener('change', async (nextState) => {
+    const sub = AppState.addEventListener('change', (nextState) => {
       if (nextState === 'background' || nextState === 'inactive') {
         justUnlockedRef.current = false;
         if (isAppLockEnabled) setIsBlurred(true);
@@ -197,15 +197,18 @@ function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {
         }
 
         setIsBlurred(true);
-        const success = await authenticateUser();
-        if (success) {
-          justUnlockedRef.current = true;
-          setIsBlurred(false);
-          setIsLocked(false);
-        } else {
-          setIsBlurred(false);
-          setIsLocked(true);
-        }
+        // Give iOS 250ms to fully wake the app from deep sleep before asking for Face ID
+        setTimeout(async () => {
+          const success = await authenticateUser();
+          if (success) {
+            justUnlockedRef.current = true;
+            setIsBlurred(false);
+            setIsLocked(false);
+          } else {
+            setIsBlurred(false);
+            setIsLocked(true);
+          }
+        }, 250);
       }
     });
     return () => sub.remove();
