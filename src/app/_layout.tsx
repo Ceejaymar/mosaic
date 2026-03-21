@@ -9,7 +9,7 @@ import * as Notifications from 'expo-notifications';
 import { Stack, useNavigationContainerRef } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AppState } from 'react-native';
+import { AppState, View } from 'react-native';
 import { SystemBars } from 'react-native-edge-to-edge';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useUnistyles } from 'react-native-unistyles';
@@ -118,7 +118,24 @@ function RootLayout() {
     if (migrationError) throw migrationError;
   }, [fontError, migrationError]);
 
-  const isAppReady = fontsLoaded && migrationSuccess;
+  const isAppLockEnabled = useAppStore((s) => s.isAppLockEnabled);
+  const [isAuthComplete, setIsAuthComplete] = useState(false);
+  const [coldStartLocked, setColdStartLocked] = useState(false);
+
+  // Cold launch: keep splash visible until biometric resolves
+  useEffect(() => {
+    if (!fontsLoaded || !migrationSuccess) return;
+    if (!isAppLockEnabled) {
+      setIsAuthComplete(true);
+      return;
+    }
+    authenticateUser().then((success) => {
+      if (!success) setColdStartLocked(true);
+      setIsAuthComplete(true);
+    });
+  }, [fontsLoaded, migrationSuccess, isAppLockEnabled]);
+
+  const isAppReady = fontsLoaded && migrationSuccess && isAuthComplete;
 
   useEffect(() => {
     if (isAppReady) {
@@ -128,50 +145,66 @@ function RootLayout() {
 
   if (!isAppReady) return null;
 
-  return <RootLayoutNav />;
+  return <RootLayoutNav startLocked={coldStartLocked} />;
 }
 
-function RootLayoutNav() {
-  const { rt } = useUnistyles();
-  const currentTheme = rt.themeName;
-  const isDarkTheme = currentTheme === 'dark';
+function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {
+  const { rt, theme } = useUnistyles();
+  const isDarkTheme = rt.themeName === 'dark';
 
   const isAppLockEnabled = useAppStore((s) => s.isAppLockEnabled);
-  const [isLocked, setIsLocked] = useState(false);
-  const isChecking = useRef(false);
-  const justUnlockedRef = useRef(false);
+  const [isLocked, setIsLocked] = useState(startLocked);
+  const [isBlurred, setIsBlurred] = useState(false);
+  const didMountRef = useRef(false);
+  const justUnlockedRef = useRef(true);
 
   const performUnlock = useCallback(async () => {
-    if (isChecking.current) return;
-
-    isChecking.current = true;
-    try {
-      const success = await authenticateUser();
-      if (success) {
-        justUnlockedRef.current = true;
-        setIsLocked(false);
-      }
-    } finally {
-      isChecking.current = false;
+    const success = await authenticateUser();
+    if (success) {
+      justUnlockedRef.current = true;
+      setIsBlurred(false);
+      setIsLocked(false);
     }
   }, []);
 
+  // Respond to user toggling app lock in settings (skip initial mount)
   useEffect(() => {
-    setIsLocked(isAppLockEnabled);
-    if (!isAppLockEnabled) justUnlockedRef.current = false;
+    if (!didMountRef.current) {
+      didMountRef.current = true;
+      return;
+    }
+    if (!isAppLockEnabled) {
+      setIsLocked(false);
+      setIsBlurred(false);
+    } else {
+      setIsLocked(true);
+    }
   }, [isAppLockEnabled]);
 
+  // Resume lock: blur immediately on background, auth on foreground
   useEffect(() => {
-    const sub = AppState.addEventListener('change', (nextState) => {
-      if (nextState === 'background') {
+    const sub = AppState.addEventListener('change', async (nextState) => {
+      if (nextState === 'background' || nextState === 'inactive') {
         justUnlockedRef.current = false;
+        if (isAppLockEnabled) setIsBlurred(true);
       }
+
       if (nextState === 'active' && isAppLockEnabled) {
         if (justUnlockedRef.current) {
           justUnlockedRef.current = false;
           return;
         }
-        setIsLocked(true);
+
+        setIsBlurred(true);
+        const success = await authenticateUser();
+        if (success) {
+          justUnlockedRef.current = true;
+          setIsBlurred(false);
+          setIsLocked(false);
+        } else {
+          setIsBlurred(false);
+          setIsLocked(true);
+        }
       }
     });
     return () => sub.remove();
@@ -197,6 +230,19 @@ function RootLayoutNav() {
           </Stack>
         </GestureHandlerRootView>
       </ThemeProvider>
+      {isBlurred && !isLocked && (
+        <View
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: theme.colors.background,
+            opacity: 0.97,
+          }}
+        />
+      )}
       {isLocked && <AppLockOverlay onUnlock={performUnlock} />}
     </>
   );
