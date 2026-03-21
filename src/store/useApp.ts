@@ -4,7 +4,14 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { mmkvAdapter } from '@/src/services/storage/mmkv';
 
-import type { AccessibilitySettings, Actions, Language, State, Theme } from '@/src/types/types';
+import type {
+  AccessibilitySettings,
+  Actions,
+  Language,
+  PreferencesState,
+  State,
+  Theme,
+} from '@/src/types/types';
 import i18n from '../i18n';
 
 const applyTheme = (mode: Theme) => {
@@ -46,13 +53,24 @@ export const useAppStore = create<State & Actions>()(
         set({ accessibility: { ...get().accessibility, [key]: value } });
       },
 
+      preferences: {
+        firstDayOfWeek: 'sunday',
+        timeFormat: 'device',
+        hideStreaks: false,
+      },
+      setPreference: <K extends keyof PreferencesState>(key: K, value: PreferencesState[K]) => {
+        set((s) => ({ preferences: { ...s.preferences, [key]: value } }));
+      },
+
       isDemoMode: false,
       toggleDemoMode: () => set((s) => ({ isDemoMode: !s.isDemoMode })),
 
       isNotificationsEnabled: false,
+      isSurpriseMeEnabled: false,
       reminderTimes: ['09:00', '14:00', '20:00'],
       toggleNotifications: () =>
         set((s) => ({ isNotificationsEnabled: !s.isNotificationsEnabled })),
+      toggleSurpriseMe: () => set((s) => ({ isSurpriseMeEnabled: !s.isSurpriseMeEnabled })),
       addReminderTime: (time: string) =>
         set((s) => {
           if (s.reminderTimes.length >= 4 || s.reminderTimes.includes(time)) return s;
@@ -69,6 +87,9 @@ export const useAppStore = create<State & Actions>()(
           const filtered = s.reminderTimes.filter((t) => t !== oldTime && t !== newTime);
           return { reminderTimes: [...filtered, newTime].sort() };
         }),
+
+      isAppLockEnabled: false,
+      toggleAppLock: (enabled: boolean) => set({ isAppLockEnabled: enabled }),
     }),
     {
       name: 'app-storage',
@@ -78,8 +99,11 @@ export const useAppStore = create<State & Actions>()(
         hasOnboarded: state.hasOnboarded,
         language: state.language,
         accessibility: state.accessibility,
+        preferences: state.preferences,
         isNotificationsEnabled: state.isNotificationsEnabled,
+        isSurpriseMeEnabled: state.isSurpriseMeEnabled,
         reminderTimes: state.reminderTimes,
+        isAppLockEnabled: state.isAppLockEnabled,
       }),
 
       merge: (persisted, current) => {
@@ -87,9 +111,10 @@ export const useAppStore = create<State & Actions>()(
         return {
           ...current,
           ...p,
-          // Deep-merge accessibility so new default keys are never dropped
-          // when the persisted snapshot pre-dates a new field being added.
+          // Deep-merge so new default keys are never dropped when the persisted
+          // snapshot pre-dates a new field being added.
           accessibility: { ...current.accessibility, ...(p.accessibility ?? {}) },
+          preferences: { ...current.preferences, ...(p.preferences ?? {}) },
         };
       },
 

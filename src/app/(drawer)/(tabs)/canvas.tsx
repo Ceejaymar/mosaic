@@ -73,7 +73,8 @@ const AnimatedMonth = memo(function AnimatedMonth({
 }) {
   const { i18n } = useTranslation();
   const { days: data, loading } = useCanvasDbData(item.month, item.year, refreshKey);
-  const dowLabels = getDowLabels(i18n.language);
+  const firstDayOfWeek = useAppStore((s) => s.preferences.firstDayOfWeek);
+  const dowLabels = getDowLabels(i18n.language, firstDayOfWeek);
 
   const gridAnimStyle = useAnimatedStyle(() => {
     const distance = Math.abs(scrollY.value - index * itemHeight);

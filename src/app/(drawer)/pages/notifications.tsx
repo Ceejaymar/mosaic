@@ -53,8 +53,10 @@ export default function NotificationsScreen() {
   const colors = useAccessibleColors();
 
   const isEnabled = useAppStore((s) => s.isNotificationsEnabled);
+  const isSurpriseMeEnabled = useAppStore((s) => s.isSurpriseMeEnabled);
   const reminderTimes = useAppStore((s) => s.reminderTimes);
   const toggleNotifications = useAppStore((s) => s.toggleNotifications);
+  const toggleSurpriseMe = useAppStore((s) => s.toggleSurpriseMe);
   const addReminderTime = useAppStore((s) => s.addReminderTime);
   const removeReminderTime = useAppStore((s) => s.removeReminderTime);
   const updateReminderTime = useAppStore((s) => s.updateReminderTime);
@@ -101,7 +103,7 @@ export default function NotificationsScreen() {
       setPermissionDenied(false);
       toggleNotifications();
       try {
-        await rescheduleAllNotifications(reminderTimes, true);
+        await rescheduleAllNotifications(reminderTimes, true, isSurpriseMeEnabled);
       } catch (err) {
         console.error('Failed to schedule notifications:', err);
         toggleNotifications(); // revert
@@ -115,7 +117,7 @@ export default function NotificationsScreen() {
         toggleNotifications(); // revert
       }
     }
-  }, [isEnabled, reminderTimes, toggleNotifications]);
+  }, [isEnabled, isSurpriseMeEnabled, reminderTimes, toggleNotifications]);
 
   const openSheetForEdit = useCallback(
     (index: number) => {
@@ -164,45 +166,32 @@ export default function NotificationsScreen() {
     }
 
     const updatedTimes = useAppStore.getState().reminderTimes;
-    await rescheduleAllNotifications(updatedTimes, true);
+    await rescheduleAllNotifications(updatedTimes, true, isSurpriseMeEnabled);
     closeSheet();
-  }, [tempHour24, tempMinute, activeEditingIndex, updateReminderTime, addReminderTime, closeSheet]);
-
-  const handleSurpriseMe = useCallback(async () => {
-    // Random time between 08:00 (8 AM) and 22:00 (10 PM)
-    const randomHour = 8 + Math.floor(Math.random() * 15);
-    const randomMinute = Math.floor(Math.random() * 60);
-    const newTime = componentsTo24(randomHour, randomMinute);
-    const currentTimes = useAppStore.getState().reminderTimes;
-
-    const isDuplicate = currentTimes.some((t, i) =>
-      activeEditingIndex !== null && i === activeEditingIndex ? false : t === newTime,
-    );
-
-    if (isDuplicate) {
-      setCollisionWarning(true);
-      return;
-    }
-
-    if (activeEditingIndex !== null) {
-      updateReminderTime(currentTimes[activeEditingIndex], newTime);
-    } else {
-      addReminderTime(newTime);
-    }
-
-    const updatedTimes = useAppStore.getState().reminderTimes;
-    await rescheduleAllNotifications(updatedTimes, true);
-    closeSheet();
-  }, [activeEditingIndex, updateReminderTime, addReminderTime, closeSheet]);
+  }, [
+    tempHour24,
+    tempMinute,
+    activeEditingIndex,
+    isSurpriseMeEnabled,
+    updateReminderTime,
+    addReminderTime,
+    closeSheet,
+  ]);
 
   const handleRemoveTime = useCallback(
     async (time: string) => {
       removeReminderTime(time);
       const currentTimes = useAppStore.getState().reminderTimes;
-      await rescheduleAllNotifications(currentTimes, true);
+      await rescheduleAllNotifications(currentTimes, true, isSurpriseMeEnabled);
     },
-    [removeReminderTime],
+    [removeReminderTime, isSurpriseMeEnabled],
   );
+
+  const handleSurpriseMeToggle = useCallback(async () => {
+    toggleSurpriseMe();
+    const newState = useAppStore.getState().isSurpriseMeEnabled;
+    await rescheduleAllNotifications(reminderTimes, true, newState);
+  }, [toggleSurpriseMe, reminderTimes]);
 
   // ─── Render Data ───────────────────────────────────────────────────
 
@@ -227,22 +216,51 @@ export default function NotificationsScreen() {
       </View>
 
       <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}>
-        {/* Master Switch row */}
-        <View style={[styles.row, { borderBottomColor: colors.divider }]}>
-          <View>
-            <Text style={[styles.rowLabel, { color: theme.colors.typography }]}>
-              Enable reminders
-            </Text>
-            <AppText colorVariant="muted" style={styles.rowSub}>
-              Daily check-in prompts
-            </AppText>
+        {/* ── General Card ── */}
+        <AppText colorVariant="muted" style={styles.sectionLabel}>
+          General
+        </AppText>
+
+        <View style={[styles.flatCard, { backgroundColor: theme.colors.surface }]}>
+          {/* Enable reminders row */}
+          <View style={styles.row}>
+            <View>
+              <Text style={[styles.rowLabel, { color: theme.colors.typography }]}>
+                Enable reminders
+              </Text>
+              <AppText colorVariant="muted" style={styles.rowSub}>
+                Daily check-in prompts
+              </AppText>
+            </View>
+            <Switch
+              value={isEnabled}
+              onValueChange={handleToggle}
+              trackColor={{ false: colors.divider, true: theme.colors.mosaicGold }}
+              thumbColor="#ffffff"
+            />
           </View>
-          <Switch
-            value={isEnabled}
-            onValueChange={handleToggle}
-            trackColor={{ false: colors.divider, true: theme.colors.mosaicGold }}
-            thumbColor="#ffffff"
-          />
+
+          <View style={[styles.divider, { backgroundColor: colors.divider }]} />
+
+          {/* Surprise Me row */}
+          <View
+            style={[styles.row, !isEnabled && styles.disabled]}
+            pointerEvents={isEnabled ? 'auto' : 'none'}
+          >
+            <View>
+              <Text style={[styles.rowLabel, { color: theme.colors.typography }]}>Surprise me</Text>
+              <AppText colorVariant="muted" style={styles.rowSub}>
+                One random reminder a day
+              </AppText>
+            </View>
+            <Switch
+              value={isSurpriseMeEnabled}
+              onValueChange={handleSurpriseMeToggle}
+              trackColor={{ false: colors.divider, true: theme.colors.mosaicGold }}
+              thumbColor="#ffffff"
+              disabled={!isEnabled}
+            />
+          </View>
         </View>
 
         {/* Permission Denied */}
@@ -274,16 +292,18 @@ export default function NotificationsScreen() {
           </View>
         ) : null}
 
-        {/* Reminder times section */}
-        <View
-          style={[styles.timesSection, !isEnabled && styles.disabled]}
-          pointerEvents={isEnabled ? 'auto' : 'none'}
-        >
-          <Text style={[styles.sectionLabel, { color: theme.colors.typography }]}>
-            Reminder times
-          </Text>
+        {/* ── Daily Times Card ── */}
+        <AppText colorVariant="muted" style={styles.sectionLabel}>
+          Daily Times
+        </AppText>
 
-          <View style={[styles.listBlock, { borderColor: colors.divider }]}>
+        <View
+          style={[styles.timesSection, (!isEnabled || isSurpriseMeEnabled) && styles.disabled]}
+          pointerEvents={isEnabled && !isSurpriseMeEnabled ? 'auto' : 'none'}
+        >
+          <View
+            style={[styles.flatCard, { backgroundColor: theme.colors.surface, paddingVertical: 8 }]}
+          >
             {reminderTimes.map((time, index) => (
               <View key={time}>
                 {index > 0 && (
@@ -323,19 +343,22 @@ export default function NotificationsScreen() {
                 </View>
               </View>
             ))}
-          </View>
 
-          {reminderTimes.length < 4 && (
-            <Pressable
-              onPress={openSheetForAdd}
-              style={({ pressed }) => [styles.addBtnMain, pressed && styles.pressed]}
-            >
-              <Ionicons name="add-circle-outline" size={20} color={theme.colors.mosaicGold} />
-              <Text style={[styles.addBtnMainText, { color: theme.colors.mosaicGold }]}>
-                Add reminder
-              </Text>
-            </Pressable>
-          )}
+            {reminderTimes.length < 4 && (
+              <>
+                <View style={[styles.divider, { backgroundColor: colors.divider }]} />
+                <Pressable
+                  onPress={openSheetForAdd}
+                  style={({ pressed }) => [styles.addBtnMain, pressed && styles.pressed]}
+                >
+                  <Ionicons name="add-circle-outline" size={20} color={theme.colors.mosaicGold} />
+                  <Text style={[styles.addBtnMainText, { color: theme.colors.mosaicGold }]}>
+                    Add reminder
+                  </Text>
+                </Pressable>
+              </>
+            )}
+          </View>
         </View>
       </ScrollView>
 
@@ -448,17 +471,6 @@ export default function NotificationsScreen() {
           >
             <Text style={[styles.saveBtnText, { color: theme.colors.onAccent }]}>Save</Text>
           </Pressable>
-
-          {/* Surprise Me (Anytime) */}
-          <Pressable
-            onPress={handleSurpriseMe}
-            style={({ pressed }) => [styles.surpriseBtn, pressed && styles.pressed]}
-          >
-            <Ionicons name="shuffle-outline" size={16} color={colors.textMuted} />
-            <AppText colorVariant="muted" style={styles.surpriseBtnText}>
-              Surprise me
-            </AppText>
-          </Pressable>
         </View>
       </Modal>
     </View>
@@ -489,23 +501,41 @@ const styles = StyleSheet.create((theme) => ({
     fontWeight: '700',
     letterSpacing: -0.5,
   },
-  content: { paddingHorizontal: theme.spacing[4], paddingTop: 8, gap: 24 },
+  content: { paddingHorizontal: theme.spacing[4], paddingTop: 8 },
+
+  sectionLabel: {
+    fontSize: 11,
+    fontFamily: 'SpaceMono',
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
+    marginBottom: 8,
+    marginLeft: 4,
+  },
+  flatCard: {
+    borderRadius: theme.radius.card,
+    paddingHorizontal: theme.spacing[4],
+    overflow: 'hidden',
+    marginBottom: 24,
+  },
 
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: 16,
-    borderBottomWidth: 1,
   },
   rowLabel: { fontSize: theme.fontSize.base, fontWeight: '600' },
   rowSub: { fontSize: 13, fontFamily: 'SpaceMono', marginTop: 2 },
+
+  disabled: { opacity: 0.4 },
+  divider: { height: 1 },
 
   deniedBlock: {
     borderWidth: 1,
     borderRadius: 12,
     padding: 20,
     alignItems: 'center',
+    marginBottom: 24,
   },
   deniedIcon: { marginBottom: 12 },
   deniedText: {
@@ -527,24 +557,13 @@ const styles = StyleSheet.create((theme) => ({
   },
   openSettingsBtnText: { fontSize: 15, fontWeight: '600' },
 
-  timesSection: { gap: 12 },
-  disabled: { opacity: 0.4 },
-  sectionLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  listBlock: {
-    borderWidth: 1,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  divider: { height: 1 },
+  timesSection: {},
   timeRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingLeft: 16,
-    paddingRight: 8,
+    paddingLeft: 0,
+    paddingRight: 0,
   },
   timeLeft: {
     flexDirection: 'row',
@@ -563,8 +582,7 @@ const styles = StyleSheet.create((theme) => ({
     justifyContent: 'center',
     gap: 8,
     paddingVertical: 14,
-    marginTop: 8,
-    marginBottom: theme.spacing[6],
+    marginTop: 4,
   },
   addBtnMainText: { fontSize: 15, fontWeight: '600' },
   pressed: { opacity: 0.6 },
@@ -620,12 +638,4 @@ const styles = StyleSheet.create((theme) => ({
     marginBottom: 12,
   },
   saveBtnText: { fontSize: 16, fontWeight: '700' },
-  surpriseBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 10,
-  },
-  surpriseBtnText: { fontSize: 14, fontFamily: 'SpaceMono' },
 }));

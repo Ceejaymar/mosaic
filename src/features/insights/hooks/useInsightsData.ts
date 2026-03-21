@@ -68,14 +68,20 @@ function moodEntryToInsight(entry: MoodEntry): InsightEntry {
 
 // ─── Date Range Helpers ──────────────────────────────────────────────────────
 
-function getDateRange(timeFrame: TimeFrame, offset: number): { start: string; end: string } {
+function getDateRange(
+  timeFrame: TimeFrame,
+  offset: number,
+  firstDayOfWeek: 'sunday' | 'monday',
+): { start: string; end: string } {
   const now = new Date();
 
   if (timeFrame === 'week') {
+    const jsDow = now.getDay();
+    const diff = firstDayOfWeek === 'monday' ? (jsDow + 6) % 7 : jsDow;
     const startDate = new Date(
       now.getFullYear(),
       now.getMonth(),
-      now.getDate() - now.getDay() + offset * 7,
+      now.getDate() - diff + offset * 7,
     );
     const endDate = new Date(
       startDate.getFullYear(),
@@ -98,8 +104,12 @@ function getDateRange(timeFrame: TimeFrame, offset: number): { start: string; en
 
 // ─── Demo Mode: Filter from Pre-generated Data ──────────────────────────────
 
-function getDemoInsights(timeFrame: TimeFrame, offset: number): InsightEntry[] {
-  const { start, end } = getDateRange(timeFrame, offset);
+function getDemoInsights(
+  timeFrame: TimeFrame,
+  offset: number,
+  firstDayOfWeek: 'sunday' | 'monday',
+): InsightEntry[] {
+  const { start, end } = getDateRange(timeFrame, offset, firstDayOfWeek);
   return getAllDemoEntries()
     .filter((e) => e.dateKey >= start && e.dateKey <= end)
     .map(moodEntryToInsight);
@@ -107,12 +117,16 @@ function getDemoInsights(timeFrame: TimeFrame, offset: number): InsightEntry[] {
 
 // ─── Real DB: Fetch Entries for Range ────────────────────────────────────────
 
-async function fetchRealEntries(timeFrame: TimeFrame, offset: number): Promise<MoodEntry[]> {
+async function fetchRealEntries(
+  timeFrame: TimeFrame,
+  offset: number,
+  firstDayOfWeek: 'sunday' | 'monday',
+): Promise<MoodEntry[]> {
   const now = new Date();
 
   if (timeFrame === 'week') {
     // Fetch the broader month(s) and filter to the week range
-    const { start, end } = getDateRange(timeFrame, offset);
+    const { start, end } = getDateRange(timeFrame, offset, firstDayOfWeek);
     // Parse YYYY-MM-DD manually to avoid UTC-midnight timezone shifts
     const [sY, sM] = start.split('-').map(Number);
     const [eY, eM] = end.split('-').map(Number);
@@ -153,13 +167,14 @@ export function useInsightsData(
   refreshKey = 0,
 ): InsightEntry[] {
   const isDemoMode = useAppStore((s) => s.isDemoMode);
+  const firstDayOfWeek = useAppStore((s) => s.preferences.firstDayOfWeek);
   const [realEntries, setRealEntries] = useState<InsightEntry[]>([]);
 
   // Demo mode: synchronous, deterministic
   const demoEntries = useMemo(() => {
     if (!isDemoMode) return [];
-    return getDemoInsights(timeFrame, offset);
-  }, [isDemoMode, timeFrame, offset]);
+    return getDemoInsights(timeFrame, offset, firstDayOfWeek);
+  }, [isDemoMode, timeFrame, offset, firstDayOfWeek]);
 
   // Real mode: async DB fetch
   // biome-ignore lint/correctness/useExhaustiveDependencies: refreshKey is an intentional refetch trigger
@@ -167,7 +182,7 @@ export function useInsightsData(
     if (isDemoMode) return;
 
     let cancelled = false;
-    fetchRealEntries(timeFrame, offset)
+    fetchRealEntries(timeFrame, offset, firstDayOfWeek)
       .then((entries) => {
         if (cancelled) return;
         setRealEntries(entries.map(moodEntryToInsight));
@@ -180,7 +195,7 @@ export function useInsightsData(
     return () => {
       cancelled = true;
     };
-  }, [isDemoMode, timeFrame, offset, refreshKey]);
+  }, [isDemoMode, timeFrame, offset, refreshKey, firstDayOfWeek]);
 
   return isDemoMode ? demoEntries : realEntries;
 }

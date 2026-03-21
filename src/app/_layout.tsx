@@ -3,12 +3,14 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import * as Sentry from '@sentry/react-native';
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
+import { BlurView } from 'expo-blur';
 import * as Device from 'expo-device';
 import { useFonts } from 'expo-font';
 import * as Notifications from 'expo-notifications';
 import { Stack, useNavigationContainerRef } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Alert, AppState, Platform, StyleSheet } from 'react-native';
 import { SystemBars } from 'react-native-edge-to-edge';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useUnistyles } from 'react-native-unistyles';
@@ -16,20 +18,31 @@ import { useUnistyles } from 'react-native-unistyles';
 import migrations from '@/drizzle/migrations';
 
 import { db } from '@/src/db/client';
+import { rescheduleAllNotifications } from '@/src/features/notifications/notificationService';
 import { storage } from '@/src/services/storage/mmkv';
 import { useAppStore } from '@/src/store/useApp';
+import { authenticateUser } from '@/src/utils/auth-helper';
 
 import '@/src/i18n/index';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
-    shouldPlaySound: false,
+    shouldPlaySound: true,
     shouldSetBadge: false,
     shouldShowBanner: true,
     shouldShowList: true,
   }),
 });
+
+if (Platform.OS === 'android') {
+  Notifications.setNotificationChannelAsync('default', {
+    name: 'default',
+    importance: Notifications.AndroidImportance.MAX,
+    vibrationPattern: [0, 250, 250, 250],
+    lightColor: '#FF231F7C',
+  });
+}
 
 const navigationIntegration = Sentry.reactNavigationIntegration({
   enableTimeToInitialDisplay: true, // drop-off tracking
@@ -115,7 +128,29 @@ function RootLayout() {
     if (migrationError) throw migrationError;
   }, [fontError, migrationError]);
 
-  const isAppReady = fontsLoaded && migrationSuccess;
+  const isAppLockEnabled = useAppStore((s) => s.isAppLockEnabled);
+  const [isAuthComplete, setIsAuthComplete] = useState(false);
+  const [coldStartLocked, setColdStartLocked] = useState(false);
+  const coldStartFired = useRef(false);
+
+  // Cold launch: keep splash visible until biometric resolves
+  useEffect(() => {
+    if (!fontsLoaded || !migrationSuccess) return;
+    if (coldStartFired.current) return; // Prevent re-running on settings toggle
+
+    coldStartFired.current = true;
+
+    if (!isAppLockEnabled) {
+      setIsAuthComplete(true);
+      return;
+    }
+    authenticateUser().then((success) => {
+      if (!success) setColdStartLocked(true);
+      setIsAuthComplete(true);
+    });
+  }, [fontsLoaded, migrationSuccess, isAppLockEnabled]);
+
+  const isAppReady = fontsLoaded && migrationSuccess && isAuthComplete;
 
   useEffect(() => {
     if (isAppReady) {
@@ -125,14 +160,139 @@ function RootLayout() {
 
   if (!isAppReady) return null;
 
-  return <RootLayoutNav />;
+  return <RootLayoutNav startLocked={coldStartLocked} />;
 }
 
-function RootLayoutNav() {
+function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {
   const { rt } = useUnistyles();
+  const isDarkTheme = rt.themeName === 'dark';
 
-  const currentTheme = rt.themeName;
-  const isDarkTheme = currentTheme === 'dark';
+  const isAppLockEnabled = useAppStore((s) => s.isAppLockEnabled);
+  const [isLocked, setIsLocked] = useState(startLocked);
+  const [isBlurred, setIsBlurred] = useState(false);
+  const didMountRef = useRef(false);
+  const justUnlockedRef = useRef(true);
+  const pendingAuthTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const performUnlock = useCallback(async () => {
+    if (pendingAuthTimerRef.current) {
+      clearTimeout(pendingAuthTimerRef.current);
+      pendingAuthTimerRef.current = null;
+    }
+    const success = await authenticateUser();
+    if (success) {
+      justUnlockedRef.current = true;
+      setIsBlurred(false);
+      setIsLocked(false);
+    } else {
+      setIsLocked(true);
+      Alert.alert('Mosaic Locked', 'Please authenticate to access your journal.', [
+        { text: 'Try Again', onPress: performUnlock },
+      ]);
+    }
+  }, []);
+
+  // Trigger auth prompt on cold start failure
+  useEffect(() => {
+    if (startLocked) {
+      performUnlock();
+    }
+  }, [startLocked, performUnlock]);
+
+  // Respond to user toggling app lock in settings (skip initial mount)
+  useEffect(() => {
+    if (!didMountRef.current) {
+      didMountRef.current = true;
+      return;
+    }
+
+    if (isAppLockEnabled) {
+      // They just turned it ON. Verify they are actually the owner.
+      const verifyEnable = async () => {
+        setIsBlurred(true);
+        const success = await authenticateUser();
+        if (success) {
+          justUnlockedRef.current = true;
+          setIsBlurred(false);
+          setIsLocked(false);
+        } else {
+          // They failed to verify. Revert the setting to false and remove blur.
+          useAppStore.getState().toggleAppLock(false);
+          setIsBlurred(false);
+          setIsLocked(false);
+          Alert.alert('Verification Failed', 'You must authenticate to enable App Lock.');
+        }
+      };
+      verifyEnable();
+    } else {
+      // They just turned it OFF. Simply turn state off.
+      setIsLocked(false);
+      setIsBlurred(false);
+    }
+  }, [isAppLockEnabled]);
+
+  // Replenish Surprise Me notifications on cold start and each foreground return
+  useEffect(() => {
+    const replenish = () => {
+      const { isNotificationsEnabled, isSurpriseMeEnabled, reminderTimes } = useAppStore.getState();
+      if (isNotificationsEnabled && isSurpriseMeEnabled) {
+        rescheduleAllNotifications(reminderTimes, true, true).catch(() => {});
+      }
+    };
+
+    replenish(); // cold start
+
+    const sub = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active') replenish();
+    });
+    return () => sub.remove();
+  }, []);
+
+  // Resume lock: blur immediately on background, auth on foreground
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'background' || nextState === 'inactive') {
+        if (pendingAuthTimerRef.current) {
+          clearTimeout(pendingAuthTimerRef.current);
+          pendingAuthTimerRef.current = null;
+        }
+        justUnlockedRef.current = false;
+        if (isAppLockEnabled) setIsBlurred(true);
+      }
+
+      if (nextState === 'active' && isAppLockEnabled) {
+        if (justUnlockedRef.current) {
+          justUnlockedRef.current = false;
+          return;
+        }
+
+        setIsBlurred(true);
+        // Give iOS 250ms to fully wake the app from deep sleep before asking for Face ID
+        pendingAuthTimerRef.current = setTimeout(async () => {
+          pendingAuthTimerRef.current = null;
+          const success = await authenticateUser();
+          if (success) {
+            justUnlockedRef.current = true;
+            setIsBlurred(false);
+            setIsLocked(false);
+          } else {
+            setIsBlurred(false);
+            setIsLocked(true);
+            Alert.alert('Mosaic Locked', 'Please authenticate to access your journal.', [
+              { text: 'Try Again', onPress: performUnlock },
+            ]);
+          }
+        }, 250);
+      }
+    });
+    return () => {
+      sub.remove();
+      if (pendingAuthTimerRef.current) {
+        clearTimeout(pendingAuthTimerRef.current);
+        pendingAuthTimerRef.current = null;
+      }
+    };
+  }, [isAppLockEnabled, performUnlock]);
 
   return (
     <>
@@ -154,6 +314,13 @@ function RootLayoutNav() {
           </Stack>
         </GestureHandlerRootView>
       </ThemeProvider>
+      {(isBlurred || isLocked) && (
+        <BlurView
+          intensity={100}
+          tint={isDarkTheme ? 'dark' : 'light'}
+          style={[StyleSheet.absoluteFill, { zIndex: 999 }]}
+        />
+      )}
     </>
   );
 }

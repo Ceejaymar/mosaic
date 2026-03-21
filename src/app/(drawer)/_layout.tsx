@@ -3,43 +3,23 @@ import {
   type DrawerContentComponentProps,
   DrawerContentScrollView,
 } from '@react-navigation/drawer';
-import * as Device from 'expo-device';
-import * as MailComposer from 'expo-mail-composer';
 import { type Href, useRouter } from 'expo-router';
 import { Drawer } from 'expo-router/drawer';
-import { Linking, Platform, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
+import { DrawerRow } from '@/src/components/drawer-row';
 import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
-
-// ─── Reusable Drawer Row Component ────────────────────────────────────────────
-
-function DrawerRow({
-  icon,
-  label,
-  onPress,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  onPress: () => void;
-}) {
-  const { theme } = useUnistyles();
-
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [styles.row, pressed && { backgroundColor: theme.colors.surface }]}
-    >
-      <View style={styles.rowLeft}>
-        <Ionicons name={icon} size={24} color={theme.colors.typography} style={{ opacity: 0.4 }} />
-        <Text style={[styles.rowLabel, { color: theme.colors.typography }]}>{label}</Text>
-      </View>
-      {/* <Ionicons name="arrow-forward" size={20} color={theme.colors.textMuted} /> */}
-    </Pressable>
-  );
-}
+import {
+  openPrivacyPolicy,
+  openSupportEmail,
+  openSurvey,
+  openTermsOfService,
+  rateApp,
+  shareApp,
+} from '@/src/utils/support-links';
 
 // ─── Custom Drawer Content ────────────────────────────────────────────────────
 
@@ -52,43 +32,6 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
   const handleHomePress = () => {
     props.navigation.closeDrawer();
     router.navigate('/(tabs)/' as Href);
-  };
-
-  const openSupportEmail = async () => {
-    const os = Device.osName ?? Platform.OS;
-    const osVersion = Device.osVersion ?? 'Unknown';
-    const model = Device.modelName ?? 'Unknown';
-    const appVersion = '1.0.0';
-
-    const email = 'support@marceedigital.com';
-    const subject = 'Mosaic Support Request';
-    const body = `Please describe your issue or question below:\n\n\nDiagnostic Info (Please leave this for the developer):\nApp Version: ${appVersion}\nDevice: ${model}\nOS: ${os} ${osVersion}`;
-
-    try {
-      const isAvailable = await MailComposer.isAvailableAsync();
-      if (isAvailable) {
-        await MailComposer.composeAsync({ recipients: [email], subject, body });
-      } else {
-        const mailto = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-        await Linking.openURL(mailto);
-      }
-    } catch (err) {
-      console.error('Failed to open email client:', err);
-    } finally {
-      props.navigation.closeDrawer();
-    }
-  };
-
-  const openSurvey = async () => {
-    const SURVEY_URL = 'https://tally.so/r/XxeY6z';
-
-    try {
-      await Linking.openURL(SURVEY_URL);
-    } catch (err) {
-      console.error('Failed to open URL:', err);
-    } finally {
-      props.navigation.closeDrawer();
-    }
   };
 
   return (
@@ -115,24 +58,36 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
         <DrawerContentScrollView {...props} contentContainerStyle={styles.scrollContent}>
           {/* Group 1: Preferences */}
           <DrawerRow
-            icon="person-outline"
-            label="Account"
-            onPress={() => router.push('/pages/account')}
+            icon="options-outline"
+            label="Preferences"
+            onPress={() => {
+              props.navigation.closeDrawer();
+              router.push('/pages/preferences');
+            }}
           />
           <DrawerRow
             icon="notifications-outline"
             label="Notifications"
-            onPress={() => router.push('/pages/notifications')}
+            onPress={() => {
+              props.navigation.closeDrawer();
+              router.push('/pages/notifications');
+            }}
           />
           <DrawerRow
             icon="lock-closed-outline"
-            label="Security & data"
-            onPress={() => router.push('/pages/security')}
+            label="Security & Data"
+            onPress={() => {
+              props.navigation.closeDrawer();
+              router.push('/pages/security');
+            }}
           />
           <DrawerRow
             icon="accessibility-outline"
             label="Accessibility"
-            onPress={() => router.push('/pages/accessibility')}
+            onPress={() => {
+              props.navigation.closeDrawer();
+              router.push('/pages/accessibility');
+            }}
           />
 
           <View style={[styles.divider, { backgroundColor: colors.divider }]} />
@@ -144,47 +99,87 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
           <DrawerRow
             icon="rocket-outline"
             label="Upcoming features"
-            onPress={() => router.push('/pages/roadmap')}
-          />
-          <DrawerRow
-            icon="document-text-outline"
-            label="Change log"
-            onPress={() => router.push('/pages/changelog')}
+            onPress={() => {
+              props.navigation.closeDrawer();
+              router.push('/pages/roadmap');
+            }}
           />
           <DrawerRow
             icon="help-circle-outline"
             label="FAQs"
-            onPress={() => router.push('/pages/faq')}
+            onPress={() => {
+              props.navigation.closeDrawer();
+              router.push('/pages/faq');
+            }}
           />
 
           <View style={[styles.divider, { backgroundColor: colors.divider }]} />
 
           {/* Group 3: Resources */}
           <AppText colorVariant="muted" style={styles.sectionTitle}>
-            Resources
+            Support & feedback
           </AppText>
-          <DrawerRow
-            icon="heart-half-outline"
-            label="Mental health hotlines"
-            onPress={() => router.push('/pages/resources')}
-          />
           <DrawerRow
             icon="chatbubble-ellipses-outline"
             label="Share your feedback"
-            onPress={openSurvey}
+            onPress={() => {
+              props.navigation.closeDrawer();
+              openSurvey();
+            }}
           />
-          <DrawerRow icon="mail-outline" label="Contact support" onPress={openSupportEmail} />
+          <DrawerRow
+            icon="mail-outline"
+            label="Contact support"
+            onPress={() => {
+              props.navigation.closeDrawer();
+              openSupportEmail();
+            }}
+          />
 
-          <DrawerRow icon="star-outline" label="Rate Mosaic" onPress={() => {}} />
-          <DrawerRow icon="share-outline" label="Share with a friend" onPress={() => {}} />
+          <DrawerRow
+            icon="star-outline"
+            label="Rate Mosaic"
+            onPress={() => {
+              props.navigation.closeDrawer();
+              rateApp();
+            }}
+          />
+          <DrawerRow
+            icon="share-outline"
+            label="Share with a friend"
+            onPress={() => {
+              props.navigation.closeDrawer();
+              shareApp();
+            }}
+          />
+
+          <View style={[styles.divider, { backgroundColor: colors.divider }]} />
+
+          {/* Group 4: Legal */}
+          <AppText colorVariant="muted" style={styles.sectionTitle}>
+            Legal
+          </AppText>
+          <DrawerRow
+            icon="shield-checkmark-outline"
+            label="Privacy policy"
+            onPress={() => {
+              props.navigation.closeDrawer();
+              openPrivacyPolicy();
+            }}
+          />
+          <DrawerRow
+            icon="document-text-outline"
+            label="Terms of service"
+            onPress={() => {
+              props.navigation.closeDrawer();
+              openTermsOfService();
+            }}
+          />
         </DrawerContentScrollView>
 
         {/* 3. FOOTER */}
         <View
-          style={[
-            styles.footer,
-            { paddingBottom: insets.bottom + 20, borderTopColor: colors.divider },
-          ]}
+          style={[styles.footer, { paddingBottom: insets.bottom, borderTopColor: colors.divider }]}
         >
           <AppText colorVariant="muted" style={styles.versionText}>
             Mosaic
@@ -203,7 +198,7 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
 export default function Layout() {
   return (
     <Drawer
-      drawerContent={CustomDrawerContent} // <-- FIX: Pass the reference directly! No arrow function.
+      drawerContent={CustomDrawerContent}
       screenOptions={{
         headerShown: false,
         drawerStyle: { width: '85%' },
@@ -238,28 +233,20 @@ const styles = StyleSheet.create((theme) => ({
     fontWeight: '700',
     letterSpacing: -0.5,
   },
-  scrollContent: { paddingTop: 8, paddingBottom: theme.spacing[6] },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: theme.spacing[2],
-  },
-  rowLeft: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  rowLabel: { fontSize: 18, fontWeight: '500' },
-  divider: { height: 1, marginRight: 16, marginVertical: 12 },
+  scrollContent: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: theme.spacing[6] },
+  divider: { height: 0.5, marginVertical: 8 },
   sectionTitle: {
-    fontSize: 14,
+    fontSize: 11,
     fontFamily: 'SpaceMono',
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginTop: 8,
+    letterSpacing: 1.2,
+    marginTop: 16,
     marginBottom: 4,
   },
   footer: {
     paddingHorizontal: 16,
-    paddingTop: 8,
-    borderTopWidth: 1,
+    paddingTop: 4,
+    borderTopWidth: 0.5,
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing[2],
