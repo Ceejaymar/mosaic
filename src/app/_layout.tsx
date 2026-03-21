@@ -3,13 +3,14 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import * as Sentry from '@sentry/react-native';
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
+import { BlurView } from 'expo-blur';
 import * as Device from 'expo-device';
 import { useFonts } from 'expo-font';
 import * as Notifications from 'expo-notifications';
 import { Stack, useNavigationContainerRef } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AppState, View } from 'react-native';
+import { AppState } from 'react-native';
 import { SystemBars } from 'react-native-edge-to-edge';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useUnistyles } from 'react-native-unistyles';
@@ -149,7 +150,7 @@ function RootLayout() {
 }
 
 function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {
-  const { rt, theme } = useUnistyles();
+  const { rt } = useUnistyles();
   const isDarkTheme = rt.themeName === 'dark';
 
   const isAppLockEnabled = useAppStore((s) => s.isAppLockEnabled);
@@ -231,16 +232,10 @@ function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {
         </GestureHandlerRootView>
       </ThemeProvider>
       {isBlurred && !isLocked && (
-        <View
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: theme.colors.background,
-            opacity: 0.97,
-          }}
+        <BlurView
+          intensity={100}
+          tint={isDarkTheme ? 'dark' : 'light'}
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999 }}
         />
       )}
       {isLocked && <AppLockOverlay onUnlock={performUnlock} />}
