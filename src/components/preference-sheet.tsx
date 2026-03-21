@@ -40,6 +40,9 @@ export function PreferenceSheet({
         <Pressable
           style={[styles.backdrop, { backgroundColor: theme.colors.modalOverlay }]}
           onPress={onClose}
+          accessible={true}
+          accessibilityRole="button"
+          accessibilityLabel="Dismiss"
         />
 
         {/* Sheet */}

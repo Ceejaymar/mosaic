@@ -48,6 +48,21 @@ export default function SecurityScreen() {
 
   const handleBackToDrawer = () => navigation.dispatch(DrawerActions.openDrawer());
 
+  const handleToggleAppLock = async (enabled: boolean) => {
+    if (enabled) {
+      const hasHardware = await LocalAuthentication.hasHardwareAsync();
+      const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+      if (!hasHardware || !isEnrolled) {
+        Alert.alert(
+          'Not Available',
+          'No biometrics or passcode are set up on this device. Please enable them in your device settings first.',
+        );
+        return;
+      }
+    }
+    toggleAppLock(enabled);
+  };
+
   const handleExport = () => {
     hapticLight();
     exportDataToCSV();
@@ -109,7 +124,7 @@ export default function SecurityScreen() {
             </View>
             <Switch
               value={isAppLockEnabled}
-              onValueChange={toggleAppLock}
+              onValueChange={handleToggleAppLock}
               trackColor={{ false: colors.divider, true: theme.colors.mosaicGold }}
               thumbColor="#ffffff"
             />

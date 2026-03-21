@@ -84,9 +84,7 @@ export async function rescheduleAllNotifications(
         },
       });
     }
-  }
-
-  if (isSurpriseMeEnabled) {
+  } else if (isSurpriseMeEnabled) {
     const now = new Date();
     for (let i = 0; i < 14; i++) {
       const targetDate = new Date(now);

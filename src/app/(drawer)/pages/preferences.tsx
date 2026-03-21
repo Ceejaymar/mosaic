@@ -174,7 +174,7 @@ export default function PreferencesScreen() {
         onSelect={(val) => {
           handleSetPreference(
             activeSheet === 'firstDay' ? 'firstDayOfWeek' : 'timeFormat',
-            val as PreferencesState['firstDayOfWeek'] & PreferencesState['timeFormat'],
+            val as PreferencesState['firstDayOfWeek'] | PreferencesState['timeFormat'],
           );
           setActiveSheet('none');
         }}

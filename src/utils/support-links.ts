@@ -1,3 +1,4 @@
+import * as Application from 'expo-application';
 import * as Device from 'expo-device';
 import * as MailComposer from 'expo-mail-composer';
 import * as WebBrowser from 'expo-web-browser';
@@ -7,7 +8,8 @@ export async function openSupportEmail() {
   const os = Device.osName ?? Platform.OS;
   const osVersion = Device.osVersion ?? 'Unknown';
   const model = Device.modelName ?? 'Unknown';
-  const appVersion = '1.0.0';
+  const appVersion =
+    Application.nativeApplicationVersion ?? Application.applicationVersion ?? '1.0.0';
 
   const email = 'support@marceedigital.com';
   const subject = 'Mosaic Support Request';

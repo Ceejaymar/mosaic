@@ -155,7 +155,6 @@ type EntryCardProps = {
 
 const EntryCard = memo(function EntryCard({ entry, onPress }: EntryCardProps) {
   const { theme } = useUnistyles();
-  const _timeFormat = useAppStore((s) => s.preferences.timeFormat);
   const info = getMoodDisplayInfo(entry.primaryMood);
   const accentColor = info?.color ?? theme.colors.mosaicGold;
   const label = info?.label ?? entry.primaryMood;
