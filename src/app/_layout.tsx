@@ -10,15 +10,15 @@ import * as Notifications from 'expo-notifications';
 import { Stack, useNavigationContainerRef } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AppState, Platform } from 'react-native';
+import { Alert, AppState, Platform, StyleSheet } from 'react-native';
 import { SystemBars } from 'react-native-edge-to-edge';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useUnistyles } from 'react-native-unistyles';
 
 import migrations from '@/drizzle/migrations';
 
-import { AppLockOverlay } from '@/src/components/app-lock-overlay';
 import { db } from '@/src/db/client';
+import { rescheduleAllNotifications } from '@/src/features/notifications/notificationService';
 import { storage } from '@/src/services/storage/mmkv';
 import { useAppStore } from '@/src/store/useApp';
 import { authenticateUser } from '@/src/utils/auth-helper';
@@ -131,10 +131,15 @@ function RootLayout() {
   const isAppLockEnabled = useAppStore((s) => s.isAppLockEnabled);
   const [isAuthComplete, setIsAuthComplete] = useState(false);
   const [coldStartLocked, setColdStartLocked] = useState(false);
+  const coldStartFired = useRef(false);
 
   // Cold launch: keep splash visible until biometric resolves
   useEffect(() => {
     if (!fontsLoaded || !migrationSuccess) return;
+    if (coldStartFired.current) return; // Prevent re-running on settings toggle
+
+    coldStartFired.current = true;
+
     if (!isAppLockEnabled) {
       setIsAuthComplete(true);
       return;
@@ -179,8 +184,20 @@ function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {
       justUnlockedRef.current = true;
       setIsBlurred(false);
       setIsLocked(false);
+    } else {
+      setIsLocked(true);
+      Alert.alert('Mosaic Locked', 'Please authenticate to access your journal.', [
+        { text: 'Try Again', onPress: performUnlock },
+      ]);
     }
   }, []);
+
+  // Trigger auth prompt on cold start failure
+  useEffect(() => {
+    if (startLocked) {
+      performUnlock();
+    }
+  }, [startLocked, performUnlock]);
 
   // Respond to user toggling app lock in settings (skip initial mount)
   useEffect(() => {
@@ -188,13 +205,48 @@ function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {
       didMountRef.current = true;
       return;
     }
-    if (!isAppLockEnabled) {
+
+    if (isAppLockEnabled) {
+      // They just turned it ON. Verify they are actually the owner.
+      const verifyEnable = async () => {
+        setIsBlurred(true);
+        const success = await authenticateUser();
+        if (success) {
+          justUnlockedRef.current = true;
+          setIsBlurred(false);
+          setIsLocked(false);
+        } else {
+          // They failed to verify. Revert the setting to false and remove blur.
+          useAppStore.getState().toggleAppLock(false);
+          setIsBlurred(false);
+          setIsLocked(false);
+          Alert.alert('Verification Failed', 'You must authenticate to enable App Lock.');
+        }
+      };
+      verifyEnable();
+    } else {
+      // They just turned it OFF. Simply turn state off.
       setIsLocked(false);
       setIsBlurred(false);
-    } else {
-      setIsLocked(true);
     }
   }, [isAppLockEnabled]);
+
+  // Replenish Surprise Me notifications on cold start and each foreground return
+  useEffect(() => {
+    const replenish = () => {
+      const { isNotificationsEnabled, isSurpriseMeEnabled, reminderTimes } = useAppStore.getState();
+      if (isNotificationsEnabled && isSurpriseMeEnabled) {
+        rescheduleAllNotifications(reminderTimes, true, true).catch(() => {});
+      }
+    };
+
+    replenish(); // cold start
+
+    const sub = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active') replenish();
+    });
+    return () => sub.remove();
+  }, []);
 
   // Resume lock: blur immediately on background, auth on foreground
   useEffect(() => {
@@ -226,6 +278,9 @@ function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {
           } else {
             setIsBlurred(false);
             setIsLocked(true);
+            Alert.alert('Mosaic Locked', 'Please authenticate to access your journal.', [
+              { text: 'Try Again', onPress: performUnlock },
+            ]);
           }
         }, 250);
       }
@@ -237,7 +292,7 @@ function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {
         pendingAuthTimerRef.current = null;
       }
     };
-  }, [isAppLockEnabled]);
+  }, [isAppLockEnabled, performUnlock]);
 
   return (
     <>
@@ -259,14 +314,13 @@ function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {
           </Stack>
         </GestureHandlerRootView>
       </ThemeProvider>
-      {isBlurred && !isLocked && (
+      {(isBlurred || isLocked) && (
         <BlurView
           intensity={100}
           tint={isDarkTheme ? 'dark' : 'light'}
-          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999 }}
+          style={[StyleSheet.absoluteFill, { zIndex: 999 }]}
         />
       )}
-      {isLocked && <AppLockOverlay onUnlock={performUnlock} />}
     </>
   );
 }

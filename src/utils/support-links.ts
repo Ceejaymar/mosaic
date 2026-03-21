@@ -55,7 +55,7 @@ export async function rateApp() {
       await StoreReview.requestReview();
     } else {
       alert(
-        'Thank you for wanting to rate Mosaic! You can leave a review directly in the App Store.',
+        "Thank you for wanting to rate Mosaic! You can leave a review on the app's store listing.",
       );
     }
   } catch (error) {
