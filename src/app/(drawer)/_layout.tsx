@@ -67,7 +67,7 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
           />
           <DrawerRow
             icon="lock-closed-outline"
-            label="Security & data"
+            label="Security & Data"
             onPress={() => router.push('/pages/security')}
           />
           <DrawerRow

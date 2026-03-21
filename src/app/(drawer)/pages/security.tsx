@@ -10,7 +10,9 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { AppText } from '@/src/components/app-text';
 import { deleteAllData } from '@/src/db/repos/moodRepo';
 import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
+import { hapticLight } from '@/src/lib/haptics/haptics';
 import { useAppStore } from '@/src/store/useApp';
+import { exportDataToCSV } from '@/src/utils/export-data';
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
@@ -46,8 +48,10 @@ export default function SecurityScreen() {
 
   const handleBackToDrawer = () => navigation.dispatch(DrawerActions.openDrawer());
 
-  const handleExport = () =>
-    Alert.alert('Export Data', 'This will generate a CSV of your check-ins.');
+  const handleExport = () => {
+    hapticLight();
+    exportDataToCSV();
+  };
   const handleDelete = () => {
     Alert.alert(
       'Delete All Data',
@@ -84,7 +88,7 @@ export default function SecurityScreen() {
           </Pressable>
         </View>
         <AppText font="heading" style={[styles.title, { color: theme.colors.typography }]}>
-          Security & data
+          Security & Data
         </AppText>
       </View>
 
@@ -123,7 +127,7 @@ export default function SecurityScreen() {
           >
             <View style={styles.rowText}>
               <AppText style={[styles.rowLabel, { color: theme.colors.typography }]}>
-                Export check-ins
+                Download my data
               </AppText>
               <AppText colorVariant="muted" style={styles.rowSub}>
                 Download your data as a CSV file.
