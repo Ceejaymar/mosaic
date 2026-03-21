@@ -139,14 +139,22 @@ export default function DaySummaryScreen() {
 
   const handleSave = useCallback(
     async (nodeId: string, note?: string, tags?: string[]) => {
+      if (isTooOld) return;
       const now = new Date();
+      const targetDate = parseISO(date);
+      targetDate.setHours(
+        now.getHours(),
+        now.getMinutes(),
+        now.getSeconds(),
+        now.getMilliseconds(),
+      );
       const newEntry: NewMoodEntry = {
         id: uuid(),
         dateKey: date,
         primaryMood: nodeId,
         note: note ?? null,
         tags: tags && tags.length > 0 ? JSON.stringify(tags) : null,
-        occurredAt: `${date}T12:00:00.000Z`,
+        occurredAt: targetDate.toISOString(),
         createdAt: now.toISOString(),
         updatedAt: now.toISOString(),
       };
@@ -156,7 +164,7 @@ export default function DaySummaryScreen() {
       setSheetVisible(false);
       await loadEntries();
     },
-    [date, loadEntries],
+    [date, isTooOld, loadEntries],
   );
 
   const handleEntryPress = useCallback(
@@ -280,7 +288,7 @@ export default function DaySummaryScreen() {
               <View style={styles.mosaicWrapper}>
                 <MosaicDisplay
                   tiles={tiles}
-                  onAddPress={() => setSheetVisible(true)}
+                  onAddPress={isTooOld ? () => {} : () => setSheetVisible(true)}
                   onTilePress={(tile) => handleEntryPress(tile.id)}
                 />
               </View>

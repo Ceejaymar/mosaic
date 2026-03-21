@@ -1,4 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { parseISO } from 'date-fns';
 import { useRouter } from 'expo-router';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -215,13 +216,20 @@ export default function CanvasScreen() {
     async (nodeId: string, note?: string, tags?: string[]) => {
       if (!checkInTargetDate) return;
       const now = new Date();
+      const targetDate = parseISO(checkInTargetDate);
+      targetDate.setHours(
+        now.getHours(),
+        now.getMinutes(),
+        now.getSeconds(),
+        now.getMilliseconds(),
+      );
       const newEntry: NewMoodEntry = {
         id: uuid(),
         dateKey: checkInTargetDate,
         primaryMood: nodeId,
         note: note ?? null,
         tags: tags && tags.length > 0 ? JSON.stringify(tags) : null,
-        occurredAt: `${checkInTargetDate}T12:00:00.000Z`,
+        occurredAt: targetDate.toISOString(),
         createdAt: now.toISOString(),
         updatedAt: now.toISOString(),
       };
