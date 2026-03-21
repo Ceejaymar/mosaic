@@ -17,6 +17,8 @@ import {
   openSupportEmail,
   openSurvey,
   openTermsOfService,
+  rateApp,
+  shareApp,
 } from '@/src/utils/support-links';
 
 // ─── Custom Drawer Content ────────────────────────────────────────────────────
@@ -134,8 +136,22 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
             }}
           />
 
-          <DrawerRow icon="star-outline" label="Rate Mosaic" onPress={() => {}} />
-          <DrawerRow icon="share-outline" label="Share with a friend" onPress={() => {}} />
+          <DrawerRow
+            icon="star-outline"
+            label="Rate Mosaic"
+            onPress={() => {
+              props.navigation.closeDrawer();
+              rateApp();
+            }}
+          />
+          <DrawerRow
+            icon="share-outline"
+            label="Share with a friend"
+            onPress={() => {
+              props.navigation.closeDrawer();
+              shareApp();
+            }}
+          />
 
           <View style={[styles.divider, { backgroundColor: colors.divider }]} />
 

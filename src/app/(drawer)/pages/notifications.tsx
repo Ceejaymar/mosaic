@@ -166,9 +166,17 @@ export default function NotificationsScreen() {
     }
 
     const updatedTimes = useAppStore.getState().reminderTimes;
-    await rescheduleAllNotifications(updatedTimes, true);
+    await rescheduleAllNotifications(updatedTimes, true, isSurpriseMeEnabled);
     closeSheet();
-  }, [tempHour24, tempMinute, activeEditingIndex, updateReminderTime, addReminderTime, closeSheet]);
+  }, [
+    tempHour24,
+    tempMinute,
+    activeEditingIndex,
+    isSurpriseMeEnabled,
+    updateReminderTime,
+    addReminderTime,
+    closeSheet,
+  ]);
 
   const handleRemoveTime = useCallback(
     async (time: string) => {

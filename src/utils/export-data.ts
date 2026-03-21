@@ -46,17 +46,21 @@ export async function exportDataToCSV() {
 
     const canShare = await Sharing.isAvailableAsync();
     if (canShare) {
-      await Sharing.shareAsync(file.uri, {
-        mimeType: 'text/csv',
-        dialogTitle: 'Download my data',
-        UTI: 'public.comma-separated-values-text',
-      });
-
-      // SECURITY PATCH: Delete the file after the share sheet closes
+      try {
+        await Sharing.shareAsync(file.uri, {
+          mimeType: 'text/csv',
+          dialogTitle: 'Download my data',
+          UTI: 'public.comma-separated-values-text',
+        });
+      } finally {
+        if (file.exists) {
+          file.delete();
+        }
+      }
+    } else {
       if (file.exists) {
         file.delete();
       }
-    } else {
       alert('Sharing is not available on this device');
     }
   } catch (error: unknown) {

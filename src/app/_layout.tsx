@@ -170,6 +170,10 @@ function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {
   const pendingAuthTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const performUnlock = useCallback(async () => {
+    if (pendingAuthTimerRef.current) {
+      clearTimeout(pendingAuthTimerRef.current);
+      pendingAuthTimerRef.current = null;
+    }
     const success = await authenticateUser();
     if (success) {
       justUnlockedRef.current = true;
