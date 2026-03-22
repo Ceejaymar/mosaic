@@ -375,10 +375,10 @@ export const CheckInFormUI = memo(function CheckInFormUI({
                 <Pressable
                   onPress={handleSaveNote}
                   hitSlop={8}
-                  disabled={!draftNote.trim() && !form.note}
+                  disabled={!draftNote.trim() && form.note == null}
                   style={({ pressed }) => [
                     styles.noteModalBtn,
-                    { opacity: !draftNote.trim() && !form.note ? 0.3 : pressed ? 0.5 : 1 },
+                    { opacity: !draftNote.trim() && form.note == null ? 0.3 : pressed ? 0.5 : 1 },
                   ]}
                 >
                   <Ionicons name="add" size={18} color={theme.colors.mosaicGold} />

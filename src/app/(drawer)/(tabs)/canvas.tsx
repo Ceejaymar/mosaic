@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { differenceInDays, parseISO, startOfDay } from 'date-fns';
+import { parseISO } from 'date-fns';
 import { useRouter } from 'expo-router';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -31,6 +31,7 @@ import {
   useCanvasDbData,
 } from '@/src/features/canvas/hooks/useCanvasDbData';
 import { getDowLabels, getMonthName } from '@/src/features/canvas/utils/date-labels';
+import { isPastBackdateLimit } from '@/src/features/canvas/utils/date-utils';
 import { CheckInSheet } from '@/src/features/check-in/components/check-in-sheet';
 import { useRefreshOnFocus } from '@/src/hooks/useRefreshOnFocus';
 import { uuid } from '@/src/lib/uuid';
@@ -206,13 +207,7 @@ export default function CanvasScreen() {
   const [checkInTargetDate, setCheckInTargetDate] = useState<string | null>(null);
 
   const handleEmptyDayPress = useCallback((dateKey: string) => {
-    const [y, m, d] = dateKey.split('-').map(Number);
-    const today = startOfDay(new Date());
-    const clicked = startOfDay(new Date(y, m - 1, d));
-    const daysDiff = differenceInDays(today, clicked);
-    const isTooOld = daysDiff > MAX_BACKDATE_DAYS;
-
-    if (isTooOld) {
+    if (isPastBackdateLimit(dateKey)) {
       Alert.alert(
         'Cannot Log Emotion',
         `You cannot log new entries older than ${MAX_BACKDATE_DAYS} days.`,

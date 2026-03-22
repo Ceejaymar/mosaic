@@ -32,23 +32,59 @@ export function useStats() {
       const weekFrom = dateToKey(getWeekStart(firstDayOfWeek));
       const todayKey = dateToKey();
 
-      // Streak always comes from the real stats table — not affected by demo mode.
-      // On first boot (lastActiveDate === null) backfill from historical entries.
-      let stats = await getUserStats();
-      if (stats.lastActiveDate === null) {
-        await syncStreakFromHistory();
-        stats = await getUserStats();
-      }
-      setCurrentStreak(stats.currentStreak);
-      setLongestStreak(stats.longestStreak);
-
-      // Check-ins this week respects demo mode
       if (isDemoMode) {
+        // Source everything from the demo dataset — never touch the real DB
         const all = getAllDemoEntries();
+        const daySet = new Set(all.map((e) => e.dateKey));
+
+        // Current streak: walk backward from today (or yesterday)
+        const todayStr = todayKey;
+        const yesterdayStr = dateToKey(new Date(new Date().setDate(new Date().getDate() - 1)));
+        let startKey: string | null = null;
+        if (daySet.has(todayStr)) startKey = todayStr;
+        else if (daySet.has(yesterdayStr)) startKey = yesterdayStr;
+
+        let streak = 0;
+        if (startKey) {
+          const cursor = new Date(startKey);
+          while (daySet.has(dateToKey(cursor))) {
+            streak++;
+            cursor.setDate(cursor.getDate() - 1);
+          }
+        }
+        setCurrentStreak(streak);
+
+        // Longest streak
+        const sorted = [...daySet].sort();
+        let longest = streak > 0 ? 1 : 0;
+        let run = 1;
+        for (let i = 1; i < sorted.length; i++) {
+          const prev = new Date(sorted[i - 1]);
+          const curr = new Date(sorted[i]);
+          const diff = Math.round((curr.getTime() - prev.getTime()) / 86_400_000);
+          if (diff === 1) {
+            run++;
+            if (run > longest) longest = run;
+          } else {
+            run = 1;
+          }
+        }
+        setLongestStreak(longest);
+
         setCheckInsThisWeek(
           all.filter((e) => e.dateKey >= weekFrom && e.dateKey <= todayKey).length,
         );
       } else {
+        // Real mode: stats table is the source of truth for streaks
+        // On first boot (lastActiveDate === null) backfill from historical entries
+        let stats = await getUserStats();
+        if (stats.lastActiveDate === null) {
+          await syncStreakFromHistory();
+          stats = await getUserStats();
+        }
+        setCurrentStreak(stats.currentStreak);
+        setLongestStreak(stats.longestStreak);
+
         const weekCount = await fetchCheckInCountForRange(weekFrom, todayKey);
         setCheckInsThisWeek(weekCount);
       }

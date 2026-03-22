@@ -15,13 +15,56 @@ const DEFAULT_STATS = {
   availableFreezes: 0,
 } satisfies UserStats;
 
-/** Returns the singleton stats row, inserting defaults if it doesn't exist yet. */
-export async function getUserStats(): Promise<UserStats> {
-  const rows = await db.select().from(userStats).where(eq(userStats.id, STATS_ID)).limit(1);
-  if (rows.length > 0) return rows[0];
+// ─── Internal date helpers ────────────────────────────────────────────────────
 
-  await db.insert(userStats).values(DEFAULT_STATS);
-  return { ...DEFAULT_STATS };
+function keyFromDate(d: Date): string {
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function shiftDays(dateKey: string, delta: number): string {
+  const [y, m, d] = dateKey.split('-').map(Number);
+  const date = new Date(y, m - 1, d);
+  date.setDate(date.getDate() + delta);
+  return keyFromDate(date);
+}
+
+function diffDays(earlier: string, later: string): number {
+  const [ey, em, ed] = earlier.split('-').map(Number);
+  const [ly, lm, ld] = later.split('-').map(Number);
+  const a = new Date(ey, em - 1, ed);
+  const b = new Date(ly, lm - 1, ld);
+  return Math.round((b.getTime() - a.getTime()) / 86_400_000);
+}
+
+/** True if the stored lastActiveDate is older than yesterday (streak has lapsed). */
+function isStreakExpired(lastActiveDate: string | null): boolean {
+  if (lastActiveDate === null) return false;
+  const yesterdayKey = shiftDays(keyFromDate(new Date()), -1);
+  return lastActiveDate < yesterdayKey;
+}
+
+// ─── Public API ───────────────────────────────────────────────────────────────
+
+/**
+ * Returns the singleton stats row.
+ * Uses an atomic insert-or-ignore so concurrent callers never race on the seed.
+ * Returns currentStreak as 0 when the streak has lapsed (lastActiveDate before
+ * yesterday) without writing to the DB — recordActivity will persist the reset
+ * on the next check-in.
+ */
+export async function getUserStats(): Promise<UserStats> {
+  // Atomic: insert defaults only if the row does not already exist
+  await db.insert(userStats).values(DEFAULT_STATS).onConflictDoNothing();
+  const [row] = await db.select().from(userStats).where(eq(userStats.id, STATS_ID)).limit(1);
+
+  // Surface an expired streak as 0 without persisting it
+  if (isStreakExpired(row.lastActiveDate)) {
+    return { ...row, currentStreak: 0 };
+  }
+  return row;
 }
 
 /**
@@ -41,16 +84,11 @@ export async function recordActivity(deviceDateString: string): Promise<UserStat
     // First ever activity
     newStreak = 1;
   } else {
-    const [ly, lm, ld] = stats.lastActiveDate.split('-').map(Number);
-    const [cy, cm, cd] = deviceDateString.split('-').map(Number);
-    const last = new Date(ly, lm - 1, ld);
-    const current = new Date(cy, cm - 1, cd);
-    const diffMs = current.getTime() - last.getTime();
-    const diffDays = Math.round(diffMs / 86_400_000);
-
-    if (diffDays === 1) {
-      // Consecutive day — extend streak
-      newStreak = stats.currentStreak + 1;
+    const diff = diffDays(stats.lastActiveDate, deviceDateString);
+    if (diff === 1) {
+      // Consecutive day — extend streak (use raw DB value, not the possibly-zeroed one)
+      const [dbRow] = await db.select().from(userStats).where(eq(userStats.id, STATS_ID)).limit(1);
+      newStreak = dbRow.currentStreak + 1;
     } else {
       // Gap of 2+ days — streak broken
       newStreak = 1;
@@ -76,38 +114,19 @@ export async function recordActivity(deviceDateString: string): Promise<UserStat
   };
 }
 
-// ─── Internal date helpers (no date-fns dep in this repo file) ────────────────
-
-function keyFromDate(d: Date): string {
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
-}
-
-function shiftDays(dateKey: string, delta: number): string {
-  const [y, m, d] = dateKey.split('-').map(Number);
-  const date = new Date(y, m - 1, d);
-  date.setDate(date.getDate() + delta);
-  return keyFromDate(date);
-}
-
-function diffDays(earlier: string, later: string): number {
-  const [ey, em, ed] = earlier.split('-').map(Number);
-  const [ly, lm, ld] = later.split('-').map(Number);
-  const a = new Date(ey, em - 1, ed);
-  const b = new Date(ly, lm - 1, ld);
-  return Math.round((b.getTime() - a.getTime()) / 86_400_000);
-}
-
 /**
  * One-time backfill: calculates currentStreak and longestStreak from the
  * user's historical mood_entries and writes them into user_stats.
  *
- * Safe to call repeatedly — it is idempotent and exits early when
- * lastActiveDate is already set (meaning the table was already seeded).
+ * Guards against overwriting live recordActivity data: exits early if the
+ * singleton row already has a non-null lastActiveDate.
  */
 export async function syncStreakFromHistory(): Promise<void> {
+  // Guard: do not overwrite a row that recordActivity has already seeded
+  await db.insert(userStats).values(DEFAULT_STATS).onConflictDoNothing();
+  const [existing] = await db.select().from(userStats).where(eq(userStats.id, STATS_ID)).limit(1);
+  if (existing.lastActiveDate !== null) return;
+
   // Query all distinct dateKeys, newest first
   const rows = await db
     .selectDistinct({ dateKey: moodEntries.dateKey })
@@ -117,12 +136,10 @@ export async function syncStreakFromHistory(): Promise<void> {
   if (rows.length === 0) return;
 
   const daySet = new Set(rows.map((r) => r.dateKey));
-  const sortedDesc = rows.map((r) => r.dateKey); // already DESC
-  const lastActiveDate = sortedDesc[0]; // most recent entry
+  const sortedDesc = rows.map((r) => r.dateKey);
+  const lastActiveDate = sortedDesc[0];
 
   // ── Current streak ──────────────────────────────────────────────────────────
-  // Allow streak to originate from today or yesterday so users who haven't
-  // checked in yet today don't lose their streak on first boot.
   const todayKey = keyFromDate(new Date());
   const yesterdayKey = shiftDays(todayKey, -1);
 
@@ -152,8 +169,6 @@ export async function syncStreakFromHistory(): Promise<void> {
     }
   }
 
-  // ── Upsert ──────────────────────────────────────────────────────────────────
-  await getUserStats(); // ensures the singleton row exists before we update
   await db
     .update(userStats)
     .set({ currentStreak, longestStreak, lastActiveDate })

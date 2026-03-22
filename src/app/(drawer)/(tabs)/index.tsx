@@ -35,9 +35,11 @@ import { getDayWithSuffix } from '@/src/utils/format-date';
 const OBS_GRADIENT = ['rgba(255,255,255,0.04)', 'rgba(255,255,255,0)', 'rgba(0,0,0,0.06)'] as const;
 
 function DateLabel() {
+  const { i18n } = useTranslation();
+  const locale = i18n?.language || undefined;
   const now = new Date();
-  const weekday = now.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
-  const month = now.toLocaleDateString('en-US', { month: 'long' }).toUpperCase();
+  const weekday = now.toLocaleDateString(locale, { weekday: 'long' }).toUpperCase();
+  const month = now.toLocaleDateString(locale, { month: 'long' }).toUpperCase();
   const day = now.getDate();
   const dayStr = String(day);
   const suffix = getDayWithSuffix(day).slice(dayStr.length); // just "ST", "ND", "RD", "TH"

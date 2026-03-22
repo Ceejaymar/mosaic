@@ -97,8 +97,13 @@ export default function DaySummaryScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      if (!isValidDate) return;
       loadEntries();
-    }, [loadEntries]),
+      return () => {
+        // Cancel any in-flight query by advancing the request counter
+        requestIdRef.current++;
+      };
+    }, [isValidDate, loadEntries]),
   );
 
   const updateDateParam = useCallback(
@@ -356,7 +361,7 @@ export default function DaySummaryScreen() {
                     { borderTopColor: theme.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)' },
                   ]}
                 >
-                  <AppText font="mono" colorVariant="muted" style={styles.entriesHeading}>
+                  <AppText font="heading" colorVariant="muted" style={styles.entriesHeading}>
                     Check-ins
                   </AppText>
                   {entries.map((entry) => (
@@ -397,6 +402,8 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: theme.fontSize.xl,
     fontWeight: '600',
     letterSpacing: -0.5,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   navRow: {
     flexDirection: 'row',

@@ -29,6 +29,13 @@
       "when": 1774203280364,
       "tag": "0003_public_christian_walker",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1774209651829,
+      "tag": "0004_tense_starbolt",
+      "breakpoints": true
     }
   ]
 }

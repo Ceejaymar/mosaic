@@ -118,11 +118,8 @@ export function MosaicDisplay({ tiles, disableAdd, onAddPress, onTilePress }: Pr
 
   if (count === 0) {
     if (disableAdd) {
-      return (
-        <View style={styles.emptyPressable}>
-          <Surface variant="card" style={styles.emptyContainer} />
-        </View>
-      );
+      // The parent screen already shows an explanatory message for this state
+      return null;
     }
     return (
       <Pressable
