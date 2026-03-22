@@ -359,22 +359,31 @@ export const CheckInFormUI = memo(function CheckInFormUI({
                 <Pressable
                   onPress={handleCancelNote}
                   hitSlop={8}
-                  style={({ pressed }) => pressed && { opacity: 0.5 }}
+                  style={({ pressed }) => [styles.noteModalBtn, pressed && { opacity: 0.5 }]}
                 >
+                  <Ionicons name="close" size={16} color={theme.colors.textMuted} />
                   <AppText font="mono" colorVariant="muted" style={styles.noteModalCancel}>
                     Cancel
                   </AppText>
                 </Pressable>
+                <View style={styles.noteModalEmotion}>
+                  <View style={[styles.noteModalEmotionDot, { backgroundColor: selectedColor }]} />
+                  <AppText font="heading" style={styles.noteModalEmotionLabel} colorVariant="muted">
+                    {selectedNode?.label}
+                  </AppText>
+                </View>
                 <Pressable
                   onPress={handleSaveNote}
                   hitSlop={8}
                   disabled={!draftNote.trim()}
-                  style={({ pressed }) => ({
-                    opacity: !draftNote.trim() ? 0.3 : pressed ? 0.5 : 1,
-                  })}
+                  style={({ pressed }) => [
+                    styles.noteModalBtn,
+                    { opacity: !draftNote.trim() ? 0.3 : pressed ? 0.5 : 1 },
+                  ]}
                 >
+                  <Ionicons name="add" size={18} color={theme.colors.mosaicGold} />
                   <AppText style={[styles.noteModalSave, { color: theme.colors.mosaicGold }]}>
-                    Save
+                    Add note
                   </AppText>
                 </Pressable>
               </View>
@@ -459,7 +468,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   backBtn: { fontSize: theme.fontSize.md, fontWeight: '500' },
   selectedEmotionPill: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing[2] },
-  emotionDot: { width: 8, height: 8, borderRadius: 4 },
+  emotionDot: { width: 16, height: 16, borderRadius: 5 },
   selectedEmotionText: {
     fontSize: theme.fontSize.base,
     fontWeight: '700',
@@ -533,6 +542,24 @@ const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: theme.spacing[5],
     paddingVertical: theme.spacing[4],
     borderBottomWidth: 0.5,
+  },
+  noteModalBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing[1],
+  },
+  noteModalEmotion: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing[2],
+  },
+  noteModalEmotionDot: {
+    width: 14,
+    height: 14,
+    borderRadius: 4,
+  },
+  noteModalEmotionLabel: {
+    fontSize: theme.fontSize.md,
   },
   noteModalCancel: { fontSize: theme.fontSize.md },
   noteModalSave: { fontSize: theme.fontSize.md, fontWeight: '700' },
