@@ -1,13 +1,15 @@
+const IS_DEV = process.env.APP_ENV === 'development';
+
 export default {
   expo: {
-    name: 'mosaic',
+    name: IS_DEV ? 'Mosaic Dev' : 'Mosaic',
     slug: 'mosaic',
     description: 'A minimal emotion tracking app.',
     owner: 'marceedigital',
     version: '1.0.0',
     orientation: 'portrait',
-    icon: './src/assets/images/icon.png',
-    scheme: 'mosaic',
+    icon: IS_DEV ? './src/assets/images/dev-icon.png' : './src/assets/images/icon.png',
+    scheme: IS_DEV ? 'mosaic-dev' : 'mosaic',
     userInterfaceStyle: 'automatic',
     newArchEnabled: true,
     splash: {
@@ -16,19 +18,22 @@ export default {
       backgroundColor: '#ffffff',
     },
     ios: {
-      supportsTablet: true,
-      bundleIdentifier: 'com.marceedigital.mosaic',
+      supportsTablet: false,
+      bundleIdentifier: IS_DEV ? 'com.marceedigital.mosaic.dev' : 'com.marceedigital.mosaic',
+      buildNumber: '1',
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
       },
     },
     android: {
       adaptiveIcon: {
-        foregroundImage: './src/assets/images/adaptive-icon.png',
+        foregroundImage: IS_DEV
+          ? './src/assets/images/dev-adaptive-icon.png'
+          : './src/assets/images/adaptive-icon.png',
         backgroundColor: '#ffffff',
       },
       edgeToEdgeEnabled: true,
-      package: 'com.marceedigital.mosaic',
+      package: IS_DEV ? 'com.marceedigital.mosaic.dev' : 'com.marceedigital.mosaic',
     },
     web: {
       bundler: 'metro',
