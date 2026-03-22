@@ -3,7 +3,7 @@ import { parseISO } from 'date-fns';
 import { useRouter } from 'expo-router';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, useWindowDimensions, View } from 'react-native';
+import { Alert, Pressable, useWindowDimensions, View } from 'react-native';
 import Animated, {
   Extrapolation,
   interpolate,
@@ -20,8 +20,10 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { AppText } from '@/src/components/app-text';
 import { DemoBadge } from '@/src/components/demo-badge';
 import { TopFade } from '@/src/components/top-fade';
+import { MAX_BACKDATE_DAYS } from '@/src/constants/config';
 import { LAYOUT } from '@/src/constants/layout';
-import { insertMoodEntry, type NewMoodEntry } from '@/src/db/repos/moodRepo';
+import { dateToKey, insertMoodEntry, type NewMoodEntry } from '@/src/db/repos/moodRepo';
+import { recordActivity } from '@/src/db/repos/statsRepo';
 import { MonthGrid } from '@/src/features/canvas/components/month-grid';
 import { YearView } from '@/src/features/canvas/components/year-view';
 import {
@@ -30,6 +32,7 @@ import {
   useCanvasDbData,
 } from '@/src/features/canvas/hooks/useCanvasDbData';
 import { getDowLabels, getMonthName } from '@/src/features/canvas/utils/date-labels';
+import { isPastBackdateLimit } from '@/src/features/canvas/utils/date-utils';
 import { CheckInSheet } from '@/src/features/check-in/components/check-in-sheet';
 import { useRefreshOnFocus } from '@/src/hooks/useRefreshOnFocus';
 import { uuid } from '@/src/lib/uuid';
@@ -204,9 +207,19 @@ export default function CanvasScreen() {
 
   const [checkInTargetDate, setCheckInTargetDate] = useState<string | null>(null);
 
-  const handleEmptyDayPress = useCallback((dateKey: string) => {
-    setCheckInTargetDate(dateKey);
-  }, []);
+  const handleEmptyDayPress = useCallback(
+    (dateKey: string) => {
+      if (isPastBackdateLimit(dateKey)) {
+        Alert.alert(
+          t('canvas.cannotLog.title'),
+          t('canvas.cannotLog.message', { count: MAX_BACKDATE_DAYS }),
+        );
+      } else {
+        setCheckInTargetDate(dateKey);
+      }
+    },
+    [t],
+  );
 
   const handleSheetClose = useCallback(() => {
     setCheckInTargetDate(null);
@@ -234,6 +247,7 @@ export default function CanvasScreen() {
         updatedAt: now.toISOString(),
       };
       await insertMoodEntry(newEntry);
+      await recordActivity(dateToKey(new Date()));
       const [yearStr, monthStr] = checkInTargetDate.split('-');
       invalidateMonthCache(parseInt(yearStr, 10), parseInt(monthStr, 10) - 1);
       setRefreshKey((k) => k + 1);

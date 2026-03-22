@@ -7,13 +7,15 @@ import * as Application from 'expo-application';
 import { type Href, useRouter } from 'expo-router';
 import { Drawer } from 'expo-router/drawer';
 import { usePostHog } from 'posthog-react-native';
-import { Pressable, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Alert, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
 import { DrawerRow } from '@/src/components/drawer-row';
 import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
+import { useAppStore } from '@/src/store/useApp';
 import {
   openPrivacyPolicy,
   openSupportEmail,
@@ -25,12 +27,53 @@ import {
 
 // ─── Custom Drawer Content ────────────────────────────────────────────────────
 
+const TAP_TARGET = 7;
+const TAP_RESET_MS = 5000;
+
 function CustomDrawerContent(props: DrawerContentComponentProps) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { theme } = useUnistyles();
   const colors = useAccessibleColors();
   const posthog = usePostHog();
+
+  const isDeveloperModeEnabled = useAppStore((s) => s.isDeveloperModeEnabled);
+  const setDeveloperMode = useAppStore((s) => s.setDeveloperMode);
+  const isDemoMode = useAppStore((s) => s.isDemoMode);
+  const toggleDemoMode = useAppStore((s) => s.toggleDemoMode);
+
+  const [tapCount, setTapCount] = useState(0);
+  const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (resetTimerRef.current) {
+        clearTimeout(resetTimerRef.current);
+        resetTimerRef.current = null;
+      }
+    };
+  }, []);
+
+  const handleVersionTap = () => {
+    const next = tapCount + 1;
+
+    if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
+
+    if (next >= TAP_TARGET) {
+      setTapCount(0);
+      if (isDeveloperModeEnabled) {
+        if (isDemoMode) toggleDemoMode();
+        setDeveloperMode(false);
+        Alert.alert('Developer Mode Disabled', 'Debug tools are now hidden.');
+      } else {
+        setDeveloperMode(true);
+        Alert.alert('Developer Mode Enabled', 'You now have access to debug tools.');
+      }
+    } else {
+      setTapCount(next);
+      resetTimerRef.current = setTimeout(() => setTapCount(0), TAP_RESET_MS);
+    }
+  };
 
   const handleHomePress = () => {
     props.navigation.closeDrawer();
@@ -161,6 +204,33 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
 
           <View style={[styles.divider, { backgroundColor: colors.divider }]} />
 
+          {/* Developer tools — only visible when developer mode is unlocked */}
+          {isDeveloperModeEnabled && (
+            <>
+              <AppText colorVariant="muted" style={styles.sectionTitle}>
+                Developer
+              </AppText>
+              <DrawerRow
+                icon="flask-outline"
+                label={isDemoMode ? 'Clear Demo Data' : 'Generate Demo Data'}
+                onPress={() => {
+                  props.navigation.closeDrawer();
+                  toggleDemoMode();
+                }}
+              />
+              <DrawerRow
+                icon="eye-off-outline"
+                label="Hide Developer Mode"
+                onPress={() => {
+                  if (isDemoMode) toggleDemoMode();
+                  setDeveloperMode(false);
+                  props.navigation.closeDrawer();
+                }}
+              />
+              <View style={[styles.divider, { backgroundColor: colors.divider }]} />
+            </>
+          )}
+
           {/* Group 4: Legal */}
           <AppText colorVariant="muted" style={styles.sectionTitle}>
             Legal
@@ -190,9 +260,11 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
           <AppText colorVariant="muted" style={styles.versionText}>
             Mosaic
           </AppText>
-          <AppText colorVariant="muted" style={styles.versionText}>
-            v{Application.nativeApplicationVersion || '1.0.0'}
-          </AppText>
+          <Pressable onPress={handleVersionTap} hitSlop={12}>
+            <AppText colorVariant="muted" style={styles.versionText}>
+              v{Application.nativeApplicationVersion || '1.0.0'}
+            </AppText>
+          </Pressable>
         </View>
       </View>
     </View>

@@ -1,12 +1,11 @@
-function getThreeMonthsAgo(): Date {
-  const d = new Date();
-  d.setMonth(d.getMonth() - 3);
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
+import { differenceInDays, parseISO, startOfDay } from 'date-fns';
 
-/** Returns true if dateKey (YYYY-MM-DD) falls within the past 3 months (inclusive of today). */
-export function isWithinThreeMonths(dateKey: string): boolean {
-  const [y, m, day] = dateKey.split('-').map(Number);
-  return new Date(y, m - 1, day) >= getThreeMonthsAgo();
+import { MAX_BACKDATE_DAYS } from '@/src/constants/config';
+
+/** Returns true if dateKey (YYYY-MM-DD) is older than MAX_BACKDATE_DAYS. */
+export function isPastBackdateLimit(dateKey: string): boolean {
+  const today = startOfDay(new Date());
+  const targetDate = startOfDay(parseISO(dateKey));
+  const diff = differenceInDays(today, targetDate);
+  return diff > MAX_BACKDATE_DAYS;
 }

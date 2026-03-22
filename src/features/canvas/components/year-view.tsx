@@ -20,9 +20,10 @@ import {
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
+import { MAX_BACKDATE_DAYS } from '@/src/constants/config';
 import { fetchMoodEntriesForMonth } from '@/src/db/repos/moodRepo';
 import { buildCanvasDays } from '@/src/features/canvas/utils/buildCanvasDays';
-import { isWithinThreeMonths } from '@/src/features/canvas/utils/date-utils';
+import { isPastBackdateLimit } from '@/src/features/canvas/utils/date-utils';
 import { getDemoEntriesForMonth } from '@/src/features/demo/generateDemoData';
 import { useAppStore } from '@/src/store/useApp';
 
@@ -85,7 +86,7 @@ type YearTileProps = {
   colors: string[];
   isEvenMonth: boolean;
   isFuture: boolean;
-  isWithin3Months: boolean;
+  isTooOld: boolean;
   onPress: (dateKey: string) => void;
   onEmptyDayPress?: (dateKey: string) => void;
   // Dynamic sizing for Compact Mode (Fixed to DimensionValue!)
@@ -98,26 +99,30 @@ const YearTile = memo(function YearTile({
   colors,
   isEvenMonth,
   isFuture,
-  isWithin3Months,
+  isTooOld,
   onPress,
   onEmptyDayPress,
   width,
   height,
 }: YearTileProps) {
+  const { t } = useTranslation();
   const { theme } = useUnistyles();
   const emptyBg = isEvenMonth ? theme.colors.surface : 'transparent';
   const hasData = colors.length > 0;
-  const canLogHistorical = !hasData && !isFuture && isWithin3Months && !!onEmptyDayPress;
-  const isTooOld = !hasData && !isFuture && !isWithin3Months;
-  const isInteractive = hasData || canLogHistorical || isTooOld;
+  const isEmptyPast = !hasData && !isFuture;
+  const canLogHistorical = isEmptyPast && !isTooOld && !!onEmptyDayPress;
+  const isInteractive = !isFuture && (hasData || canLogHistorical || isTooOld);
 
-  const tileOpacity = isFuture ? 0.25 : isTooOld ? 0.4 : 1;
+  const tileOpacity = isFuture ? 0.25 : isTooOld && isEmptyPast ? 0.4 : 1;
 
   const handlePress = () => {
     if (hasData) onPress(dateKey);
     else if (canLogHistorical) onEmptyDayPress?.(dateKey);
     else if (isTooOld)
-      Alert.alert('Too far back', 'You can only log check-ins up to 3 months in the past.');
+      Alert.alert(
+        t('canvas.cannotLog.title'),
+        t('canvas.cannotLog.message', { count: MAX_BACKDATE_DAYS }),
+      );
   };
 
   const flatStyle = {
@@ -189,7 +194,7 @@ type FlatDay = {
   month: number;
   entries: string[];
   isFuture: boolean;
-  isWithin3Months: boolean;
+  isTooOld: boolean;
 };
 
 const SingleYearBlock = memo(function SingleYearBlock({
@@ -254,7 +259,7 @@ const SingleYearBlock = memo(function SingleYearBlock({
               month,
               entries: d.entries,
               isFuture: d.date > todayKey,
-              isWithin3Months: isWithinThreeMonths(d.date),
+              isTooOld: isPastBackdateLimit(d.date),
             });
           }
         }
@@ -307,7 +312,7 @@ const SingleYearBlock = memo(function SingleYearBlock({
         colors={day.entries}
         isEvenMonth={day.month % 2 === 0}
         isFuture={day.isFuture}
-        isWithin3Months={day.isWithin3Months}
+        isTooOld={day.isTooOld}
         onPress={onDayPress}
         onEmptyDayPress={onEmptyDayPress}
         width={dynamicW}

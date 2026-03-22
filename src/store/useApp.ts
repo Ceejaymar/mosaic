@@ -14,13 +14,18 @@ import type {
 } from '@/src/types/types';
 import i18n from '../i18n';
 
-const applyTheme = (mode: Theme) => {
+const applyTheme = (_mode: Theme) => {
+  // Temporarily force dark mode
+  UnistylesRuntime.setAdaptiveThemes(false);
+  UnistylesRuntime.setTheme('dark');
+  /*
   if (mode === 'system') {
     UnistylesRuntime.setAdaptiveThemes(true);
   } else {
     UnistylesRuntime.setAdaptiveThemes(false);
     UnistylesRuntime.setTheme(mode);
   }
+  */
 };
 
 export const useAppStore = create<State & Actions>()(
@@ -65,6 +70,9 @@ export const useAppStore = create<State & Actions>()(
       isDemoMode: false,
       toggleDemoMode: () => set((s) => ({ isDemoMode: !s.isDemoMode })),
 
+      isDeveloperModeEnabled: false,
+      setDeveloperMode: (enabled: boolean) => set({ isDeveloperModeEnabled: enabled }),
+
       isNotificationsEnabled: false,
       isSurpriseMeEnabled: false,
       reminderTimes: ['09:00', '14:00', '20:00'],
@@ -100,6 +108,7 @@ export const useAppStore = create<State & Actions>()(
         language: state.language,
         accessibility: state.accessibility,
         preferences: state.preferences,
+        isDeveloperModeEnabled: state.isDeveloperModeEnabled,
         isNotificationsEnabled: state.isNotificationsEnabled,
         isSurpriseMeEnabled: state.isSurpriseMeEnabled,
         reminderTimes: state.reminderTimes,

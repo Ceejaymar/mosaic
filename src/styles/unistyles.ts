@@ -4,7 +4,8 @@ import { breakpoints } from './breakpoints';
 import { appThemes } from './themes';
 
 const settings = {
-  adaptiveThemes: true,
+  adaptiveThemes: false, // Temporarily disabled to force dark mode
+  initialTheme: 'dark' as const,
 };
 
 type AppThemes = typeof appThemes;

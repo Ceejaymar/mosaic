@@ -1,28 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { AppState } from 'react-native';
-import {
-  dateToKey,
-  fetchCheckInCountForRange,
-  fetchDistinctCheckedInDays,
-} from '@/src/db/repos/moodRepo';
+
+import { dateToKey, fetchCheckInCountForRange } from '@/src/db/repos/moodRepo';
+import { getUserStats, syncStreakFromHistory } from '@/src/db/repos/statsRepo';
 import { getAllDemoEntries } from '@/src/features/demo/generateDemoData';
 import { useAppStore } from '@/src/store/useApp';
-
-// ─── Internal helpers ─────────────────────────────────────────────────────────
-
-/**
- * Walks backwards from today counting consecutive days that appear in the set.
- * Uses local date arithmetic to respect the device timezone.
- */
-function computeStreak(days: Set<string>): number {
-  let streak = 0;
-  const cursor = new Date();
-  while (days.has(dateToKey(cursor))) {
-    streak++;
-    cursor.setDate(cursor.getDate() - 1);
-  }
-  return streak;
-}
 
 /** Returns the start of the current week in local time, respecting the firstDayOfWeek preference. */
 function getWeekStart(firstDayOfWeek: 'sunday' | 'monday'): Date {
@@ -40,32 +22,71 @@ export function useStats() {
   const isDemoMode = useAppStore((s) => s.isDemoMode);
   const firstDayOfWeek = useAppStore((s) => s.preferences.firstDayOfWeek);
   const [currentStreak, setCurrentStreak] = useState(0);
+  const [longestStreak, setLongestStreak] = useState(0);
   const [checkInsThisWeek, setCheckInsThisWeek] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
   const load = useCallback(async () => {
     setIsLoading(true);
     try {
-      const today = new Date();
       const weekFrom = dateToKey(getWeekStart(firstDayOfWeek));
-      const todayKey = dateToKey(today);
+      const todayKey = dateToKey();
 
       if (isDemoMode) {
+        // Source everything from the demo dataset — never touch the real DB
         const all = getAllDemoEntries();
-        const checkedInDays = new Set(all.map((e) => e.dateKey));
-        setCurrentStreak(computeStreak(checkedInDays));
+        const daySet = new Set(all.map((e) => e.dateKey));
+
+        // Current streak: walk backward from today (or yesterday)
+        const todayStr = todayKey;
+        const yesterdayStr = dateToKey(new Date(new Date().setDate(new Date().getDate() - 1)));
+        let startKey: string | null = null;
+        if (daySet.has(todayStr)) startKey = todayStr;
+        else if (daySet.has(yesterdayStr)) startKey = yesterdayStr;
+
+        let streak = 0;
+        if (startKey) {
+          const [y, m, d] = startKey.split('-').map(Number);
+          const cursor = new Date(y, m - 1, d);
+          while (daySet.has(dateToKey(cursor))) {
+            streak++;
+            cursor.setDate(cursor.getDate() - 1);
+          }
+        }
+        setCurrentStreak(streak);
+
+        // Longest streak
+        const sorted = [...daySet].sort();
+        let longest = sorted.length > 0 ? 1 : 0;
+        let run = 1;
+        for (let i = 1; i < sorted.length; i++) {
+          const prev = new Date(sorted[i - 1]);
+          const curr = new Date(sorted[i]);
+          const diff = Math.round((curr.getTime() - prev.getTime()) / 86_400_000);
+          if (diff === 1) {
+            run++;
+            if (run > longest) longest = run;
+          } else {
+            run = 1;
+          }
+        }
+        setLongestStreak(longest);
+
         setCheckInsThisWeek(
           all.filter((e) => e.dateKey >= weekFrom && e.dateKey <= todayKey).length,
         );
       } else {
-        const streakFrom = dateToKey(
-          new Date(today.getFullYear(), today.getMonth(), today.getDate() - 365),
-        );
-        const [keys, weekCount] = await Promise.all([
-          fetchDistinctCheckedInDays(streakFrom, todayKey),
-          fetchCheckInCountForRange(weekFrom, todayKey),
-        ]);
-        setCurrentStreak(computeStreak(new Set(keys)));
+        // Real mode: stats table is the source of truth for streaks
+        // On first boot (lastActiveDate === null) backfill from historical entries
+        let stats = await getUserStats();
+        if (stats.lastActiveDate === null) {
+          await syncStreakFromHistory();
+          stats = await getUserStats();
+        }
+        setCurrentStreak(stats.currentStreak);
+        setLongestStreak(stats.longestStreak);
+
+        const weekCount = await fetchCheckInCountForRange(weekFrom, todayKey);
         setCheckInsThisWeek(weekCount);
       }
     } catch (error) {
@@ -87,5 +108,5 @@ export function useStats() {
     return () => subscription.remove();
   }, [load]);
 
-  return { currentStreak, checkInsThisWeek, isLoading };
+  return { currentStreak, longestStreak, checkInsThisWeek, isLoading, refreshStats: load };
 }

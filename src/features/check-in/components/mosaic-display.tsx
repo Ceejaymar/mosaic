@@ -6,6 +6,7 @@ import { AppText } from '@/src/components/app-text';
 import { Surface } from '@/src/components/surface';
 import { formatTime } from '@/src/features/check-in/utils/format-time';
 import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
+import { isLightColor } from '@/src/utils/color-ui';
 
 const GAP = 4;
 
@@ -21,6 +22,8 @@ export type MosaicTileData = {
 
 type Props = {
   tiles: MosaicTileData[];
+  /** When true, the empty-state placeholder is non-interactive (no + button). */
+  disableAdd?: boolean;
   /** Called when the empty-state container is tapped (open a new check-in). */
   onAddPress: () => void;
   /** Called when an individual filled tile is tapped (open edit for that entry). */
@@ -35,6 +38,10 @@ type TileProps = {
 };
 
 function Tile({ color, label, occurredAt, style }: TileProps) {
+  const light = isLightColor(color);
+  const textColor = light ? '#000000' : '#ffffff';
+  const timeColor = light ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.65)';
+
   return (
     <Surface
       variant="card"
@@ -43,10 +50,10 @@ function Tile({ color, label, occurredAt, style }: TileProps) {
       style={[styles.tile, { backgroundColor: color }, style]}
     >
       <View style={styles.scrim} />
-      <AppText font="heading" style={styles.tileLabel} numberOfLines={1}>
+      <AppText font="heading" style={[styles.tileLabel, { color: textColor }]} numberOfLines={1}>
         {label}
       </AppText>
-      <AppText style={styles.tileTime}>{formatTime(occurredAt)}</AppText>
+      <AppText style={[styles.tileTime, { color: timeColor }]}>{formatTime(occurredAt)}</AppText>
     </Surface>
   );
 }
@@ -104,12 +111,16 @@ function renderGrid(tiles: MosaicTileData[], onTilePress: (tile: MosaicTileData)
   );
 }
 
-export function MosaicDisplay({ tiles, onAddPress, onTilePress }: Props) {
+export function MosaicDisplay({ tiles, disableAdd, onAddPress, onTilePress }: Props) {
   const colors = useAccessibleColors();
   const cappedTiles = tiles.slice(0, 4);
   const count = cappedTiles.length;
 
   if (count === 0) {
+    if (disableAdd) {
+      // The parent screen already shows an explanatory message for this state
+      return null;
+    }
     return (
       <Pressable
         onPress={onAddPress}
@@ -179,8 +190,7 @@ const styles = StyleSheet.create((theme) => ({
   tileLabel: {
     fontSize: 18,
     fontWeight: '700',
-    color: theme.colors.onAccent,
     letterSpacing: -0.54,
   },
-  tileTime: { fontSize: 12, color: 'rgba(255,255,255,0.65)', marginTop: theme.spacing[1] },
+  tileTime: { fontSize: 12, fontWeight: '700', marginTop: theme.spacing[1] },
 }));

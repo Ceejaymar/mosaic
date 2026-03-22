@@ -1,4 +1,17 @@
-import { index, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { sql } from 'drizzle-orm';
+import { check, index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+
+export const userStats = sqliteTable(
+  'user_stats',
+  {
+    id: integer('id').primaryKey(), // singleton row, always id = 1
+    currentStreak: integer('current_streak').notNull().default(0),
+    longestStreak: integer('longest_streak').notNull().default(0),
+    lastActiveDate: text('last_active_date'), // 'YYYY-MM-DD', nullable
+    availableFreezes: integer('available_freezes').notNull().default(0),
+  },
+  (table) => [check('user_stats_singleton', sql`${table.id} = 1`)],
+);
 
 export const moodEntries = sqliteTable(
   'mood_entries',

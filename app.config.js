@@ -10,7 +10,7 @@ export default {
     orientation: 'portrait',
     icon: IS_DEV ? './src/assets/images/dev-icon.png' : './src/assets/images/icon.png',
     scheme: IS_DEV ? 'mosaic-dev' : 'mosaic',
-    userInterfaceStyle: 'automatic',
+    userInterfaceStyle: 'dark',
     newArchEnabled: true,
     splash: {
       image: './src/assets/images/splash-icon.png',
