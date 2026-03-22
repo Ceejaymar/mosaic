@@ -2,8 +2,8 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { addDays, differenceInDays, format, isSameDay, parseISO, subDays } from 'date-fns';
 import { type Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
-import { Directions, Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { ActivityIndicator, Pressable, useWindowDimensions, View } from 'react-native';
+import { Gesture, GestureDetector, ScrollView } from 'react-native-gesture-handler';
 import Animated, {
   runOnJS,
   useAnimatedStyle,
@@ -175,18 +175,22 @@ export default function DaySummaryScreen() {
     [router],
   );
 
-  // Fling gestures for swipe navigation
-  const flingLeft = Gesture.Fling()
-    .direction(Directions.LEFT)
-    .onEnd(() => {
-      runOnJS(handleNextDay)();
+  const handleSwipeEnd = useCallback(
+    (translationX: number) => {
+      if (translationX < -50) handleNextDay();
+      else if (translationX > 50) handlePrevDay();
+    },
+    [handleNextDay, handlePrevDay],
+  );
+
+  // Pan gesture for swipe navigation — thresholds prevent accidental triggers on child taps
+  // Reanimated 4: non-worklet functions called from worklet context are auto-dispatched to JS thread
+  const swipes = Gesture.Pan()
+    .activeOffsetX([-30, 30])
+    .failOffsetY([-30, 30])
+    .onEnd((e) => {
+      runOnJS(handleSwipeEnd)(e.translationX);
     });
-  const flingRight = Gesture.Fling()
-    .direction(Directions.RIGHT)
-    .onEnd(() => {
-      runOnJS(handlePrevDay)();
-    });
-  const swipes = Gesture.Exclusive(flingLeft, flingRight);
 
   // Invalid date param — show minimal fallback rather than crashing
   if (!isValidDate) {
@@ -213,7 +217,7 @@ export default function DaySummaryScreen() {
 
   const atLimit = entries.length >= MAX_ENTRIES;
   const tiles = entries.map(entryToTile);
-  const formattedDate = format(currentDate, 'MMM d');
+  const formattedDate = format(currentDate, 'MMM do');
 
   return (
     <GestureDetector gesture={swipes}>
@@ -256,7 +260,7 @@ export default function DaySummaryScreen() {
             </Pressable>
 
             <AppText font="heading" style={[styles.dateLabel, { color: theme.colors.typography }]}>
-              {format(currentDate, 'MMM d, yyyy')}
+              {format(currentDate, 'EEEE, MMMM do')}
             </AppText>
 
             <Pressable

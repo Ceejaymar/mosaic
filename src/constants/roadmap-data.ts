@@ -22,14 +22,21 @@ export const ROADMAP_DATA = {
       icon: 'partly-sunny-outline' as const,
     },
     {
+      id: '8',
+      title: 'Light mode',
+      description:
+        'A clean, bright theme for those who prefer a lighter aesthetic — fully adapted across every screen.',
+      icon: 'sunny-outline' as const,
+    },
+  ],
+  future: [
+    {
       id: '4',
       title: 'Secure cloud sync',
       description:
         'Optional end-to-end encrypted backup to seamlessly sync Mosaic across all your devices.',
       icon: 'cloud-done-outline' as const,
     },
-  ],
-  future: [
     {
       id: '5',
       title: 'Well-being sync',

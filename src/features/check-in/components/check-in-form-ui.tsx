@@ -368,7 +368,10 @@ export const CheckInFormUI = memo(function CheckInFormUI({
                 <Pressable
                   onPress={handleSaveNote}
                   hitSlop={8}
-                  style={({ pressed }) => pressed && { opacity: 0.5 }}
+                  disabled={!draftNote.trim()}
+                  style={({ pressed }) => ({
+                    opacity: !draftNote.trim() ? 0.3 : pressed ? 0.5 : 1,
+                  })}
                 >
                   <AppText style={[styles.noteModalSave, { color: theme.colors.mosaicGold }]}>
                     Save
