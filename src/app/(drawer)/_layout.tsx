@@ -52,8 +52,13 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
 
     if (next >= TAP_TARGET) {
       setTapCount(0);
-      setDeveloperMode(true);
-      Alert.alert('Developer Mode Enabled', 'You now have access to debug tools.');
+      if (isDeveloperModeEnabled) {
+        setDeveloperMode(false);
+        Alert.alert('Developer Mode Disabled', 'Debug tools are now hidden.');
+      } else {
+        setDeveloperMode(true);
+        Alert.alert('Developer Mode Enabled', 'You now have access to debug tools.');
+      }
     } else {
       setTapCount(next);
       resetTimerRef.current = setTimeout(() => setTapCount(0), TAP_RESET_MS);
@@ -201,6 +206,15 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
                 onPress={() => {
                   props.navigation.closeDrawer();
                   toggleDemoMode();
+                }}
+              />
+              <DrawerRow
+                icon="eye-off-outline"
+                label="Hide Developer Mode"
+                onPress={() => {
+                  if (isDemoMode) toggleDemoMode();
+                  setDeveloperMode(false);
+                  props.navigation.closeDrawer();
                 }}
               />
               <View style={[styles.divider, { backgroundColor: colors.divider }]} />
