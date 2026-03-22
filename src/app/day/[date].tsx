@@ -1,7 +1,8 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useFocusEffect } from '@react-navigation/native';
 import { addDays, differenceInDays, format, isSameDay, parseISO, subDays } from 'date-fns';
 import { type Href, useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector, ScrollView } from 'react-native-gesture-handler';
 import Animated, {
@@ -94,9 +95,11 @@ export default function DaySummaryScreen() {
     }
   }, [date]);
 
-  useEffect(() => {
-    loadEntries();
-  }, [loadEntries]);
+  useFocusEffect(
+    useCallback(() => {
+      loadEntries();
+    }, [loadEntries]),
+  );
 
   const updateDateParam = useCallback(
     (newDateStr: string) => {
@@ -205,7 +208,9 @@ export default function DaySummaryScreen() {
             style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.6 }]}
           >
             <Ionicons name="arrow-back" size={20} color={theme.colors.typography} />
-            <AppText style={[styles.backLabel, { color: theme.colors.typography }]}>Back</AppText>
+            <AppText colorVariant="primary" style={styles.backLabel}>
+              Back
+            </AppText>
           </Pressable>
         </View>
         <View style={styles.centered}>
@@ -216,7 +221,8 @@ export default function DaySummaryScreen() {
   }
 
   const atLimit = entries.length >= MAX_ENTRIES;
-  const tiles = entries.map(entryToTile);
+  // DB returns DESC (newest first). Reverse so oldest→newest maps top-left→bottom-right.
+  const tiles = entries.slice().reverse().map(entryToTile);
   const formattedDate = format(currentDate, 'MMM do');
 
   return (
@@ -234,7 +240,9 @@ export default function DaySummaryScreen() {
               style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.6 }]}
             >
               <Ionicons name="arrow-back" size={20} color={theme.colors.typography} />
-              <AppText style={[styles.backLabel, { color: theme.colors.typography }]}>Back</AppText>
+              <AppText colorVariant="primary" style={styles.backLabel}>
+                Back
+              </AppText>
             </Pressable>
             <Pressable
               onPress={() => router.navigate('/(tabs)/' as Href)}
@@ -341,9 +349,19 @@ export default function DaySummaryScreen() {
                   </AppText>
                 </View>
               ) : (
-                entries.map((entry) => (
-                  <EntryCard key={entry.id} entry={entry} onPress={handleEntryPress} />
-                ))
+                <View
+                  style={[
+                    styles.entriesSection,
+                    { borderTopColor: theme.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)' },
+                  ]}
+                >
+                  <AppText font="mono" colorVariant="muted" style={styles.entriesHeading}>
+                    Check-ins
+                  </AppText>
+                  {entries.map((entry) => (
+                    <EntryCard key={entry.id} entry={entry} onPress={handleEntryPress} />
+                  ))}
+                </View>
               )}
             </ScrollView>
           )}
@@ -375,7 +393,7 @@ const styles = StyleSheet.create((theme) => ({
     marginBottom: theme.spacing[1],
   },
   dateLabel: {
-    fontSize: 22,
+    fontSize: theme.fontSize.xl,
     fontWeight: '600',
     letterSpacing: -0.5,
   },
@@ -406,11 +424,11 @@ const styles = StyleSheet.create((theme) => ({
     justifyContent: 'center',
   },
   scrollContent: {
-    paddingTop: theme.spacing[2],
+    paddingTop: theme.spacing[4],
   },
   mosaicWrapper: {
     paddingHorizontal: theme.spacing[4],
-    marginBottom: theme.spacing[3],
+    marginBottom: theme.spacing[4],
   },
   addButton: {
     flexDirection: 'row',
@@ -441,13 +459,26 @@ const styles = StyleSheet.create((theme) => ({
     gap: theme.spacing[2],
   },
   emptyTitle: {
-    fontSize: 18,
+    fontSize: theme.fontSize.lg,
     fontWeight: '600',
     letterSpacing: -0.3,
   },
   emptySubtitle: {
-    fontSize: 14,
+    fontSize: theme.fontSize.md,
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: 22,
+  },
+  entriesSection: {
+    marginTop: theme.spacing[3],
+    borderTopWidth: 0.5,
+    paddingTop: theme.spacing[4],
+  },
+  entriesHeading: {
+    fontSize: theme.fontSize.xs,
+    fontWeight: '600',
+    letterSpacing: 1.4,
+    textTransform: 'uppercase',
+    marginBottom: theme.spacing[3],
+    paddingHorizontal: theme.spacing[4],
   },
 }));

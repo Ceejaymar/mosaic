@@ -30,9 +30,49 @@ import { hapticLight } from '@/src/lib/haptics/haptics';
 import { useAppStore } from '@/src/store/useApp';
 import { LETTER_SPACING } from '@/src/styles/design-tokens';
 import { enableAndroidLayoutAnimations } from '@/src/utils/animations';
-import { getFormattedDateLabel } from '@/src/utils/format-date';
+import { getDayWithSuffix } from '@/src/utils/format-date';
 
 const OBS_GRADIENT = ['rgba(255,255,255,0.04)', 'rgba(255,255,255,0)', 'rgba(0,0,0,0.06)'] as const;
+
+function DateLabel() {
+  const now = new Date();
+  const weekday = now.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
+  const month = now.toLocaleDateString('en-US', { month: 'long' }).toUpperCase();
+  const day = now.getDate();
+  const dayStr = String(day);
+  const suffix = getDayWithSuffix(day).slice(dayStr.length); // just "ST", "ND", "RD", "TH"
+
+  return (
+    <View style={dateLabelStyles.row}>
+      <AppText font="mono" colorVariant="muted" style={dateLabelStyles.text}>
+        {`${weekday}, ${month} ${dayStr}`}
+      </AppText>
+      <AppText font="mono" colorVariant="muted" style={dateLabelStyles.suffix}>
+        {suffix}
+      </AppText>
+    </View>
+  );
+}
+
+const dateLabelStyles = StyleSheet.create(() => ({
+  row: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  text: {
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 1.5,
+    fontStyle: 'italic',
+  },
+  suffix: {
+    fontSize: 7,
+    fontWeight: '600',
+    letterSpacing: 1,
+    fontStyle: 'italic',
+    marginTop: 1,
+  },
+}));
 
 export default function CheckInScreen() {
   const { t } = useTranslation();
@@ -139,9 +179,7 @@ export default function CheckInScreen() {
 
         <View style={styles.dateLabelRow}>
           <View style={styles.dateLeft}>
-            <AppText font="mono" colorVariant="muted" style={styles.dateLabel}>
-              {getFormattedDateLabel()}
-            </AppText>
+            <DateLabel />
             <DemoBadge />
           </View>
           {!hideStreaks && currentStreak > 0 && (
@@ -193,9 +231,7 @@ export default function CheckInScreen() {
           >
             {dailyObservation.map((obs) => (
               <View key={obs} style={styles.obsRow}>
-                <AppText variant="md" colorVariant="muted" style={styles.obsBullet}>
-                  •
-                </AppText>
+                <View style={[styles.obsBullet, { backgroundColor: theme.colors.mosaicGold }]} />
                 <AppText variant="md" colorVariant="muted" style={styles.obsText}>
                   {obs}
                 </AppText>
@@ -228,7 +264,7 @@ const styles = StyleSheet.create((theme) => ({
   greeting: {
     fontSize: theme.fontSize.display,
     fontWeight: '700',
-    lineHeight: 41,
+    lineHeight: 40,
     letterSpacing: LETTER_SPACING.tight,
     marginBottom: theme.spacing[2],
   },
@@ -281,11 +317,15 @@ const styles = StyleSheet.create((theme) => ({
   },
   obsRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     gap: theme.spacing[2],
   },
   obsBullet: {
-    opacity: 0.4,
+    width: 7,
+    height: 7,
+    borderRadius: 2,
+    flexShrink: 0,
+    opacity: 0.8,
   },
   completionBanner: {
     alignItems: 'center',

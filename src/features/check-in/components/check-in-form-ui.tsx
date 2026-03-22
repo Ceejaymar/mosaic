@@ -375,15 +375,15 @@ export const CheckInFormUI = memo(function CheckInFormUI({
                 <Pressable
                   onPress={handleSaveNote}
                   hitSlop={8}
-                  disabled={!draftNote.trim()}
+                  disabled={!draftNote.trim() && !form.note}
                   style={({ pressed }) => [
                     styles.noteModalBtn,
-                    { opacity: !draftNote.trim() ? 0.3 : pressed ? 0.5 : 1 },
+                    { opacity: !draftNote.trim() && !form.note ? 0.3 : pressed ? 0.5 : 1 },
                   ]}
                 >
                   <Ionicons name="add" size={18} color={theme.colors.mosaicGold} />
                   <AppText style={[styles.noteModalSave, { color: theme.colors.mosaicGold }]}>
-                    Add note
+                    Save note
                   </AppText>
                 </Pressable>
               </View>
@@ -391,6 +391,7 @@ export const CheckInFormUI = memo(function CheckInFormUI({
                 style={[styles.noteModalInput, { color: theme.colors.typography }]}
                 multiline
                 autoFocus
+                clearButtonMode="while-editing"
                 value={draftNote}
                 onChangeText={setDraftNote}
                 placeholder="What's on your mind?"

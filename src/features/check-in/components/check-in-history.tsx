@@ -20,7 +20,7 @@ export function CheckInHistory({ entries, onEntryPress }: Props) {
   if (entries.length === 0) return null;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { borderTopColor: colors.divider }]}>
       <AppText font="mono" colorVariant="muted" style={styles.heading}>
         Check-ins
       </AppText>
@@ -51,6 +51,8 @@ export function CheckInHistory({ entries, onEntryPress }: Props) {
 const styles = StyleSheet.create((theme) => ({
   container: {
     marginTop: 32,
+    borderTopWidth: RNStyleSheet.hairlineWidth,
+    paddingTop: 24,
   },
   heading: {
     fontSize: 11,
