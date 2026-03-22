@@ -8,6 +8,7 @@ import {
   type MoodEntry,
   type NewMoodEntry,
 } from '@/src/db/repos/moodRepo';
+import { recordActivity } from '@/src/db/repos/statsRepo';
 import { invalidateMonthCache } from '@/src/features/canvas/hooks/useCanvasDbData';
 import { getDemoEntriesForDate } from '@/src/features/demo/generateDemoData';
 import { uuid } from '@/src/lib/uuid';
@@ -99,6 +100,8 @@ export function useTodayCheckIns() {
         await insertMoodEntry(newEntry);
         const [yearStr, monthStr] = newEntry.dateKey.split('-');
         invalidateMonthCache(parseInt(yearStr, 10), parseInt(monthStr, 10) - 1);
+        // Record real-world today — never the entry's dateKey — to prevent backdating from gaming the streak
+        await recordActivity(dateToKey(new Date()));
       } catch (error) {
         console.error('Failed to persist mood entry', error);
         setTodayEntries((prev) => prev.filter((e) => e.id !== newEntry.id));

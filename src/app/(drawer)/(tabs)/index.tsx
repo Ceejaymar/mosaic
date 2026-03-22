@@ -87,7 +87,7 @@ export default function CheckInScreen() {
 
   const [sheetVisible, setSheetVisible] = useState(false);
   const { todayEntries, isLoading, loadError, saveEntry, refresh } = useTodayCheckIns();
-  const { currentStreak } = useStats();
+  const { currentStreak, refreshStats } = useStats();
   const hideStreaks = useAppStore((s) => s.preferences.hideStreaks);
 
   const currentSlot = getCurrentTimeSlot();
@@ -114,8 +114,9 @@ export default function CheckInScreen() {
     async (nodeId: string, note?: string, tags?: string[]) => {
       setSheetVisible(false);
       await saveEntry(nodeId, note, tags);
+      refreshStats();
     },
-    [saveEntry],
+    [saveEntry, refreshStats],
   );
 
   const handleTilePress = useCallback(
