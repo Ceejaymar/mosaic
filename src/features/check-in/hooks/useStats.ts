@@ -46,7 +46,8 @@ export function useStats() {
 
         let streak = 0;
         if (startKey) {
-          const cursor = new Date(startKey);
+          const [y, m, d] = startKey.split('-').map(Number);
+          const cursor = new Date(y, m - 1, d);
           while (daySet.has(dateToKey(cursor))) {
             streak++;
             cursor.setDate(cursor.getDate() - 1);
@@ -56,7 +57,7 @@ export function useStats() {
 
         // Longest streak
         const sorted = [...daySet].sort();
-        let longest = streak > 0 ? 1 : 0;
+        let longest = sorted.length > 0 ? 1 : 0;
         let run = 1;
         for (let i = 1; i < sorted.length; i++) {
           const prev = new Date(sorted[i - 1]);

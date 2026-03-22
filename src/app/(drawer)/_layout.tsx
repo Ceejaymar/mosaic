@@ -7,7 +7,7 @@ import * as Application from 'expo-application';
 import { type Href, useRouter } from 'expo-router';
 import { Drawer } from 'expo-router/drawer';
 import { usePostHog } from 'posthog-react-native';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Alert, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
@@ -45,6 +45,15 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
   const [tapCount, setTapCount] = useState(0);
   const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  useEffect(() => {
+    return () => {
+      if (resetTimerRef.current) {
+        clearTimeout(resetTimerRef.current);
+        resetTimerRef.current = null;
+      }
+    };
+  }, []);
+
   const handleVersionTap = () => {
     const next = tapCount + 1;
 
@@ -53,6 +62,7 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
     if (next >= TAP_TARGET) {
       setTapCount(0);
       if (isDeveloperModeEnabled) {
+        if (isDemoMode) toggleDemoMode();
         setDeveloperMode(false);
         Alert.alert('Developer Mode Disabled', 'Debug tools are now hidden.');
       } else {

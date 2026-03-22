@@ -39,6 +39,10 @@
       "label": "Demo",
       "accessibilityLive": "Switch to live data",
       "accessibilityDemo": "Switch to demo data"
+    },
+    "cannotLog": {
+      "title": "Cannot Log Emotion",
+      "message": "You cannot log new entries older than {{count}} days."
     }
   },
   "journal": {

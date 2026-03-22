@@ -206,16 +206,19 @@ export default function CanvasScreen() {
 
   const [checkInTargetDate, setCheckInTargetDate] = useState<string | null>(null);
 
-  const handleEmptyDayPress = useCallback((dateKey: string) => {
-    if (isPastBackdateLimit(dateKey)) {
-      Alert.alert(
-        'Cannot Log Emotion',
-        `You cannot log new entries older than ${MAX_BACKDATE_DAYS} days.`,
-      );
-    } else {
-      setCheckInTargetDate(dateKey);
-    }
-  }, []);
+  const handleEmptyDayPress = useCallback(
+    (dateKey: string) => {
+      if (isPastBackdateLimit(dateKey)) {
+        Alert.alert(
+          t('canvas.cannotLog.title'),
+          t('canvas.cannotLog.message', { count: MAX_BACKDATE_DAYS }),
+        );
+      } else {
+        setCheckInTargetDate(dateKey);
+      }
+    },
+    [t],
+  );
 
   const handleSheetClose = useCallback(() => {
     setCheckInTargetDate(null);

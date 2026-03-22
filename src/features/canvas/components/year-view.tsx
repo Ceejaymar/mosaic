@@ -105,6 +105,7 @@ const YearTile = memo(function YearTile({
   width,
   height,
 }: YearTileProps) {
+  const { t } = useTranslation();
   const { theme } = useUnistyles();
   const emptyBg = isEvenMonth ? theme.colors.surface : 'transparent';
   const hasData = colors.length > 0;
@@ -119,8 +120,8 @@ const YearTile = memo(function YearTile({
     else if (canLogHistorical) onEmptyDayPress?.(dateKey);
     else if (isTooOld)
       Alert.alert(
-        'Cannot Log Emotion',
-        `You cannot log new entries older than ${MAX_BACKDATE_DAYS} days.`,
+        t('canvas.cannotLog.title'),
+        t('canvas.cannotLog.message', { count: MAX_BACKDATE_DAYS }),
       );
   };
 

@@ -36,6 +36,10 @@
       "label": "Demo",
       "accessibilityLive": "Cambiar a datos reales",
       "accessibilityDemo": "Cambiar a datos de demostración"
+    },
+    "cannotLog": {
+      "title": "No se puede registrar la emoción",
+      "message": "No puedes registrar entradas con más de {{count}} días de antigüedad."
     }
   },
   "journal": {
