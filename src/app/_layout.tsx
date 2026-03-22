@@ -14,7 +14,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, AppState, Platform, StyleSheet } from 'react-native';
 import { SystemBars } from 'react-native-edge-to-edge';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { useUnistyles } from 'react-native-unistyles';
+// import { useUnistyles } from 'react-native-unistyles'; // Temporarily unused
 import migrations from '@/drizzle/migrations';
 import { posthog } from '@/src/config/posthog';
 
@@ -190,8 +190,9 @@ function RootLayout() {
 }
 
 function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {
-  const { rt } = useUnistyles();
-  const isDarkTheme = rt.themeName === 'dark';
+  // const { rt } = useUnistyles();
+  // const isDarkTheme = rt.themeName === 'dark'; // Temporarily commented out
+  const isDarkTheme = true; // Temporarily forced to true
 
   const isAppLockEnabled = useAppStore((s) => s.isAppLockEnabled);
   const [isLocked, setIsLocked] = useState(startLocked);

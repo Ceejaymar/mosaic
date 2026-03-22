@@ -14,13 +14,18 @@ import type {
 } from '@/src/types/types';
 import i18n from '../i18n';
 
-const applyTheme = (mode: Theme) => {
+const applyTheme = (_mode: Theme) => {
+  // Temporarily force dark mode
+  UnistylesRuntime.setAdaptiveThemes(false);
+  UnistylesRuntime.setTheme('dark');
+  /*
   if (mode === 'system') {
     UnistylesRuntime.setAdaptiveThemes(true);
   } else {
     UnistylesRuntime.setAdaptiveThemes(false);
     UnistylesRuntime.setTheme(mode);
   }
+  */
 };
 
 export const useAppStore = create<State & Actions>()(
