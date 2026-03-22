@@ -5,10 +5,13 @@ import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
 import { useAppStore } from '@/src/store/useApp';
 
 export function DemoBadge() {
+  const isDeveloperModeEnabled = useAppStore((s) => s.isDeveloperModeEnabled);
   const isDemoMode = useAppStore((s) => s.isDemoMode);
   const toggleDemoMode = useAppStore((s) => s.toggleDemoMode);
   const { theme } = useUnistyles();
   const colors = useAccessibleColors();
+
+  if (!isDeveloperModeEnabled) return null;
 
   return (
     <Pressable

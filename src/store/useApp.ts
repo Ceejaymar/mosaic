@@ -70,6 +70,9 @@ export const useAppStore = create<State & Actions>()(
       isDemoMode: false,
       toggleDemoMode: () => set((s) => ({ isDemoMode: !s.isDemoMode })),
 
+      isDeveloperModeEnabled: false,
+      setDeveloperMode: (enabled: boolean) => set({ isDeveloperModeEnabled: enabled }),
+
       isNotificationsEnabled: false,
       isSurpriseMeEnabled: false,
       reminderTimes: ['09:00', '14:00', '20:00'],
@@ -105,6 +108,7 @@ export const useAppStore = create<State & Actions>()(
         language: state.language,
         accessibility: state.accessibility,
         preferences: state.preferences,
+        isDeveloperModeEnabled: state.isDeveloperModeEnabled,
         isNotificationsEnabled: state.isNotificationsEnabled,
         isSurpriseMeEnabled: state.isSurpriseMeEnabled,
         reminderTimes: state.reminderTimes,

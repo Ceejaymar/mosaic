@@ -7,6 +7,7 @@ export type State = {
   accessibility: AccessibilitySettings;
   preferences: PreferencesState;
   isDemoMode: boolean;
+  isDeveloperModeEnabled: boolean;
   isNotificationsEnabled: boolean;
   isSurpriseMeEnabled: boolean;
   reminderTimes: string[];
@@ -20,6 +21,7 @@ export type Actions = {
   setAccessibilitySetting: (key: keyof AccessibilitySettings, value: boolean) => void;
   setPreference: <K extends keyof PreferencesState>(key: K, value: PreferencesState[K]) => void;
   toggleDemoMode: () => void;
+  setDeveloperMode: (enabled: boolean) => void;
   toggleNotifications: () => void;
   toggleSurpriseMe: () => void;
   addReminderTime: (time: string) => void;
