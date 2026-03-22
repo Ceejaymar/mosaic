@@ -113,7 +113,7 @@ const YearTile = memo(function YearTile({
   const canLogHistorical = isEmptyPast && !isTooOld && !!onEmptyDayPress;
   const isInteractive = !isFuture && (hasData || canLogHistorical || isTooOld);
 
-  const tileOpacity = isFuture ? 0.25 : isTooOld ? 0.4 : 1;
+  const tileOpacity = isFuture ? 0.25 : isTooOld && isEmptyPast ? 0.4 : 1;
 
   const handlePress = () => {
     if (hasData) onPress(dateKey);

@@ -22,7 +22,8 @@ import { DemoBadge } from '@/src/components/demo-badge';
 import { TopFade } from '@/src/components/top-fade';
 import { MAX_BACKDATE_DAYS } from '@/src/constants/config';
 import { LAYOUT } from '@/src/constants/layout';
-import { insertMoodEntry, type NewMoodEntry } from '@/src/db/repos/moodRepo';
+import { dateToKey, insertMoodEntry, type NewMoodEntry } from '@/src/db/repos/moodRepo';
+import { recordActivity } from '@/src/db/repos/statsRepo';
 import { MonthGrid } from '@/src/features/canvas/components/month-grid';
 import { YearView } from '@/src/features/canvas/components/year-view';
 import {
@@ -246,6 +247,7 @@ export default function CanvasScreen() {
         updatedAt: now.toISOString(),
       };
       await insertMoodEntry(newEntry);
+      await recordActivity(dateToKey(new Date()));
       const [yearStr, monthStr] = checkInTargetDate.split('-');
       invalidateMonthCache(parseInt(yearStr, 10), parseInt(monthStr, 10) - 1);
       setRefreshKey((k) => k + 1);
