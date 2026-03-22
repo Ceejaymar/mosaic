@@ -1,9 +1,9 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { parseISO } from 'date-fns';
+import { differenceInDays, parseISO, startOfDay } from 'date-fns';
 import { useRouter } from 'expo-router';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, useWindowDimensions, View } from 'react-native';
+import { Alert, Pressable, useWindowDimensions, View } from 'react-native';
 import Animated, {
   Extrapolation,
   interpolate,
@@ -20,6 +20,7 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { AppText } from '@/src/components/app-text';
 import { DemoBadge } from '@/src/components/demo-badge';
 import { TopFade } from '@/src/components/top-fade';
+import { MAX_BACKDATE_DAYS } from '@/src/constants/config';
 import { LAYOUT } from '@/src/constants/layout';
 import { insertMoodEntry, type NewMoodEntry } from '@/src/db/repos/moodRepo';
 import { MonthGrid } from '@/src/features/canvas/components/month-grid';
@@ -205,7 +206,20 @@ export default function CanvasScreen() {
   const [checkInTargetDate, setCheckInTargetDate] = useState<string | null>(null);
 
   const handleEmptyDayPress = useCallback((dateKey: string) => {
-    setCheckInTargetDate(dateKey);
+    const [y, m, d] = dateKey.split('-').map(Number);
+    const today = startOfDay(new Date());
+    const clicked = startOfDay(new Date(y, m - 1, d));
+    const daysDiff = differenceInDays(today, clicked);
+    const isTooOld = daysDiff > MAX_BACKDATE_DAYS;
+
+    if (isTooOld) {
+      Alert.alert(
+        'Cannot Log Emotion',
+        `You cannot log new entries older than ${MAX_BACKDATE_DAYS} days.`,
+      );
+    } else {
+      setCheckInTargetDate(dateKey);
+    }
   }, []);
 
   const handleSheetClose = useCallback(() => {

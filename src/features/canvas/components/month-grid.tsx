@@ -2,8 +2,9 @@ import { memo } from 'react';
 import { Alert, Pressable, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
+import { MAX_BACKDATE_DAYS } from '@/src/constants/config';
 import { dateToKey } from '@/src/db/repos/moodRepo';
-import { isWithinThreeMonths } from '@/src/features/canvas/utils/date-utils';
+import { isPastBackdateLimit } from '@/src/features/canvas/utils/date-utils';
 import { useAppStore } from '@/src/store/useApp';
 import type { CanvasDay } from '../hooks/useCanvasData';
 import { DayTile } from './day-tile';
@@ -61,9 +62,8 @@ export const MonthGrid = memo(function MonthGrid({
         const hasData = colors.length > 0;
 
         const isEmptyPast = !hasData && !isFuture;
-        const withinRange = isEmptyPast ? isWithinThreeMonths(dateKey) : false;
-        const canLogHistorical = isEmptyPast && withinRange && !!onEmptyDayPress;
-        const isTooOld = isEmptyPast && !withinRange;
+        const isTooOld = isEmptyPast && isPastBackdateLimit(dateKey);
+        const canLogHistorical = isEmptyPast && !isTooOld && !!onEmptyDayPress;
         const isInteractive = !isFuture && (hasData || canLogHistorical || isTooOld);
 
         return (
@@ -75,12 +75,13 @@ export const MonthGrid = memo(function MonthGrid({
               else if (canLogHistorical) onEmptyDayPress?.(dateKey);
               else if (isTooOld)
                 Alert.alert(
-                  'Too far back',
-                  'You can only log check-ins up to 3 months in the past.',
+                  'Cannot Log Emotion',
+                  `You cannot log new entries older than ${MAX_BACKDATE_DAYS} days.`,
                 );
             }}
             style={({ pressed }) => [
               cellSize,
+              isFuture && { opacity: 0.35 },
               isTooOld && { opacity: 0.4 },
               isInteractive && !isTooOld && pressed && { opacity: 0.7 },
             ]}

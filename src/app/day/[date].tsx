@@ -16,6 +16,7 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
 import { EntryCard } from '@/src/components/entry-card';
+import { MAX_BACKDATE_DAYS } from '@/src/constants/config';
 import {
   fetchMoodEntriesForDate,
   insertMoodEntry,
@@ -33,7 +34,6 @@ import { uuid } from '@/src/lib/uuid';
 import { useAppStore } from '@/src/store/useApp';
 
 const MAX_ENTRIES = 4;
-const MAX_BACKDATE_DAYS = 90;
 
 function entryToTile(entry: MoodEntry): MosaicTileData {
   const info = getMoodDisplayInfo(entry.primaryMood);
@@ -300,7 +300,8 @@ export default function DaySummaryScreen() {
               <View style={styles.mosaicWrapper}>
                 <MosaicDisplay
                   tiles={tiles}
-                  onAddPress={isTooOld ? () => {} : () => setSheetVisible(true)}
+                  disableAdd={isTooOld}
+                  onAddPress={() => setSheetVisible(true)}
                   onTilePress={(tile) => handleEntryPress(tile.id)}
                 />
               </View>

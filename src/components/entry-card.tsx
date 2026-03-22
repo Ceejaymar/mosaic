@@ -33,7 +33,7 @@ export const EntryCard = memo(function EntryCard({ entry, onPress }: EntryCardPr
     onPress(entry.id);
   }, [entry.id, onPress]);
 
-  const gradientColors = [hexAlpha(accentColor, 0.06), hexAlpha(accentColor, 0.42)] as const;
+  const gradientColors = [hexAlpha(accentColor, 0), hexAlpha(accentColor, 0.2)] as const;
 
   return (
     <Pressable

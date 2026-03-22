@@ -22,6 +22,8 @@ export type MosaicTileData = {
 
 type Props = {
   tiles: MosaicTileData[];
+  /** When true, the empty-state placeholder is non-interactive (no + button). */
+  disableAdd?: boolean;
   /** Called when the empty-state container is tapped (open a new check-in). */
   onAddPress: () => void;
   /** Called when an individual filled tile is tapped (open edit for that entry). */
@@ -109,12 +111,19 @@ function renderGrid(tiles: MosaicTileData[], onTilePress: (tile: MosaicTileData)
   );
 }
 
-export function MosaicDisplay({ tiles, onAddPress, onTilePress }: Props) {
+export function MosaicDisplay({ tiles, disableAdd, onAddPress, onTilePress }: Props) {
   const colors = useAccessibleColors();
   const cappedTiles = tiles.slice(0, 4);
   const count = cappedTiles.length;
 
   if (count === 0) {
+    if (disableAdd) {
+      return (
+        <View style={styles.emptyPressable}>
+          <Surface variant="card" style={styles.emptyContainer} />
+        </View>
+      );
+    }
     return (
       <Pressable
         onPress={onAddPress}
