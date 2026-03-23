@@ -6,19 +6,24 @@ import { AppText } from '@/src/components/app-text';
 import type { InsightEntry } from '@/src/features/insights/types';
 import { useAppStore } from '@/src/store/useApp';
 
-type Props = { entries: InsightEntry[] };
+type Props = { entries: InsightEntry[]; offset: number };
 
-export function MicroGrid({ entries }: Props) {
+export function MicroGrid({ entries, offset }: Props) {
   const firstDayOfWeek = useAppStore((s) => s.preferences.firstDayOfWeek);
 
   const dayData = useMemo(() => {
     const now = new Date();
     const jsDow = now.getDay();
     const diffToStart = firstDayOfWeek === 'monday' ? (jsDow + 6) % 7 : jsDow;
+    const startDate = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() - diffToStart + offset * 7,
+    );
 
-    // Build the 7 days of the current week
+    // Build the 7 days of the selected week
     const days = Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diffToStart + i);
+      const d = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + i);
       const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       const label = d.toLocaleDateString('en-US', { weekday: 'short' });
       return { dateKey, label };
@@ -47,7 +52,7 @@ export function MicroGrid({ entries }: Props) {
 
     const maxCount = Math.max(...stats.map((s) => s.totalCount), 1);
     return stats.map((s) => ({ ...s, pctOfMax: s.totalCount / maxCount }));
-  }, [entries, firstDayOfWeek]);
+  }, [entries, firstDayOfWeek, offset]);
 
   return (
     <View style={styles.container}>

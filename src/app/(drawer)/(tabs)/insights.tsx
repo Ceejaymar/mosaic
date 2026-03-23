@@ -414,7 +414,7 @@ export default function InsightsScreen() {
             <TopFeelings entries={entries} timeFrame={timeFrame} />
             <SectionDivider />
             <RhythmBar entries={entries} />
-            {timeFrame === 'week' && <MicroGrid entries={entries} />}
+            {timeFrame === 'week' && <MicroGrid entries={entries} offset={offset} />}
             <SectionDivider />
             <ContextMatrix entries={entries} category="people" title="Who you were with" />
             <ContextMatrix entries={entries} category="activities" title="What you were doing" />

@@ -118,23 +118,23 @@ export async function recordActivity(deviceDateString: string): Promise<UserStat
   const streakForMonth = Math.min(newStreak, dayOfMonth);
   const { longestStreak: monthBest } = await getMonthlyStats(monthKey);
 
-  await Promise.all([
-    db
+  await db.transaction(async (tx) => {
+    await tx
       .update(userStats)
       .set({
         currentStreak: newStreak,
         longestStreak: newLongest,
         lastActiveDate: deviceDateString,
       })
-      .where(eq(userStats.id, STATS_ID)),
-    db
+      .where(eq(userStats.id, STATS_ID));
+    await tx
       .insert(monthlyStats)
       .values({ monthKey, longestStreak: Math.max(monthBest, streakForMonth) })
       .onConflictDoUpdate({
         target: monthlyStats.monthKey,
         set: { longestStreak: Math.max(monthBest, streakForMonth) },
-      }),
-  ]);
+      });
+  });
 
   return {
     ...stats,
@@ -199,11 +199,6 @@ export async function syncStreakFromHistory(): Promise<void> {
     }
   }
 
-  await db
-    .update(userStats)
-    .set({ currentStreak, longestStreak, lastActiveDate })
-    .where(eq(userStats.id, STATS_ID));
-
   // ── Per-month longest streak backfill ────────────────────────────────────────
   // Single pass over sortedAsc: maintain a running consecutive-day counter and
   // credit each day's run to its month, capped to the day-of-month so cross-
@@ -247,4 +242,10 @@ export async function syncStreakFromHistory(): Promise<void> {
       ),
     );
   }
+
+  // Mark sync complete only after all monthly backfill writes succeed
+  await db
+    .update(userStats)
+    .set({ currentStreak, longestStreak, lastActiveDate })
+    .where(eq(userStats.id, STATS_ID));
 }
