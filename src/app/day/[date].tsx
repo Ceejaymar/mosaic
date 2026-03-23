@@ -114,7 +114,8 @@ export default function DaySummaryScreen() {
     let isMounted = true;
 
     const checkPrev = async () => {
-      const prev = subDays(currentDate, 1);
+      const current = parseISO(date);
+      const prev = subDays(current, 1);
       const prevStr = format(prev, 'yyyy-MM-dd');
       const epochStr = isDemoMode ? '2025-01-01' : '2026-01-01';
 
@@ -136,7 +137,7 @@ export default function DaySummaryScreen() {
     return () => {
       isMounted = false;
     };
-  }, [currentDate, isValidDate, isDemoMode]);
+  }, [date, isValidDate, isDemoMode]);
 
   const updateDateParam = useCallback(
     (newDateStr: string) => {
