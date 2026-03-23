@@ -1,14 +1,26 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { useMemo } from 'react';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
 import { Surface } from '@/src/components/surface';
+import { EMOTION_PALETTES } from '@/src/features/emotion-accordion/palettes';
 import type { InsightEntry } from '@/src/features/insights/types';
+import { isLightColor } from '@/src/utils/color-ui';
 
 type Props = { entries: InsightEntry[] };
 
-type Item = { color: string; pct: number };
+// Build a reverse map: coreColor (palette[0]) → capitalized group label
+const CORE_COLOR_TO_LABEL: Record<string, string> = {};
+for (const [groupId, palette] of Object.entries(EMOTION_PALETTES.default)) {
+  if (palette[0]) {
+    CORE_COLOR_TO_LABEL[palette[0].toLowerCase()] =
+      groupId.charAt(0).toUpperCase() + groupId.slice(1);
+  }
+}
+
+type Item = { color: string; pct: number; name: string };
 type LayoutItem = Item & { area: number };
 type Block = Item & { x: number; y: number; w: number; h: number };
 type Bounds = { x: number; y: number; w: number; h: number };
@@ -37,7 +49,15 @@ function layoutRow(row: LayoutItem[], bounds: Bounds): Block[] {
     let cursor = 0;
     for (const item of row) {
       const itemW = item.area / stripH;
-      blocks.push({ color: item.color, pct: item.pct, x: x + cursor, y, w: itemW, h: stripH });
+      blocks.push({
+        color: item.color,
+        pct: item.pct,
+        name: item.name,
+        x: x + cursor,
+        y,
+        w: itemW,
+        h: stripH,
+      });
       cursor += itemW;
     }
   } else {
@@ -46,7 +66,15 @@ function layoutRow(row: LayoutItem[], bounds: Bounds): Block[] {
     let cursor = 0;
     for (const item of row) {
       const itemH = item.area / stripW;
-      blocks.push({ color: item.color, pct: item.pct, x, y: y + cursor, w: stripW, h: itemH });
+      blocks.push({
+        color: item.color,
+        pct: item.pct,
+        name: item.name,
+        x,
+        y: y + cursor,
+        w: stripW,
+        h: itemH,
+      });
       cursor += itemH;
     }
   }
@@ -79,6 +107,7 @@ function squarify(items: Item[]): Block[] {
   const normalized: LayoutItem[] = items.map((i) => ({
     color: i.color,
     pct: i.pct / pctTotal,
+    name: i.name,
     area: (i.pct / pctTotal) * totalArea,
   }));
 
@@ -134,7 +163,11 @@ export function HeroMosaic({ entries }: Props) {
     const items = Object.entries(counts)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 8)
-      .map(([color, count]) => ({ color, pct: count / total }));
+      .map(([color, count]) => ({
+        color,
+        pct: count / total,
+        name: CORE_COLOR_TO_LABEL[color.toLowerCase()] ?? '',
+      }));
 
     return squarify(items);
   }, [entries]);
@@ -144,17 +177,19 @@ export function HeroMosaic({ entries }: Props) {
   return (
     <View style={styles.container}>
       <AppText font="heading" variant="xl" colorVariant="primary" style={styles.title}>
-        Mood distribution
+        Emotion distribution
       </AppText>
       <Surface variant="card">
         <View style={styles.mosaic}>
           {blocks.map((block, i) => (
-            <View
+            <LinearGradient
               key={`${block.color}-${i}`}
+              colors={[block.color, `${block.color}CC`]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
               style={[
                 styles.block,
                 {
-                  backgroundColor: block.color,
                   left: `${block.x}%`,
                   top: `${block.y}%`,
                   width: `${block.w}%`,
@@ -163,11 +198,43 @@ export function HeroMosaic({ entries }: Props) {
               ]}
             >
               {block.pct >= 0.05 && (
-                <AppText font="mono" variant="sm" style={styles.pctLabel}>
+                <AppText
+                  font="mono"
+                  style={[
+                    styles.pctLabel,
+                    {
+                      color: isLightColor(block.color)
+                        ? 'rgba(0,0,0,0.85)'
+                        : 'rgba(255,255,255,0.95)',
+                    },
+                  ]}
+                >
                   {`${Math.round(block.pct * 100)}%`}
                 </AppText>
               )}
-            </View>
+              {block.pct >= 0.08 && !!block.name && (
+                <View
+                  style={[
+                    styles.nameBadge,
+                    {
+                      backgroundColor: isLightColor(block.color)
+                        ? 'rgba(0,0,0,0.18)'
+                        : 'rgba(255,255,255,0.18)',
+                    },
+                  ]}
+                >
+                  <AppText
+                    font="mono"
+                    style={[
+                      styles.nameLabel,
+                      { color: isLightColor(block.color) ? 'rgba(0,0,0,0.9)' : '#ffffff' },
+                    ]}
+                  >
+                    {block.name}
+                  </AppText>
+                </View>
+              )}
+            </LinearGradient>
           ))}
         </View>
       </Surface>
@@ -195,7 +262,21 @@ const styles = StyleSheet.create((theme) => ({
     justifyContent: 'center',
   },
   pctLabel: {
-    color: 'rgba(255,255,255,0.85)',
     fontWeight: '700',
+    fontSize: 16,
+  },
+  nameBadge: {
+    position: 'absolute',
+    bottom: 7,
+    left: 8,
+    borderRadius: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+  },
+  nameLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
   },
 }));
