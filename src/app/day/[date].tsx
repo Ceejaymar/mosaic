@@ -16,7 +16,7 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
 import { EntryCard } from '@/src/components/entry-card';
-import { MAX_BACKDATE_DAYS } from '@/src/constants/config';
+import { DEMO_EPOCH, MAX_BACKDATE_DAYS, PROD_EPOCH } from '@/src/constants/config';
 import {
   fetchMoodEntriesForDate,
   insertMoodEntry,
@@ -117,7 +117,7 @@ export default function DaySummaryScreen() {
       const current = parseISO(date);
       const prev = subDays(current, 1);
       const prevStr = format(prev, 'yyyy-MM-dd');
-      const epochStr = isDemoMode ? '2025-01-01' : '2026-01-01';
+      const epochStr = isDemoMode ? DEMO_EPOCH : PROD_EPOCH;
 
       if (prevStr < epochStr) {
         if (isMounted) setCanGoPrev(false);
@@ -125,8 +125,13 @@ export default function DaySummaryScreen() {
       }
 
       if (isPastBackdateLimit(prevStr)) {
-        const prevEntries = await fetchMoodEntriesForDate(prevStr);
-        if (isMounted) setCanGoPrev(prevEntries.length > 0);
+        try {
+          const prevEntries = await fetchMoodEntriesForDate(prevStr);
+          if (isMounted) setCanGoPrev(prevEntries.length > 0);
+        } catch (err) {
+          console.error('Failed to check previous day entries', err);
+          if (isMounted) setCanGoPrev(false);
+        }
         return;
       }
 
