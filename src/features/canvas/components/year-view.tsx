@@ -30,7 +30,6 @@ import { useAppStore } from '@/src/store/useApp';
 // ─── Context ──────────────────────────────────────────────────────────────────
 
 const CURRENT_YEAR = new Date().getFullYear();
-const MIN_YEAR = CURRENT_YEAR - 5;
 const VisibleYearContext = createContext(CURRENT_YEAR);
 const yearKeyExtractor = (item: number) => item.toString();
 
@@ -370,12 +369,15 @@ export function YearView({
   const [yearsList, setYearsList] = useState<number[]>([CURRENT_YEAR]);
   const [visibleYear, setVisibleYear] = useState(CURRENT_YEAR);
 
+  const isDemoMode = useAppStore((s) => s.isDemoMode);
+  const minYear = isDemoMode ? 2025 : 2026;
+
   const loadPreviousYear = useCallback(() => {
     setYearsList((prev) => {
       const oldest = prev[prev.length - 1];
-      return oldest > MIN_YEAR ? [...prev, oldest - 1] : prev;
+      return oldest > minYear ? [...prev, oldest - 1] : prev;
     });
-  }, []);
+  }, [minYear]);
 
   const latestOnYearChangeRef = useRef(onYearChange);
   useEffect(() => {

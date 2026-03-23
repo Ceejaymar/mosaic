@@ -2,7 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFocusEffect } from '@react-navigation/native';
 import { addDays, differenceInDays, format, isSameDay, parseISO, subDays } from 'date-fns';
 import { type Href, useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector, ScrollView } from 'react-native-gesture-handler';
 import Animated, {
@@ -24,6 +24,7 @@ import {
   type NewMoodEntry,
 } from '@/src/db/repos/moodRepo';
 import { invalidateMonthCache } from '@/src/features/canvas/hooks/useCanvasDbData';
+import { isPastBackdateLimit } from '@/src/features/canvas/utils/date-utils';
 import { CheckInSheet } from '@/src/features/check-in/components/check-in-sheet';
 import {
   MosaicDisplay,
@@ -52,6 +53,7 @@ export default function DaySummaryScreen() {
   const { width } = useWindowDimensions();
   const { date } = useLocalSearchParams<{ date: string }>();
   const reduceMotion = useAppStore((s) => s.accessibility.reduceMotion);
+  const isDemoMode = useAppStore((s) => s.isDemoMode);
 
   // Validate the param before deriving anything from it
   const parsedDate = date ? parseISO(date) : null;
@@ -66,6 +68,7 @@ export default function DaySummaryScreen() {
   const [entries, setEntries] = useState<MoodEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [sheetVisible, setSheetVisible] = useState(false);
+  const [canGoPrev, setCanGoPrev] = useState(true);
 
   // Animation values
   const translateX = useSharedValue(0);
@@ -105,6 +108,35 @@ export default function DaySummaryScreen() {
       };
     }, [isValidDate, loadEntries]),
   );
+
+  useEffect(() => {
+    if (!isValidDate) return;
+    let isMounted = true;
+
+    const checkPrev = async () => {
+      const prev = subDays(currentDate, 1);
+      const prevStr = format(prev, 'yyyy-MM-dd');
+      const epochStr = isDemoMode ? '2025-01-01' : '2026-01-01';
+
+      if (prevStr < epochStr) {
+        if (isMounted) setCanGoPrev(false);
+        return;
+      }
+
+      if (isPastBackdateLimit(prevStr)) {
+        const prevEntries = await fetchMoodEntriesForDate(prevStr);
+        if (isMounted) setCanGoPrev(prevEntries.length > 0);
+        return;
+      }
+
+      if (isMounted) setCanGoPrev(true);
+    };
+
+    checkPrev();
+    return () => {
+      isMounted = false;
+    };
+  }, [currentDate, isValidDate, isDemoMode]);
 
   const updateDateParam = useCallback(
     (newDateStr: string) => {
@@ -265,9 +297,10 @@ export default function DaySummaryScreen() {
             <Pressable
               onPress={handlePrevDay}
               hitSlop={16}
+              disabled={!canGoPrev}
               accessibilityRole="button"
               accessibilityLabel="Previous day"
-              style={({ pressed }) => pressed && { opacity: 0.6 }}
+              style={({ pressed }) => [!canGoPrev ? { opacity: 0 } : pressed && { opacity: 0.6 }]}
             >
               <Ionicons name="chevron-back" size={20} color={theme.colors.textMuted} />
             </Pressable>
@@ -283,7 +316,7 @@ export default function DaySummaryScreen() {
               accessibilityRole="button"
               accessibilityLabel="Next day"
               accessibilityState={{ disabled: isToday }}
-              style={({ pressed }) => pressed && !isToday && { opacity: 0.6 }}
+              style={({ pressed }) => [isToday ? { opacity: 0 } : pressed && { opacity: 0.6 }]}
             >
               <Ionicons name="chevron-forward" size={20} color={theme.colors.textMuted} />
             </Pressable>
