@@ -58,7 +58,7 @@ export function RhythmBar({ entries }: Props) {
             </AppText>
             <View style={styles.track}>
               {slot.totalCount > 0 && (
-                <View style={[styles.pillWrapper, { width: `${slot.pctOfMax * 100}%` }]}>
+                <View style={[styles.pillWrapper, { width: '100%' }]}>
                   {slot.segments.map((seg) => (
                     <View
                       key={seg.color}
@@ -95,10 +95,10 @@ const styles = StyleSheet.create((theme) => ({
     gap: theme.spacing[3],
   },
   slotLabel: {
-    width: 76,
-    fontSize: theme.fontSize.xs,
+    width: 80,
+    fontSize: theme.fontSize.sm,
     fontWeight: '600',
-    letterSpacing: 0.4,
+    letterSpacing: 0.2,
   },
   track: {
     flex: 1,
@@ -106,6 +106,7 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: 12,
     backgroundColor: theme.colors.surface,
     overflow: 'hidden',
+    justifyContent: 'center',
   },
   pillWrapper: {
     flexDirection: 'row',
