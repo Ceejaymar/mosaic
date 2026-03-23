@@ -26,22 +26,23 @@ export function MicroGrid({ entries }: Props) {
 
     const stats = days.map(({ dateKey, label }) => {
       const dayEntries = entries.filter((e) => e.date === dateKey);
-      const totalCount = dayEntries.length;
 
       const colorTally: Record<string, number> = {};
       for (const e of dayEntries) {
         const color = e.coreEmotions[0] || e.emotions[0];
+        if (!color) continue;
         colorTally[color] = (colorTally[color] || 0) + 1;
       }
 
+      const tallyTotal = Object.values(colorTally).reduce((a, b) => a + b, 0);
       const segments = Object.entries(colorTally)
         .map(([color, count]) => ({
           color,
-          pctOfSlot: totalCount > 0 ? count / totalCount : 0,
+          pctOfSlot: tallyTotal > 0 ? count / tallyTotal : 0,
         }))
         .sort((a, b) => b.pctOfSlot - a.pctOfSlot);
 
-      return { dateKey, label, totalCount, segments };
+      return { dateKey, label, totalCount: tallyTotal, segments };
     });
 
     const maxCount = Math.max(...stats.map((s) => s.totalCount), 1);

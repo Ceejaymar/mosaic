@@ -520,7 +520,7 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: theme.fontSize['2xl'],
     fontWeight: '700',
     letterSpacing: -0.5,
-    color: '#FFFFFF',
+    color: theme.colors.typography,
   },
   statLabel: {
     fontSize: theme.fontSize.xs,

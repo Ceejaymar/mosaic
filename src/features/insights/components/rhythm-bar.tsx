@@ -19,16 +19,17 @@ export function RhythmBar({ entries }: Props) {
     // 1. Group and tally by slot
     const stats = TIME_SLOTS.map(({ id, label }) => {
       const slotEntries = entries.filter((e) => e.timeOfDay === id);
-      const totalCount = slotEntries.length;
 
-      // 2. Tally colors within this specific slot
+      // 2. Tally colors within this specific slot (skip entries with no color)
       const colorTally: Record<string, number> = {};
       for (const e of slotEntries) {
         const color = e.coreEmotions[0] || e.emotions[0];
+        if (!color) continue;
         colorTally[color] = (colorTally[color] || 0) + 1;
       }
 
-      // 3. Segment width is relative to THIS slot's total
+      // 3. Segment width is relative to THIS slot's tallied total
+      const totalCount = Object.values(colorTally).reduce((a, b) => a + b, 0);
       const segments = Object.entries(colorTally)
         .map(([color, count]) => ({
           color,

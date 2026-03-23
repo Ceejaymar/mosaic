@@ -112,8 +112,10 @@ export async function recordActivity(deviceDateString: string): Promise<UserStat
 
   const newLongest = Math.max(newStreak, stats.longestStreak);
 
-  // Derive the 'YYYY-MM' key for the month being recorded
+  // Derive the 'YYYY-MM' key and cap the streak to days elapsed in the month
   const monthKey = deviceDateString.slice(0, 7);
+  const dayOfMonth = Number(deviceDateString.slice(8, 10));
+  const streakForMonth = Math.min(newStreak, dayOfMonth);
   const { longestStreak: monthBest } = await getMonthlyStats(monthKey);
 
   await Promise.all([
@@ -127,10 +129,10 @@ export async function recordActivity(deviceDateString: string): Promise<UserStat
       .where(eq(userStats.id, STATS_ID)),
     db
       .insert(monthlyStats)
-      .values({ monthKey, longestStreak: Math.max(monthBest, newStreak) })
+      .values({ monthKey, longestStreak: Math.max(monthBest, streakForMonth) })
       .onConflictDoUpdate({
         target: monthlyStats.monthKey,
-        set: { longestStreak: Math.max(monthBest, newStreak) },
+        set: { longestStreak: Math.max(monthBest, streakForMonth) },
       }),
   ]);
 
@@ -203,54 +205,34 @@ export async function syncStreakFromHistory(): Promise<void> {
     .where(eq(userStats.id, STATS_ID));
 
   // ── Per-month longest streak backfill ────────────────────────────────────────
-  // Group dateKeys by 'YYYY-MM', then find the longest consecutive run within
-  // each month (runs may cross month boundaries in user_stats but are capped
-  // per-month here to reflect the month's own contribution).
-  const monthMap = new Map<string, string[]>();
-  for (const dateKey of sortedAsc) {
-    const mk = dateKey.slice(0, 7);
-    const bucket = monthMap.get(mk);
-    if (bucket) bucket.push(dateKey);
-    else monthMap.set(mk, [dateKey]);
+  // Single pass over sortedAsc: maintain a running consecutive-day counter and
+  // credit each day's run to its month, capped to the day-of-month so cross-
+  // month runs don't inflate the month's tally.
+  const monthBestMap = new Map<string, number>();
+
+  if (sortedAsc.length > 0) {
+    const first = sortedAsc[0];
+    monthBestMap.set(first.slice(0, 7), 1);
   }
 
-  // For each month, walk the global sorted list to find the max consecutive run
-  // that touches days within that month.
-  const monthUpdates: Array<{ monthKey: string; longestStreak: number }> = [];
-  for (const [mk, _days] of monthMap) {
-    // Walk sortedAsc tracking the current run; credit the run length to the
-    // month that contains the *last* day of the run (i.e. the peak day).
-    // Simpler and accurate: walk only the days inside this month and track
-    // the longest run whose tail falls in the month.
-    let best = 1;
-    let run = 1;
-    const monthDays = sortedAsc.filter((dk) => dk.slice(0, 7) === mk);
-    // A run can start from a day in a previous month, so look at the day
-    // just before the first day of this month in the global sorted list.
-    for (let i = 1; i < monthDays.length; i++) {
-      if (diffDays(monthDays[i - 1], monthDays[i]) === 1) {
-        run++;
-        if (run > best) best = run;
-      } else {
-        run = 1;
-      }
+  let runLen = 1;
+  for (let i = 1; i < sortedAsc.length; i++) {
+    if (diffDays(sortedAsc[i - 1], sortedAsc[i]) === 1) {
+      runLen++;
+    } else {
+      runLen = 1;
     }
-    // Also account for a streak arriving from the previous month into this one
-    const firstDay = monthDays[0];
-    const globalIdx = sortedAsc.indexOf(firstDay);
-    if (globalIdx > 0 && diffDays(sortedAsc[globalIdx - 1], firstDay) === 1) {
-      // Count the incoming run length up to firstDay
-      let incoming = 1;
-      for (let j = globalIdx - 1; j > 0; j--) {
-        if (diffDays(sortedAsc[j - 1], sortedAsc[j]) === 1) incoming++;
-        else break;
-      }
-      // The total run through firstDay into this month
-      const crossBest = incoming + (monthDays.length > 1 ? best - 1 : 0);
-      if (crossBest > best) best = crossBest;
-    }
-    monthUpdates.push({ monthKey: mk, longestStreak: best });
+    const dateKey = sortedAsc[i];
+    const mk = dateKey.slice(0, 7);
+    const dayOfMonth = Number(dateKey.slice(8, 10));
+    const capped = Math.min(runLen, dayOfMonth);
+    monthBestMap.set(mk, Math.max(monthBestMap.get(mk) ?? 0, capped));
   }
+
+  const monthUpdates = Array.from(monthBestMap.entries()).map(([monthKey, longestStreak]) => ({
+    monthKey,
+    longestStreak,
+  }));
 
   if (monthUpdates.length > 0) {
     await Promise.all(
