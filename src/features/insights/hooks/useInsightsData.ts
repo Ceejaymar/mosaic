@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { dateToKey, fetchMoodEntriesForMonth, type MoodEntry } from '@/src/db/repos/moodRepo';
+import { getMonthlyStats } from '@/src/db/repos/statsRepo';
 import {
   ACTIVITY_TAGS,
   LOCATION_TAGS,
@@ -161,14 +162,20 @@ async function fetchRealEntries(
 
 // ─── Hook ────────────────────────────────────────────────────────────────────
 
+export type InsightsData = {
+  entries: InsightEntry[];
+  monthlyLongestStreak: number;
+};
+
 export function useInsightsData(
   timeFrame: TimeFrame,
   offset: number,
   refreshKey = 0,
-): InsightEntry[] {
+): InsightsData {
   const isDemoMode = useAppStore((s) => s.isDemoMode);
   const firstDayOfWeek = useAppStore((s) => s.preferences.firstDayOfWeek);
   const [realEntries, setRealEntries] = useState<InsightEntry[]>([]);
+  const [realMonthlyLongest, setRealMonthlyLongest] = useState(0);
 
   // Demo mode: synchronous, deterministic
   const demoEntries = useMemo(() => {
@@ -176,26 +183,46 @@ export function useInsightsData(
     return getDemoInsights(timeFrame, offset, firstDayOfWeek);
   }, [isDemoMode, timeFrame, offset, firstDayOfWeek]);
 
-  // Real mode: async DB fetch
+  // Real mode: async DB fetch — entries + monthly streak in parallel
   // biome-ignore lint/correctness/useExhaustiveDependencies: refreshKey is an intentional refetch trigger
   useEffect(() => {
     if (isDemoMode) return;
 
     let cancelled = false;
-    fetchRealEntries(timeFrame, offset, firstDayOfWeek)
-      .then((entries) => {
+
+    const now = new Date();
+    const target = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+    const targetMonthKey = `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, '0')}`;
+
+    (async () => {
+      try {
+        const [rawEntries, monthStats] = await Promise.all([
+          fetchRealEntries(timeFrame, offset, firstDayOfWeek),
+          timeFrame === 'month'
+            ? getMonthlyStats(targetMonthKey)
+            : Promise.resolve({ monthKey: '', longestStreak: 0 }),
+        ]);
         if (cancelled) return;
-        setRealEntries(entries.map(moodEntryToInsight));
-      })
-      .catch(() => {
+        setRealEntries(rawEntries.map(moodEntryToInsight));
+        setRealMonthlyLongest(monthStats.longestStreak);
+      } catch {
         if (cancelled) return;
         setRealEntries([]);
-      });
+        setRealMonthlyLongest(0);
+      }
+    })();
 
     return () => {
       cancelled = true;
     };
   }, [isDemoMode, timeFrame, offset, refreshKey, firstDayOfWeek]);
 
-  return isDemoMode ? demoEntries : realEntries;
+  const entries = isDemoMode ? demoEntries : realEntries;
+  const monthlyLongestStreak = isDemoMode
+    ? demoEntries.length > 5
+      ? 5
+      : demoEntries.length
+    : realMonthlyLongest;
+
+  return { entries, monthlyLongestStreak };
 }

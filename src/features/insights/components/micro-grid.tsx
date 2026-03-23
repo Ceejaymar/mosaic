@@ -1,146 +1,127 @@
 import { useMemo } from 'react';
-import { Text, View } from 'react-native';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import { View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
 import type { InsightEntry } from '@/src/features/insights/types';
+import { useAppStore } from '@/src/store/useApp';
 
-type Props = { entries: InsightEntry[] };
+type Props = { entries: InsightEntry[]; offset: number };
 
-const DOW_CONFIG = [
-  { id: 'sun', label: 'S', dayIndex: 0 },
-  { id: 'mon', label: 'M', dayIndex: 1 },
-  { id: 'tue', label: 'T', dayIndex: 2 },
-  { id: 'wed', label: 'W', dayIndex: 3 },
-  { id: 'thu', label: 'T', dayIndex: 4 },
-  { id: 'fri', label: 'F', dayIndex: 5 },
-  { id: 'sat', label: 'S', dayIndex: 6 },
-] as const;
+export function MicroGrid({ entries, offset }: Props) {
+  const firstDayOfWeek = useAppStore((s) => s.preferences.firstDayOfWeek);
 
-export function MicroGrid({ entries }: Props) {
-  const { theme } = useUnistyles();
-
-  const { dayColors, weekIds } = useMemo(() => {
-    const dayColors: Record<string, string[]> = {};
-    const weekSet = new Set<number>();
-
-    const sortedEntries = [...entries].sort((a, b) => a.date.localeCompare(b.date));
-    if (sortedEntries.length === 0) return { dayColors: {}, weekIds: [] };
-
-    // FIX: Parse into separate variables to avoid constructor overload error
-    const firstParts = sortedEntries[0].date.split('-').map(Number);
-    // JS Months are 0-indexed (Jan = 0)
-    const firstDate = new Date(firstParts[0], firstParts[1] - 1, firstParts[2]);
-
-    // Normalize baseline to the start of its week (Sunday)
-    firstDate.setDate(firstDate.getDate() - firstDate.getDay());
-
-    for (const entry of entries) {
-      const [y, m, d] = entry.date.split('-').map(Number);
-      // FIX: Construct local date to avoid UTC timezone shifting check-ins to the previous day
-      const date = new Date(y, m - 1, d);
-
-      const diffInDays = Math.floor((date.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24));
-      const weekIndex = Math.floor(diffInDays / 7);
-      const dow = date.getDay();
-
-      weekSet.add(weekIndex);
-      const key = `${weekIndex}-${dow}`;
-
-      if (!dayColors[key]) dayColors[key] = [];
-
-      const uniqueColors = Array.from(new Set(entry.emotions));
-      dayColors[key] = Array.from(new Set([...dayColors[key], ...uniqueColors])).slice(0, 4);
-    }
-    const weekIds = Array.from(weekSet).sort((a, b) => a - b);
-    return { dayColors, weekIds };
-  }, [entries]);
-
-  const renderMiniTile = (colors: string[]) => {
-    if (colors.length === 0)
-      return <View style={[styles.tile, { backgroundColor: theme.colors.surface }]} />;
-    if (colors.length === 1) return <View style={[styles.tile, { backgroundColor: colors[0] }]} />;
-    if (colors.length === 2)
-      return (
-        <View style={styles.tile}>
-          <View style={[styles.halfL, { backgroundColor: colors[0] }]} />
-          <View style={[styles.halfR, { backgroundColor: colors[1] }]} />
-        </View>
-      );
-    if (colors.length === 3)
-      return (
-        <View style={styles.tile}>
-          <View style={[styles.quadTL, { backgroundColor: colors[0] }]} />
-          <View style={[styles.quadTR, { backgroundColor: colors[1] }]} />
-          <View style={[styles.halfB, { backgroundColor: colors[2] }]} />
-        </View>
-      );
-    return (
-      <View style={styles.tile}>
-        <View style={[styles.quadTL, { backgroundColor: colors[0] }]} />
-        <View style={[styles.quadTR, { backgroundColor: colors[1] }]} />
-        <View style={[styles.quadBL, { backgroundColor: colors[2] }]} />
-        <View style={[styles.quadBR, { backgroundColor: colors[3] }]} />
-      </View>
+  const dayData = useMemo(() => {
+    const now = new Date();
+    const jsDow = now.getDay();
+    const diffToStart = firstDayOfWeek === 'monday' ? (jsDow + 6) % 7 : jsDow;
+    const startDate = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() - diffToStart + offset * 7,
     );
-  };
+
+    // Build the 7 days of the selected week
+    const days = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + i);
+      const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const label = d.toLocaleDateString('en-US', { weekday: 'short' });
+      return { dateKey, label };
+    });
+
+    const stats = days.map(({ dateKey, label }) => {
+      const dayEntries = entries.filter((e) => e.date === dateKey);
+
+      const colorTally: Record<string, number> = {};
+      for (const e of dayEntries) {
+        const color = e.coreEmotions[0] || e.emotions[0];
+        if (!color) continue;
+        colorTally[color] = (colorTally[color] || 0) + 1;
+      }
+
+      const tallyTotal = Object.values(colorTally).reduce((a, b) => a + b, 0);
+      const segments = Object.entries(colorTally)
+        .map(([color, count]) => ({
+          color,
+          pctOfSlot: tallyTotal > 0 ? count / tallyTotal : 0,
+        }))
+        .sort((a, b) => b.pctOfSlot - a.pctOfSlot);
+
+      return { dateKey, label, totalCount: tallyTotal, segments };
+    });
+
+    const maxCount = Math.max(...stats.map((s) => s.totalCount), 1);
+    return stats.map((s) => ({ ...s, pctOfMax: s.totalCount / maxCount }));
+  }, [entries, firstDayOfWeek, offset]);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>The Week</Text>
+      <AppText font="heading" variant="xl" colorVariant="primary" style={styles.title}>
+        This week
+      </AppText>
 
-      {/* We removed the weekIds.map() loop so it forces exactly 1 row */}
-      <View style={styles.grid}>
-        {DOW_CONFIG.map(({ id, label, dayIndex }) => {
-          // 1. Find all entries for this specific day of the week (e.g., all Mondays)
-          const keys = Object.keys(dayColors).filter((k) => k.endsWith(`-${dayIndex}`));
-
-          // 2. Sort them to grab the most recent week's data
-          const latestKey = keys.sort((a, b) => {
-            const weekA = parseInt(a.split('-')[0], 10);
-            const weekB = parseInt(b.split('-')[0], 10);
-            return weekB - weekA;
-          })[0];
-
-          const colors = latestKey ? dayColors[latestKey] : [];
-
-          return (
-            <View key={id} style={styles.col}>
-              <AppText font="mono" colorVariant="muted" style={styles.label}>
-                {label}
-              </AppText>
-              {renderMiniTile(colors)}
+      <View style={styles.stack}>
+        {dayData.map((day) => (
+          <View key={day.dateKey} style={styles.row}>
+            <AppText font="mono" colorVariant="muted" style={styles.slotLabel}>
+              {day.label}
+            </AppText>
+            <View style={styles.track}>
+              {day.totalCount > 0 && (
+                <View style={[styles.pillWrapper, { width: '100%' }]}>
+                  {day.segments.map((seg) => (
+                    <View
+                      key={seg.color}
+                      style={{
+                        backgroundColor: seg.color,
+                        width: `${seg.pctOfSlot * 100}%`,
+                        height: '100%',
+                      }}
+                    />
+                  ))}
+                </View>
+              )}
             </View>
-          );
-        })}
+          </View>
+        ))}
       </View>
     </View>
   );
 }
 
-const SIZE = 16;
-const HALF = SIZE / 2;
-
 const styles = StyleSheet.create((theme) => ({
-  container: { paddingHorizontal: 24, marginBottom: 40 },
+  container: { paddingHorizontal: theme.spacing[6], marginBottom: theme.spacing[8] },
   title: {
-    fontSize: 22,
     fontWeight: '700',
-    fontFamily: 'Fraunces',
-    color: theme.colors.typography,
-    letterSpacing: -0.4,
-    marginBottom: 16,
+    marginBottom: theme.spacing[4],
   },
-  // weekRow removed from styles
-  grid: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 16 },
-  col: { alignItems: 'center', gap: 8 },
-  label: { fontSize: 11, fontWeight: '600', fontFamily: 'SpaceMono' },
-  tile: { width: SIZE, height: SIZE, borderRadius: 4, overflow: 'hidden' },
-  halfL: { position: 'absolute', top: 0, bottom: 0, left: 0, width: HALF },
-  halfR: { position: 'absolute', top: 0, bottom: 0, right: 0, width: HALF },
-  halfB: { position: 'absolute', bottom: 0, left: 0, right: 0, height: HALF },
-  quadTL: { position: 'absolute', top: 0, left: 0, width: HALF, height: HALF },
-  quadTR: { position: 'absolute', top: 0, right: 0, width: HALF, height: HALF },
-  quadBL: { position: 'absolute', bottom: 0, left: 0, width: HALF, height: HALF },
-  quadBR: { position: 'absolute', bottom: 0, right: 0, width: HALF, height: HALF },
+  stack: {
+    flexDirection: 'column',
+    gap: 12,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing[3],
+  },
+  slotLabel: {
+    width: 50,
+    fontSize: theme.fontSize.sm,
+    fontWeight: '600',
+    letterSpacing: 0.2,
+  },
+  track: {
+    flex: 1,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: theme.colors.surface,
+    overflow: 'hidden',
+    justifyContent: 'center',
+  },
+  pillWrapper: {
+    flexDirection: 'row',
+    height: 24,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
 }));

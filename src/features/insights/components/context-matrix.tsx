@@ -82,7 +82,7 @@ const styles = StyleSheet.create((theme) => ({
     letterSpacing: -0.4,
     marginBottom: theme.spacing[4],
   },
-  list: { gap: theme.spacing[4] },
+  list: { gap: 12 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -90,17 +90,17 @@ const styles = StyleSheet.create((theme) => ({
   },
   label: {
     flex: 1,
-    fontSize: theme.fontSize.md,
-    fontWeight: '500',
+    fontSize: theme.fontSize.sm,
+    fontWeight: '600',
     color: theme.colors.typography,
     marginRight: theme.spacing[4],
   },
   pillContainer: {
     flex: 2,
-    height: 12,
+    height: 24,
     flexDirection: 'row',
-    borderRadius: 6,
-    overflow: 'hidden', // Clips the inner flex segments to the rounded corners
-    backgroundColor: theme.colors.surface, // fallback
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: theme.colors.surface,
   },
 }));

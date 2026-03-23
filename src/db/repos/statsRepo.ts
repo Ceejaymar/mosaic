@@ -1,7 +1,7 @@
 import { desc, eq } from 'drizzle-orm';
 
 import { db } from '../client';
-import { moodEntries, userStats } from '../schema';
+import { monthlyStats, moodEntries, userStats } from '../schema';
 
 export type UserStats = typeof userStats.$inferSelect;
 
@@ -47,6 +47,21 @@ function isStreakExpired(lastActiveDate: string | null): boolean {
 }
 
 // ─── Public API ───────────────────────────────────────────────────────────────
+
+export type MonthlyStats = typeof monthlyStats.$inferSelect;
+
+/**
+ * Returns the monthly_stats row for the given 'YYYY-MM' key,
+ * or a zero-initialized default if no row exists yet.
+ */
+export async function getMonthlyStats(monthKey: string): Promise<MonthlyStats> {
+  const [row] = await db
+    .select()
+    .from(monthlyStats)
+    .where(eq(monthlyStats.monthKey, monthKey))
+    .limit(1);
+  return row ?? { monthKey, longestStreak: 0 };
+}
 
 /**
  * Returns the singleton stats row.
@@ -97,14 +112,29 @@ export async function recordActivity(deviceDateString: string): Promise<UserStat
 
   const newLongest = Math.max(newStreak, stats.longestStreak);
 
-  await db
-    .update(userStats)
-    .set({
-      currentStreak: newStreak,
-      longestStreak: newLongest,
-      lastActiveDate: deviceDateString,
-    })
-    .where(eq(userStats.id, STATS_ID));
+  // Derive the 'YYYY-MM' key and cap the streak to days elapsed in the month
+  const monthKey = deviceDateString.slice(0, 7);
+  const dayOfMonth = Number(deviceDateString.slice(8, 10));
+  const streakForMonth = Math.min(newStreak, dayOfMonth);
+  const { longestStreak: monthBest } = await getMonthlyStats(monthKey);
+
+  await db.transaction(async (tx) => {
+    await tx
+      .update(userStats)
+      .set({
+        currentStreak: newStreak,
+        longestStreak: newLongest,
+        lastActiveDate: deviceDateString,
+      })
+      .where(eq(userStats.id, STATS_ID));
+    await tx
+      .insert(monthlyStats)
+      .values({ monthKey, longestStreak: Math.max(monthBest, streakForMonth) })
+      .onConflictDoUpdate({
+        target: monthlyStats.monthKey,
+        set: { longestStreak: Math.max(monthBest, streakForMonth) },
+      });
+  });
 
   return {
     ...stats,
@@ -169,6 +199,51 @@ export async function syncStreakFromHistory(): Promise<void> {
     }
   }
 
+  // ── Per-month longest streak backfill ────────────────────────────────────────
+  // Single pass over sortedAsc: maintain a running consecutive-day counter and
+  // credit each day's run to its month, capped to the day-of-month so cross-
+  // month runs don't inflate the month's tally.
+  const monthBestMap = new Map<string, number>();
+
+  if (sortedAsc.length > 0) {
+    const first = sortedAsc[0];
+    monthBestMap.set(first.slice(0, 7), 1);
+  }
+
+  let runLen = 1;
+  for (let i = 1; i < sortedAsc.length; i++) {
+    if (diffDays(sortedAsc[i - 1], sortedAsc[i]) === 1) {
+      runLen++;
+    } else {
+      runLen = 1;
+    }
+    const dateKey = sortedAsc[i];
+    const mk = dateKey.slice(0, 7);
+    const dayOfMonth = Number(dateKey.slice(8, 10));
+    const capped = Math.min(runLen, dayOfMonth);
+    monthBestMap.set(mk, Math.max(monthBestMap.get(mk) ?? 0, capped));
+  }
+
+  const monthUpdates = Array.from(monthBestMap.entries()).map(([monthKey, longestStreak]) => ({
+    monthKey,
+    longestStreak,
+  }));
+
+  if (monthUpdates.length > 0) {
+    await Promise.all(
+      monthUpdates.map(({ monthKey: mk, longestStreak: ls }) =>
+        db
+          .insert(monthlyStats)
+          .values({ monthKey: mk, longestStreak: ls })
+          .onConflictDoUpdate({
+            target: monthlyStats.monthKey,
+            set: { longestStreak: ls },
+          }),
+      ),
+    );
+  }
+
+  // Mark sync complete only after all monthly backfill writes succeed
   await db
     .update(userStats)
     .set({ currentStreak, longestStreak, lastActiveDate })

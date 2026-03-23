@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { type Href, router } from 'expo-router';
+// import { type Href, router } from 'expo-router'; // restore when Observations section is re-enabled
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   type FlatList,
@@ -23,7 +23,7 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
 import { DemoBadge } from '@/src/components/demo-badge';
-import { Surface } from '@/src/components/surface';
+// import { Surface } from '@/src/components/surface'; // restore with Observations section
 import { LAYOUT } from '@/src/constants/layout';
 import { ContextMatrix } from '@/src/features/insights/components/context-matrix';
 import { HeroMosaic } from '@/src/features/insights/components/hero-mosaic';
@@ -31,8 +31,8 @@ import { MicroGrid } from '@/src/features/insights/components/micro-grid';
 import { RhythmBar } from '@/src/features/insights/components/rhythm-bar';
 import { TopFeelings } from '@/src/features/insights/components/top-feelings';
 import { useInsightsData } from '@/src/features/insights/hooks/useInsightsData';
-import type { TimeFrame } from '@/src/features/insights/types';
-import { generateObservations } from '@/src/features/insights/utils/observations';
+import type { InsightEntry, TimeFrame } from '@/src/features/insights/types';
+// import { generateObservations } from '@/src/features/insights/utils/observations'; // restore with Observations section
 import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
 import { useRefreshOnFocus } from '@/src/hooks/useRefreshOnFocus';
 import { hapticSelection } from '@/src/lib/haptics/haptics';
@@ -92,7 +92,7 @@ function getFormattedDateRange(
 
 // ─── 1. Minimal Dropdown (Top Right) ──────────────────────────────────────────
 
-const TIMEFRAMES: TimeFrame[] = ['week', 'month', 'year'];
+const TIMEFRAMES: TimeFrame[] = ['week', 'month' /*, 'year'*/];
 
 function TimeFrameDropdown({
   value,
@@ -106,51 +106,54 @@ function TimeFrameDropdown({
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <View style={{ zIndex: 100 }}>
-      <Pressable
-        onPress={() => setIsOpen(!isOpen)}
-        style={({ pressed }) => [styles.dropdownTrigger, pressed && { opacity: 0.5 }]}
-      >
-        <AppText
-          font="mono"
-          variant="md"
-          style={[styles.dropdownTriggerText, { color: theme.colors.mosaicGold }]}
+    <>
+      {isOpen && <Pressable style={styles.dropdownBackdrop} onPress={() => setIsOpen(false)} />}
+      <View style={{ zIndex: 100 }}>
+        <Pressable
+          onPress={() => setIsOpen(!isOpen)}
+          style={({ pressed }) => [styles.dropdownTrigger, pressed && { opacity: 0.5 }]}
         >
-          {value.charAt(0).toUpperCase() + value.slice(1)} ▾
-        </AppText>
-      </Pressable>
+          <AppText
+            font="mono"
+            variant="md"
+            style={[styles.dropdownTriggerText, { color: theme.colors.mosaicGold }]}
+          >
+            {value.charAt(0).toUpperCase() + value.slice(1)} ▾
+          </AppText>
+        </Pressable>
 
-      {isOpen && (
-        <View
-          style={[
-            styles.dropdownMenu,
-            { backgroundColor: theme.colors.surface, borderColor: colors.divider },
-          ]}
-        >
-          {TIMEFRAMES.map((tf) => (
-            <Pressable
-              key={tf}
-              onPress={() => {
-                hapticSelection();
-                onChange(tf);
-                setIsOpen(false);
-              }}
-              style={styles.dropdownItem}
-            >
-              <AppText
-                font="mono"
-                style={[
-                  styles.dropdownItemText,
-                  { color: value === tf ? theme.colors.mosaicGold : theme.colors.typography },
-                ]}
+        {isOpen && (
+          <View
+            style={[
+              styles.dropdownMenu,
+              { backgroundColor: theme.colors.surface, borderColor: colors.divider },
+            ]}
+          >
+            {TIMEFRAMES.map((tf) => (
+              <Pressable
+                key={tf}
+                onPress={() => {
+                  hapticSelection();
+                  onChange(tf);
+                  setIsOpen(false);
+                }}
+                style={styles.dropdownItem}
               >
-                {tf.charAt(0).toUpperCase() + tf.slice(1)}
-              </AppText>
-            </Pressable>
-          ))}
-        </View>
-      )}
-    </View>
+                <AppText
+                  font="mono"
+                  style={[
+                    styles.dropdownItemText,
+                    { color: value === tf ? theme.colors.mosaicGold : theme.colors.typography },
+                  ]}
+                >
+                  {tf.charAt(0).toUpperCase() + tf.slice(1)}
+                </AppText>
+              </Pressable>
+            ))}
+          </View>
+        )}
+      </View>
+    </>
   );
 }
 
@@ -273,6 +276,60 @@ function DateSnapper({
   );
 }
 
+// ─── Stat Cards ───────────────────────────────────────────────────────────────
+
+function StatCards({
+  entries,
+  timeFrame,
+  monthlyLongestStreak,
+}: {
+  entries: InsightEntry[];
+  timeFrame: TimeFrame;
+  monthlyLongestStreak: number;
+}) {
+  const { theme } = useUnistyles();
+  const daysLogged = useMemo(() => new Set(entries.map((e) => e.date)).size, [entries]);
+  const contextualValue = timeFrame === 'month' ? monthlyLongestStreak : daysLogged;
+  const contextualLabel = timeFrame === 'month' ? 'Longest streak' : 'Days logged';
+
+  const goldStart = theme.isDark ? 'rgba(192,144,64,0.18)' : 'rgba(206,143,36,0.12)';
+  const goldEnd = theme.isDark ? 'rgba(28,28,30,0.6)' : 'rgba(242,242,247,0.8)';
+  const borderColor = theme.isDark ? 'rgba(192,144,64,0.2)' : 'rgba(206,143,36,0.15)';
+
+  return (
+    <View style={styles.statsRow}>
+      <LinearGradient
+        colors={[goldStart, goldEnd]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.statCard, { borderColor }]}
+      >
+        <AppText font="heading" style={styles.statNumber}>
+          {entries.length}
+        </AppText>
+        <AppText style={styles.statLabel}>Total check-ins</AppText>
+      </LinearGradient>
+      <LinearGradient
+        colors={[goldStart, goldEnd]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.statCard, { borderColor }]}
+      >
+        <AppText font="heading" style={styles.statNumber}>
+          {contextualValue}
+        </AppText>
+        <AppText style={styles.statLabel}>{contextualLabel}</AppText>
+      </LinearGradient>
+    </View>
+  );
+}
+
+// ─── Section Divider ──────────────────────────────────────────────────────────
+
+function SectionDivider() {
+  return <View style={styles.sectionDivider} />;
+}
+
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
 export default function InsightsScreen() {
@@ -292,12 +349,23 @@ export default function InsightsScreen() {
     setOffset(0);
   }, []);
 
-  const entries = useInsightsData(timeFrame, offset, refreshKey);
-  const observations = useMemo(() => generateObservations(entries), [entries]);
+  const { entries, monthlyLongestStreak } = useInsightsData(timeFrame, offset, refreshKey);
+  // const observations = useMemo(() => generateObservations(entries), [entries]); // restore with Observations section
   const hasEnoughData = entries.length >= 3;
+
+  const ambientColors = theme.isDark
+    ? (['rgba(192,144,64,0.09)', 'transparent'] as const)
+    : (['rgba(206,143,36,0.06)', 'transparent'] as const);
+
+  const headerFadeColors = theme.isDark
+    ? ([theme.colors.background, 'rgba(0,0,0,0)'] as const)
+    : ([theme.colors.background, 'rgba(255,255,255,0)'] as const);
 
   return (
     <View style={styles.container}>
+      {/* AMBIENT WARM GLOW — sits behind everything */}
+      <LinearGradient colors={ambientColors} style={styles.ambientGlow} pointerEvents="none" />
+
       {/* THE UNIFIED HEADER */}
       <View style={[styles.headerOverlay, { paddingTop: insets.top }]}>
         <View style={styles.topBar}>
@@ -317,12 +385,9 @@ export default function InsightsScreen() {
           firstDayOfWeek={firstDayOfWeek}
         />
 
-        {/* THE SHORT FADE */}
+        {/* HEADER BOTTOM FADE */}
         <View style={styles.shortFadeContainer} pointerEvents="none">
-          <LinearGradient
-            colors={[theme.colors.background, 'transparent']}
-            style={StyleSheet.absoluteFill}
-          />
+          <LinearGradient colors={headerFadeColors} style={StyleSheet.absoluteFill} />
         </View>
       </View>
 
@@ -332,7 +397,7 @@ export default function InsightsScreen() {
         contentContainerStyle={[
           styles.scrollContent,
           {
-            paddingTop: insets.top + 90,
+            paddingTop: insets.top + 130,
             paddingBottom: LAYOUT.TAB_BAR_HEIGHT + insets.bottom + 40,
           },
         ]}
@@ -340,14 +405,22 @@ export default function InsightsScreen() {
         {hasEnoughData ? (
           <>
             <HeroMosaic entries={entries} />
+            <StatCards
+              entries={entries}
+              timeFrame={timeFrame}
+              monthlyLongestStreak={monthlyLongestStreak}
+            />
+            <SectionDivider />
             <TopFeelings entries={entries} timeFrame={timeFrame} />
+            <SectionDivider />
             <RhythmBar entries={entries} />
+            {timeFrame === 'week' && <MicroGrid entries={entries} offset={offset} />}
+            <SectionDivider />
             <ContextMatrix entries={entries} category="people" title="Who you were with" />
             <ContextMatrix entries={entries} category="activities" title="What you were doing" />
             <ContextMatrix entries={entries} category="places" title="Where you were" />
 
-            {timeFrame === 'week' && <MicroGrid entries={entries} />}
-
+            {/* Observations — temporarily hidden, keep for future use
             {observations.length > 0 && (
               <View style={styles.section}>
                 <AppText
@@ -389,6 +462,7 @@ export default function InsightsScreen() {
                 </ScrollView>
               </View>
             )}
+            */}
           </>
         ) : (
           <View style={styles.emptyState}>
@@ -407,6 +481,17 @@ export default function InsightsScreen() {
 
 const styles = StyleSheet.create((theme) => ({
   container: { flex: 1, backgroundColor: theme.colors.background },
+
+  // Warm ambient glow radiating from the top — subtle gold warmth
+  ambientGlow: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 320,
+    zIndex: 0,
+  },
+
   headerOverlay: {
     position: 'absolute',
     top: 0,
@@ -470,4 +555,52 @@ const styles = StyleSheet.create((theme) => ({
   },
   emptyTitle: { fontSize: 18, fontWeight: '600', marginBottom: theme.spacing[2] },
   emptyText: { fontSize: theme.fontSize.md, textAlign: 'center', lineHeight: 22 },
+
+  // Stat cards with gradient glass surface + hairline gold border
+  statsRow: {
+    flexDirection: 'row',
+    paddingHorizontal: theme.spacing[6],
+    gap: theme.spacing[3],
+    marginBottom: theme.spacing[6],
+  },
+  statCard: {
+    flex: 1,
+    paddingVertical: theme.spacing[4],
+    paddingHorizontal: theme.spacing[4],
+    borderRadius: theme.radius.card,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  statNumber: {
+    fontSize: theme.fontSize['2xl'],
+    fontWeight: '700',
+    letterSpacing: -0.5,
+    color: theme.colors.typography,
+  },
+  statLabel: {
+    fontSize: theme.fontSize.xs,
+    marginTop: theme.spacing[1],
+    color: theme.colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
+    fontFamily: 'SpaceMono',
+  },
+
+  // Full-screen backdrop to dismiss the dropdown
+  dropdownBackdrop: {
+    position: 'absolute',
+    top: -9999,
+    left: -9999,
+    right: -9999,
+    bottom: -9999,
+    zIndex: 99,
+  },
+
+  // Thin gold gossamer thread between content sections
+  sectionDivider: {
+    height: 1,
+    marginHorizontal: theme.spacing[6],
+    marginBottom: theme.spacing[8],
+    backgroundColor: theme.isDark ? 'rgba(192,144,64,0.14)' : 'rgba(206,143,36,0.12)',
+  },
 }));
