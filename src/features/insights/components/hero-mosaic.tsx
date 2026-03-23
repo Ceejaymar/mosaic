@@ -267,11 +267,11 @@ const styles = StyleSheet.create((theme) => ({
   },
   nameBadge: {
     position: 'absolute',
-    bottom: 7,
-    left: 8,
-    borderRadius: 4,
-    paddingHorizontal: 5,
-    paddingVertical: 2,
+    bottom: theme.spacing[2],
+    left: theme.spacing[2],
+    borderRadius: theme.radius.tight,
+    paddingHorizontal: theme.spacing[2],
+    paddingVertical: theme.spacing[1],
   },
   nameLabel: {
     fontSize: 10,
