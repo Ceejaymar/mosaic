@@ -42,13 +42,16 @@ import { LETTER_SPACING } from '@/src/styles/design-tokens';
 // Grid math constants — used in layout calculations, exempt from token rule
 const GRID_H_PAD = 8;
 const TILE_GAP = 4;
-const MONTHS_BACK = 36;
+
 const GRID_ROWS = 6;
 
 type MonthItem = { month: number; year: number; id: string };
 
-function buildMonthList(count: number): MonthItem[] {
+function buildMonthList(epochYear: number, epochMonth = 0): MonthItem[] {
   const now = new Date();
+  const totalMonths = (now.getFullYear() - epochYear) * 12 + (now.getMonth() - epochMonth) + 1;
+  const count = Math.max(1, totalMonths);
+
   return Array.from({ length: count }, (_, i) => {
     const d = new Date(now.getFullYear(), now.getMonth() - (count - 1 - i), 1);
     return { month: d.getMonth(), year: d.getFullYear(), id: `${d.getFullYear()}-${d.getMonth()}` };
@@ -147,6 +150,7 @@ export default function CanvasScreen() {
   const { t } = useTranslation();
   const { theme } = useUnistyles();
   const reduceMotion = useAppStore((s) => s.accessibility.reduceMotion);
+  const isDemoMode = useAppStore((s) => s.isDemoMode);
   const rm = reduceMotion ? ReduceMotion.Always : ReduceMotion.System;
 
   const [viewMode, setViewMode] = useState<'month' | 'year'>('month');
@@ -164,7 +168,7 @@ export default function CanvasScreen() {
     }, []),
   );
 
-  const monthList = useMemo(() => buildMonthList(MONTHS_BACK), []);
+  const monthList = useMemo(() => buildMonthList(isDemoMode ? 2025 : 2026, 0), [isDemoMode]);
 
   // Grid math — raw numbers intentional
   const gridContentWidth = screenWidth - GRID_H_PAD * 2;

@@ -30,7 +30,6 @@ import { useAppStore } from '@/src/store/useApp';
 // ─── Context ──────────────────────────────────────────────────────────────────
 
 const CURRENT_YEAR = new Date().getFullYear();
-const MIN_YEAR = CURRENT_YEAR - 5;
 const VisibleYearContext = createContext(CURRENT_YEAR);
 const yearKeyExtractor = (item: number) => item.toString();
 
@@ -84,9 +83,9 @@ const PANELS = {
 type YearTileProps = {
   dateKey: string;
   colors: string[];
-  isEvenMonth: boolean;
   isFuture: boolean;
   isTooOld: boolean;
+  isEvenMonth: boolean;
   onPress: (dateKey: string) => void;
   onEmptyDayPress?: (dateKey: string) => void;
   // Dynamic sizing for Compact Mode (Fixed to DimensionValue!)
@@ -97,9 +96,9 @@ type YearTileProps = {
 const YearTile = memo(function YearTile({
   dateKey,
   colors,
-  isEvenMonth,
   isFuture,
   isTooOld,
+  isEvenMonth,
   onPress,
   onEmptyDayPress,
   width,
@@ -107,13 +106,17 @@ const YearTile = memo(function YearTile({
 }: YearTileProps) {
   const { t } = useTranslation();
   const { theme } = useUnistyles();
-  const emptyBg = isEvenMonth ? theme.colors.surface : 'transparent';
+  const emptyBg = isEvenMonth ? theme.colors.surface : 'rgba(150, 150, 150, 0.08)';
   const hasData = colors.length > 0;
   const isEmptyPast = !hasData && !isFuture;
   const canLogHistorical = isEmptyPast && !isTooOld && !!onEmptyDayPress;
   const isInteractive = !isFuture && (hasData || canLogHistorical || isTooOld);
 
-  const tileOpacity = isFuture ? 0.25 : isTooOld && isEmptyPast ? 0.4 : 1;
+  if (isFuture) {
+    return <View style={{ width, height }} pointerEvents="none" />;
+  }
+
+  const tileOpacity = isTooOld && isEmptyPast ? 0.4 : 1;
 
   const handlePress = () => {
     if (hasData) onPress(dateKey);
@@ -310,9 +313,9 @@ const SingleYearBlock = memo(function SingleYearBlock({
         key={day.dateKey}
         dateKey={day.dateKey}
         colors={day.entries}
-        isEvenMonth={day.month % 2 === 0}
         isFuture={day.isFuture}
         isTooOld={day.isTooOld}
+        isEvenMonth={day.month % 2 === 0}
         onPress={onDayPress}
         onEmptyDayPress={onEmptyDayPress}
         width={dynamicW}
@@ -370,12 +373,15 @@ export function YearView({
   const [yearsList, setYearsList] = useState<number[]>([CURRENT_YEAR]);
   const [visibleYear, setVisibleYear] = useState(CURRENT_YEAR);
 
+  const isDemoMode = useAppStore((s) => s.isDemoMode);
+  const minYear = isDemoMode ? 2025 : 2026;
+
   const loadPreviousYear = useCallback(() => {
     setYearsList((prev) => {
       const oldest = prev[prev.length - 1];
-      return oldest > MIN_YEAR ? [...prev, oldest - 1] : prev;
+      return oldest > minYear ? [...prev, oldest - 1] : prev;
     });
-  }, []);
+  }, [minYear]);
 
   const latestOnYearChangeRef = useRef(onYearChange);
   useEffect(() => {

@@ -51,8 +51,10 @@ const navigationIntegration = Sentry.reactNavigationIntegration({
 
 Sentry.init({
   dsn: 'https://06641ea19a9965be5f3dcbdb6b3d04e5@o4510953598222336.ingest.us.sentry.io/4510953601236992',
-  sendDefaultPii: false,
 
+  enabled: !__DEV__,
+
+  sendDefaultPii: false,
   tracesSampleRate: 1.0, // 1.0 captures 100% of transactions for testing, Adjust this down later to save quota
   enableAutoPerformanceTracing: true, // This enables the automatic tracing
 
