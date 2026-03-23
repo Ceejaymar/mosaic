@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { View } from 'react-native';
+import FastSquircleView from 'react-native-fast-squircle';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
@@ -29,41 +30,27 @@ export function TopFeelings({ entries, timeFrame }: Props) {
 
   if (rows.length === 0) return null;
 
-  const maxCount = rows[0].count;
-
   return (
     <View style={styles.container}>
       <AppText font="heading" variant="xl" colorVariant="primary" style={styles.title}>
-        The emotions you felt most often
+        Emotions you felt most
       </AppText>
 
-      <View style={styles.list}>
+      <View style={styles.grid}>
         {rows.map((row) => (
-          <View key={row.name} style={styles.row}>
-            {/* Left: dot + name */}
-            <View style={styles.rowLeft}>
-              <View style={[styles.dot, { backgroundColor: row.color }]} />
-              <AppText colorVariant="primary" style={styles.feelingName} numberOfLines={1}>
-                {row.name}
+          <View key={row.name} style={styles.tile}>
+            <FastSquircleView
+              cornerSmoothing={0.8}
+              borderRadius={14}
+              style={[styles.squircle, { backgroundColor: row.color }]}
+            >
+              <AppText font="heading" style={styles.countText}>
+                {row.count}
               </AppText>
-            </View>
-
-            {/* Right: proportional pill bar */}
-            <View style={styles.barTrack}>
-              <View
-                style={[
-                  styles.pill,
-                  {
-                    width: `${Math.round((row.count / maxCount) * 100)}%`,
-                    backgroundColor: row.color,
-                  },
-                ]}
-              >
-                <AppText font="mono" variant="xs" style={styles.pillCount}>
-                  {row.count}
-                </AppText>
-              </View>
-            </View>
+            </FastSquircleView>
+            <AppText font="heading" style={styles.emotionName} numberOfLines={2}>
+              {row.name}
+            </AppText>
           </View>
         ))}
       </View>
@@ -80,44 +67,35 @@ const styles = StyleSheet.create((theme) => ({
     fontWeight: '700',
     marginBottom: theme.spacing[4],
   },
-  list: {
-    gap: theme.spacing[3],
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
   },
-  row: {
+  tile: {
+    minWidth: '45%',
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 10,
   },
-  rowLeft: {
-    flexDirection: 'row',
+  squircle: {
+    width: 48,
+    height: 48,
     alignItems: 'center',
-    width: 140,
-    gap: theme.spacing[2],
-  },
-  dot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-  },
-  feelingName: {
-    flex: 1,
-    fontSize: theme.fontSize.sm,
-    fontWeight: '500',
-  },
-  barTrack: {
-    flex: 1,
-    height: 28,
     justifyContent: 'center',
+    flexShrink: 0,
   },
-  pill: {
-    height: 28,
-    borderRadius: theme.radius.pill,
-    justifyContent: 'center',
-    alignItems: 'flex-end',
-    paddingHorizontal: theme.spacing[2],
-    minWidth: 28,
-  },
-  pillCount: {
-    color: 'rgba(255,255,255,0.9)',
+  countText: {
+    fontSize: 20,
     fontWeight: '700',
+    color: '#000000',
+  },
+  emotionName: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    lineHeight: 20,
   },
 }));

@@ -372,12 +372,12 @@ export default function InsightsScreen() {
       >
         {hasEnoughData ? (
           <>
+            <HeroMosaic entries={entries} />
             <StatCards
               entries={entries}
               timeFrame={timeFrame}
               monthlyLongestStreak={monthlyLongestStreak}
             />
-            <HeroMosaic entries={entries} />
             <TopFeelings entries={entries} timeFrame={timeFrame} />
             <RhythmBar entries={entries} />
             {timeFrame === 'week' && <MicroGrid entries={entries} />}
