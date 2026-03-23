@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { type Href, router } from 'expo-router';
+// import { type Href, router } from 'expo-router'; // restore when Observations section is re-enabled
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   type FlatList,
@@ -23,7 +23,7 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
 import { DemoBadge } from '@/src/components/demo-badge';
-import { Surface } from '@/src/components/surface';
+// import { Surface } from '@/src/components/surface'; // restore with Observations section
 import { LAYOUT } from '@/src/constants/layout';
 import { ContextMatrix } from '@/src/features/insights/components/context-matrix';
 import { HeroMosaic } from '@/src/features/insights/components/hero-mosaic';
@@ -31,8 +31,8 @@ import { MicroGrid } from '@/src/features/insights/components/micro-grid';
 import { RhythmBar } from '@/src/features/insights/components/rhythm-bar';
 import { TopFeelings } from '@/src/features/insights/components/top-feelings';
 import { useInsightsData } from '@/src/features/insights/hooks/useInsightsData';
-import type { TimeFrame } from '@/src/features/insights/types';
-import { generateObservations } from '@/src/features/insights/utils/observations';
+import type { InsightEntry, TimeFrame } from '@/src/features/insights/types';
+// import { generateObservations } from '@/src/features/insights/utils/observations'; // restore with Observations section
 import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
 import { useRefreshOnFocus } from '@/src/hooks/useRefreshOnFocus';
 import { hapticSelection } from '@/src/lib/haptics/haptics';
@@ -92,7 +92,7 @@ function getFormattedDateRange(
 
 // ─── 1. Minimal Dropdown (Top Right) ──────────────────────────────────────────
 
-const TIMEFRAMES: TimeFrame[] = ['week', 'month', 'year'];
+const TIMEFRAMES: TimeFrame[] = ['week', 'month' /*, 'year'*/];
 
 function TimeFrameDropdown({
   value,
@@ -273,6 +273,39 @@ function DateSnapper({
   );
 }
 
+// ─── Stat Cards ───────────────────────────────────────────────────────────────
+
+function StatCards({
+  entries,
+  timeFrame,
+  monthlyLongestStreak,
+}: {
+  entries: InsightEntry[];
+  timeFrame: TimeFrame;
+  monthlyLongestStreak: number;
+}) {
+  const daysLogged = useMemo(() => new Set(entries.map((e) => e.date)).size, [entries]);
+  const contextualValue = timeFrame === 'month' ? monthlyLongestStreak : daysLogged;
+  const contextualLabel = timeFrame === 'month' ? 'Longest streak' : 'Days logged';
+
+  return (
+    <View style={styles.statsRow}>
+      <View style={styles.statCard}>
+        <AppText font="heading" style={styles.statNumber}>
+          {entries.length}
+        </AppText>
+        <AppText style={styles.statLabel}>Total check-ins</AppText>
+      </View>
+      <View style={styles.statCard}>
+        <AppText font="heading" style={styles.statNumber}>
+          {contextualValue}
+        </AppText>
+        <AppText style={styles.statLabel}>{contextualLabel}</AppText>
+      </View>
+    </View>
+  );
+}
+
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
 export default function InsightsScreen() {
@@ -292,8 +325,8 @@ export default function InsightsScreen() {
     setOffset(0);
   }, []);
 
-  const entries = useInsightsData(timeFrame, offset, refreshKey);
-  const observations = useMemo(() => generateObservations(entries), [entries]);
+  const { entries, monthlyLongestStreak } = useInsightsData(timeFrame, offset, refreshKey);
+  // const observations = useMemo(() => generateObservations(entries), [entries]); // restore with Observations section
   const hasEnoughData = entries.length >= 3;
 
   return (
@@ -332,22 +365,27 @@ export default function InsightsScreen() {
         contentContainerStyle={[
           styles.scrollContent,
           {
-            paddingTop: insets.top + 90,
+            paddingTop: insets.top + 130,
             paddingBottom: LAYOUT.TAB_BAR_HEIGHT + insets.bottom + 40,
           },
         ]}
       >
         {hasEnoughData ? (
           <>
+            <StatCards
+              entries={entries}
+              timeFrame={timeFrame}
+              monthlyLongestStreak={monthlyLongestStreak}
+            />
             <HeroMosaic entries={entries} />
             <TopFeelings entries={entries} timeFrame={timeFrame} />
             <RhythmBar entries={entries} />
+            {timeFrame === 'week' && <MicroGrid entries={entries} />}
             <ContextMatrix entries={entries} category="people" title="Who you were with" />
             <ContextMatrix entries={entries} category="activities" title="What you were doing" />
             <ContextMatrix entries={entries} category="places" title="Where you were" />
 
-            {timeFrame === 'week' && <MicroGrid entries={entries} />}
-
+            {/* Observations — temporarily hidden, keep for future use
             {observations.length > 0 && (
               <View style={styles.section}>
                 <AppText
@@ -389,6 +427,7 @@ export default function InsightsScreen() {
                 </ScrollView>
               </View>
             )}
+            */}
           </>
         ) : (
           <View style={styles.emptyState}>
@@ -470,4 +509,25 @@ const styles = StyleSheet.create((theme) => ({
   },
   emptyTitle: { fontSize: 18, fontWeight: '600', marginBottom: theme.spacing[2] },
   emptyText: { fontSize: theme.fontSize.md, textAlign: 'center', lineHeight: 22 },
+  statsRow: {
+    flexDirection: 'row',
+    paddingHorizontal: theme.spacing[6],
+    gap: theme.spacing[3],
+    marginBottom: theme.spacing[4],
+  },
+  statCard: { flex: 1, paddingVertical: theme.spacing[3], paddingHorizontal: theme.spacing[2] },
+  statNumber: {
+    fontSize: theme.fontSize['2xl'],
+    fontWeight: '700',
+    letterSpacing: -0.5,
+    color: '#FFFFFF',
+  },
+  statLabel: {
+    fontSize: theme.fontSize.xs,
+    marginTop: theme.spacing[1],
+    color: theme.colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
+    fontFamily: 'SpaceMono',
+  },
 }));

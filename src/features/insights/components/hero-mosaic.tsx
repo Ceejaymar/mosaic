@@ -144,7 +144,7 @@ export function HeroMosaic({ entries }: Props) {
   return (
     <View style={styles.container}>
       <AppText font="heading" variant="xl" colorVariant="primary" style={styles.title}>
-        Your Footprint
+        Mood distribution
       </AppText>
       <Surface variant="card">
         <View style={styles.mosaic}>

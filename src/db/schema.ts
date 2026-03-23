@@ -13,6 +13,11 @@ export const userStats = sqliteTable(
   (table) => [check('user_stats_singleton', sql`${table.id} = 1`)],
 );
 
+export const monthlyStats = sqliteTable('monthly_stats', {
+  monthKey: text('month_key').primaryKey(), // 'YYYY-MM'
+  longestStreak: integer('longest_streak').notNull().default(0),
+});
+
 export const moodEntries = sqliteTable(
   'mood_entries',
   {
