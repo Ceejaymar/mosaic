@@ -9,6 +9,7 @@ import { ProgressBar } from './components/ProgressBar';
 import { Step1Welcome } from './components/Step1Welcome';
 import { Step2Intent } from './components/Step2Intent';
 import { Step3Reassurance } from './components/Step3Reassurance';
+import { Step4Notifications } from './components/Step4Notifications';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -51,14 +52,7 @@ export function OnboardingFlow() {
       case 3:
         return <Step3Reassurance primaryIntent={primaryIntent} onNext={() => setCurrentStep(4)} />;
       case 4:
-        return (
-          <View style={{ gap: 20, marginTop: 40 }}>
-            <AppText style={{ color: theme.colors.typography, textAlign: 'center' }}>
-              Step 4 — Push Notifications (Coming soon)
-            </AppText>
-            <Button title="Continue to Step 5" onPress={() => setCurrentStep(5)} />
-          </View>
-        );
+        return <Step4Notifications onNext={() => setCurrentStep(5)} />;
       case 5:
         return (
           <View style={{ gap: 20, marginTop: 40 }}>
