@@ -1,17 +1,18 @@
 import { usePostHog } from 'posthog-react-native';
 import { useState } from 'react';
-import { View } from 'react-native';
+import { Button, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
 
 import { ProgressBar } from './components/ProgressBar';
-import { Step1Intent } from './components/Step1Intent';
-import { Step2Dynamic } from './components/Step2Dynamic';
+import { Step1Welcome } from './components/Step1Welcome';
+import { Step2Intent } from './components/Step2Intent';
+import { Step3Reassurance } from './components/Step3Reassurance';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const TOTAL_STEPS = 5;
+const TOTAL_STEPS = 7;
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -28,9 +29,9 @@ export function OnboardingFlow() {
     );
   };
 
-  const handleStep1Next = () => {
+  const handleStep2Next = () => {
     posthog.capture('onboarding_intent_selected', { intents: selectedIntents });
-    setCurrentStep(2);
+    setCurrentStep(3);
   };
 
   const primaryIntent = selectedIntents[0] ?? '';
@@ -38,47 +39,73 @@ export function OnboardingFlow() {
   const renderStep = () => {
     switch (currentStep) {
       case 1:
+        return <Step1Welcome onNext={() => setCurrentStep(2)} />;
+      case 2:
         return (
-          <Step1Intent
+          <Step2Intent
             selectedIntents={selectedIntents}
             onToggle={handleToggleIntent}
-            onNext={handleStep1Next}
+            onNext={handleStep2Next}
           />
         );
-      case 2:
-        return <Step2Dynamic primaryIntent={primaryIntent} onNext={() => setCurrentStep(3)} />;
       case 3:
-        return (
-          <AppText style={{ color: theme.colors.typography, textAlign: 'center' }}>
-            Step 3 — Coming soon
-          </AppText>
-        );
+        return <Step3Reassurance primaryIntent={primaryIntent} onNext={() => setCurrentStep(4)} />;
       case 4:
         return (
-          <AppText style={{ color: theme.colors.typography, textAlign: 'center' }}>
-            Step 4 — Coming soon
-          </AppText>
+          <View style={{ gap: 20, marginTop: 40 }}>
+            <AppText style={{ color: theme.colors.typography, textAlign: 'center' }}>
+              Step 4 — Push Notifications (Coming soon)
+            </AppText>
+            <Button title="Continue to Step 5" onPress={() => setCurrentStep(5)} />
+          </View>
         );
       case 5:
         return (
-          <AppText style={{ color: theme.colors.typography, textAlign: 'center' }}>
-            Step 5 — Coming soon
-          </AppText>
+          <View style={{ gap: 20, marginTop: 40 }}>
+            <AppText style={{ color: theme.colors.typography, textAlign: 'center' }}>
+              Step 5 — Face ID (Coming soon)
+            </AppText>
+            <Button title="Continue to Step 6" onPress={() => setCurrentStep(6)} />
+          </View>
+        );
+      case 6:
+        return (
+          <View style={{ gap: 20, marginTop: 40 }}>
+            <AppText style={{ color: theme.colors.typography, textAlign: 'center' }}>
+              Step 6 — Analyzing / Loader (Coming soon)
+            </AppText>
+            <Button title="Continue to Step 7" onPress={() => setCurrentStep(7)} />
+          </View>
+        );
+      case 7:
+        return (
+          <View style={{ gap: 20, marginTop: 40 }}>
+            <AppText style={{ color: theme.colors.typography, textAlign: 'center' }}>
+              Step 7 — The Value Reveal &amp; Paywall (Coming soon)
+            </AppText>
+            <Button title="Finish Onboarding" onPress={() => setCurrentStep(1)} />
+          </View>
         );
       default:
         return null;
     }
   };
 
+  const showProgress = currentStep > 1 && currentStep < 7;
+
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      {/* Progress bar */}
-      <View style={styles.progressWrap}>
-        <ProgressBar currentStep={currentStep} totalSteps={TOTAL_STEPS} />
-      </View>
+      {/* Progress bar — hidden on welcome (step 1) and paywall (step 7) */}
+      {showProgress && (
+        <View style={styles.progressWrap}>
+          <ProgressBar currentStep={currentStep} totalSteps={TOTAL_STEPS} />
+        </View>
+      )}
 
       {/* Step content */}
-      <View style={styles.content}>{renderStep()}</View>
+      <View style={[styles.content, !showProgress && styles.contentNoProgress]}>
+        {renderStep()}
+      </View>
     </View>
   );
 }
@@ -96,5 +123,8 @@ const styles = StyleSheet.create((theme) => ({
   content: {
     flex: 1,
     paddingHorizontal: theme.spacing[5],
+  },
+  contentNoProgress: {
+    paddingTop: theme.spacing[6],
   },
 }));

@@ -20,7 +20,7 @@ type Props = {
   onNext: () => void;
 };
 
-export function Step1Intent({ selectedIntents, onToggle, onNext }: Props) {
+export function Step2Intent({ selectedIntents, onToggle, onNext }: Props) {
   const { theme } = useUnistyles();
 
   return (

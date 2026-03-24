@@ -28,7 +28,7 @@ type Props = {
   onNext: () => void;
 };
 
-export function Step2Dynamic({ primaryIntent, onNext }: Props) {
+export function Step3Reassurance({ primaryIntent, onNext }: Props) {
   const { theme } = useUnistyles();
   const subtitle = getDynamicSubtitle(primaryIntent.toLowerCase());
 
