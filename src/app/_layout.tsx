@@ -20,8 +20,14 @@ import { posthog } from '@/src/config/posthog';
 
 import { db } from '@/src/db/client';
 import { rescheduleAllNotifications } from '@/src/features/notifications/notificationService';
+import {
+  addCustomerInfoListener,
+  configurePurchases,
+  getCustomerInfo,
+} from '@/src/services/purchases';
 import { storage } from '@/src/services/storage/mmkv';
 import { useAppStore } from '@/src/store/useApp';
+import { usePurchasesStore } from '@/src/store/usePurchases';
 import { authenticateUser } from '@/src/utils/auth-helper';
 
 import '@/src/i18n/index';
@@ -125,6 +131,19 @@ function RootLayout() {
       navigationIntegration.registerNavigationContainer(navigationRef);
     }
   }, [navigationRef]);
+
+  const setCustomerInfo = usePurchasesStore((s) => s.setCustomerInfo);
+
+  // Hydrate subscription state and subscribe to real-time updates from RevenueCat
+  useEffect(() => {
+    configurePurchases();
+    getCustomerInfo()
+      .then(setCustomerInfo)
+      .catch(() => usePurchasesStore.getState().setLoading(false));
+
+    const unsubscribe = addCustomerInfoListener(setCustomerInfo);
+    return unsubscribe;
+  }, [setCustomerInfo]);
 
   useEffect(() => {
     const ANON_ID_KEY = 'mosaic-anon-id';

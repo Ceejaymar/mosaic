@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { usePostHog } from 'posthog-react-native';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, ScrollView, View } from 'react-native';
+import { ActivityIndicator, Button, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
@@ -27,6 +27,7 @@ import { generateDailyObservation } from '@/src/features/check-in/utils/daily-ob
 import { getMoodDisplayInfo } from '@/src/features/check-in/utils/mood-helpers';
 import { getCurrentTimeSlot } from '@/src/features/check-in/utils/time-of-day';
 import { hapticLight } from '@/src/lib/haptics/haptics';
+import { presentPaywall } from '@/src/services/purchases';
 import { useAppStore } from '@/src/store/useApp';
 import { LETTER_SPACING } from '@/src/styles/design-tokens';
 import { enableAndroidLayoutAnimations } from '@/src/utils/animations';
@@ -176,6 +177,15 @@ export default function CheckInScreen() {
         ]}
         showsVerticalScrollIndicator={false}
       >
+        <View style={{ marginTop: 50 }}>
+          <Button
+            title="Open Paywall (Test)"
+            onPress={async () => {
+              const result = await presentPaywall();
+              console.log('Paywall closed with result:', result);
+            }}
+          />
+        </View>
         <AppText font="heading" colorVariant="primary" style={styles.greeting}>
           {`How are you feeling\n${t(`dashboard.time_of_day.${currentSlot}`)}?`}
         </AppText>
