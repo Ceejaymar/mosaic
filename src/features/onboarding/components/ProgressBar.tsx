@@ -14,10 +14,10 @@ export function ProgressBar({ currentStep, totalSteps }: Props) {
         <View key={step} style={styles.segmentEmpty}>
           {step <= currentStep && (
             <LinearGradient
-              colors={['#D4AF37', '#C5A059']}
+              colors={['#E8C76A', '#C5A059', '#B8924A']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
-              style={[StyleSheet.absoluteFill, { borderRadius: 2 }]}
+              style={[StyleSheet.absoluteFill, { borderRadius: 3 }]}
             />
           )}
         </View>
@@ -27,11 +27,11 @@ export function ProgressBar({ currentStep, totalSteps }: Props) {
 }
 
 const styles = StyleSheet.create(() => ({
-  row: { flexDirection: 'row', gap: 6, width: '100%' },
+  row: { flexDirection: 'row', gap: 5, width: '100%' },
   segmentEmpty: {
     flex: 1,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
   },
 }));
