@@ -102,7 +102,26 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
 
         {/* 2. SCROLLING LINKS */}
         <DrawerContentScrollView {...props} contentContainerStyle={styles.scrollContent}>
+          {/* Group 0: Account */}
+          <AppText colorVariant="muted" style={styles.sectionTitle}>
+            Account
+          </AppText>
+          <DrawerRow
+            icon="star"
+            label="Mosaic Pro"
+            iconColor="#C5A059"
+            textColor="#C5A059"
+            onPress={() => {
+              props.navigation.closeDrawer();
+              router.push('/pages/subscription');
+            }}
+          />
+          <View style={[styles.divider, { backgroundColor: colors.divider }]} />
+
           {/* Group 1: Preferences */}
+          <AppText colorVariant="muted" style={styles.sectionTitle}>
+            General
+          </AppText>
           <DrawerRow
             icon="options-outline"
             label="Preferences"

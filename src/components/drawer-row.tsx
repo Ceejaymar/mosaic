@@ -6,18 +6,29 @@ export function DrawerRow({
   icon,
   label,
   onPress,
+  iconColor,
+  textColor,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   onPress: () => void;
+  iconColor?: string;
+  textColor?: string;
 }) {
   const { theme } = useUnistyles();
 
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [styles.row, pressed && { opacity: 0.5 }]}>
       <View style={styles.rowLeft}>
-        <Ionicons name={icon} size={20} color={theme.colors.typography} style={{ opacity: 0.5 }} />
-        <Text style={[styles.rowLabel, { color: theme.colors.typography }]}>{label}</Text>
+        <Ionicons
+          name={icon}
+          size={20}
+          color={iconColor ?? theme.colors.typography}
+          style={iconColor ? undefined : { opacity: 0.5 }}
+        />
+        <Text style={[styles.rowLabel, { color: textColor ?? theme.colors.typography }]}>
+          {label}
+        </Text>
       </View>
       <Ionicons
         name="chevron-forward"
