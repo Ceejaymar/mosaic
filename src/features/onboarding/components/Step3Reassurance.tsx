@@ -1,9 +1,8 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
-
-// ─── Dynamic subtitle map ─────────────────────────────────────────────────────
 
 function getDynamicSubtitle(intent: string): string {
   if (intent.includes('therapy')) {
@@ -21,12 +20,7 @@ function getDynamicSubtitle(intent: string): string {
   return 'Mosaic is your personal space to feel, reflect, and grow. You made the right call being here.';
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
-
-type Props = {
-  primaryIntent: string;
-  onNext: () => void;
-};
+type Props = { primaryIntent: string; onNext: () => void };
 
 export function Step3Reassurance({ primaryIntent, onNext }: Props) {
   const { theme } = useUnistyles();
@@ -34,20 +28,22 @@ export function Step3Reassurance({ primaryIntent, onNext }: Props) {
 
   return (
     <View style={styles.container}>
-      {/* Accent mark */}
-      <View style={styles.accentRow}>
-        <View style={[styles.accentLine, { backgroundColor: '#C5A059' }]} />
+      <View style={styles.cardWrap}>
+        <LinearGradient
+          colors={['rgba(197, 160, 89, 0.15)', 'rgba(197, 160, 89, 0.02)']}
+          style={[StyleSheet.absoluteFill, { borderRadius: 24 }]}
+        />
+        <View style={styles.cardInner}>
+          <View style={[styles.accentLine, { backgroundColor: '#C5A059' }]} />
+          <AppText font="heading" style={[styles.title, { color: theme.colors.typography }]}>
+            You're in the{'\n'}right place.
+          </AppText>
+          <AppText style={[styles.subtitle, { color: theme.colors.typography }]}>
+            {subtitle}
+          </AppText>
+        </View>
       </View>
 
-      {/* Copy */}
-      <View style={styles.copy}>
-        <AppText font="heading" style={[styles.title, { color: theme.colors.typography }]}>
-          You're in the{'\n'}right place.
-        </AppText>
-        <AppText style={[styles.subtitle, { color: theme.colors.typography }]}>{subtitle}</AppText>
-      </View>
-
-      {/* CTA */}
       <Pressable
         onPress={onNext}
         style={({ pressed }) => [
@@ -63,42 +59,14 @@ export function Step3Reassurance({ primaryIntent, onNext }: Props) {
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
-
 const styles = StyleSheet.create((theme) => ({
-  container: {
-    flex: 1,
-    gap: theme.spacing[8],
-    justifyContent: 'center',
-  },
-  accentRow: {
-    alignItems: 'flex-start',
-  },
-  accentLine: {
-    width: 40,
-    height: 3,
-    borderRadius: 2,
-  },
-  copy: {
-    gap: theme.spacing[4],
-  },
-  title: {
-    fontSize: 40,
-    fontWeight: '700',
-    letterSpacing: -1,
-    lineHeight: 46,
-  },
-  subtitle: {
-    fontSize: theme.fontSize.lg,
-    lineHeight: 28,
-    opacity: 0.7,
-    maxWidth: 340,
-  },
-  btn: {
-    paddingVertical: 16,
-    borderRadius: theme.radius.tight,
-    alignItems: 'center',
-  },
+  container: { flex: 1, gap: theme.spacing[8], justifyContent: 'center' },
+  cardWrap: { borderRadius: 24, borderWidth: 1, borderColor: 'rgba(197, 160, 89, 0.1)' },
+  cardInner: { padding: theme.spacing[6], gap: theme.spacing[5] },
+  accentLine: { width: 40, height: 3, borderRadius: 2 },
+  title: { fontSize: 36, fontWeight: '700', letterSpacing: -1, lineHeight: 42 },
+  subtitle: { fontSize: theme.fontSize.lg, lineHeight: 28, opacity: 0.8 },
+  btn: { paddingVertical: 16, borderRadius: theme.radius.tight, alignItems: 'center' },
   btnText: {
     fontSize: theme.fontSize.base,
     fontWeight: '700',
