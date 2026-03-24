@@ -25,22 +25,20 @@ export function Step1Welcome({ onNext }: Props) {
 
   return (
     <View style={styles.container}>
-      {/* ── Brand mark with layered radial glow ── */}
+      {/* ── Brand mark: three concentric squircles ── */}
       <View style={styles.markContainer}>
-        {/* Outer ambient glow */}
+        {/* Ambient glow behind everything */}
         <LinearGradient
-          colors={['rgba(197, 160, 89, 0.18)', 'rgba(197, 160, 89, 0.06)', 'transparent']}
+          colors={['rgba(197, 160, 89, 0.14)', 'rgba(197, 160, 89, 0.04)', 'transparent']}
           start={{ x: 0.5, y: 0.5 }}
           end={{ x: 1, y: 1 }}
-          style={styles.markGlowOuter}
+          style={styles.markGlow}
         />
-        {/* Inner warm halo */}
-        <LinearGradient
-          colors={['rgba(212, 175, 55, 0.22)', 'transparent']}
-          start={{ x: 0.5, y: 0.5 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.markGlowInner}
-        />
+        {/* Outer squircle ring */}
+        <View style={styles.ringOuter} />
+        {/* Middle squircle ring */}
+        <View style={styles.ringMiddle} />
+        {/* Inner squircle mark */}
         <View style={[styles.mark, { backgroundColor: 'rgba(197, 160, 89, 0.12)' }]}>
           <View style={[styles.markInner, { backgroundColor: theme.colors.mosaicGold }]} />
         </View>
@@ -129,17 +127,28 @@ const styles = StyleSheet.create((theme) => ({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  markGlowOuter: {
+  markGlow: {
     position: 'absolute',
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-  },
-  markGlowInner: {
-    position: 'absolute',
-    width: 110,
-    height: 110,
+    width: 220,
+    height: 220,
     borderRadius: 55,
+  },
+  ringOuter: {
+    position: 'absolute',
+    width: 156,
+    height: 156,
+    borderRadius: 38,
+    borderWidth: 1,
+    borderColor: 'rgba(197, 160, 89, 0.1)',
+  },
+  ringMiddle: {
+    position: 'absolute',
+    width: 108,
+    height: 108,
+    borderRadius: 27,
+    borderWidth: 1,
+    borderColor: 'rgba(197, 160, 89, 0.18)',
+    backgroundColor: 'rgba(197, 160, 89, 0.04)',
   },
   mark: {
     width: 68,
