@@ -15,6 +15,7 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { AppText } from '@/src/components/app-text';
 import { DrawerRow } from '@/src/components/drawer-row';
 import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
+import { getOfferings, purchasePackage } from '@/src/services/purchases';
 import { useAppStore } from '@/src/store/useApp';
 import {
   openPrivacyPolicy,
@@ -235,6 +236,44 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
                 onPress={() => {
                   props.navigation.closeDrawer();
                   toggleDemoMode();
+                }}
+              />
+              <DrawerRow
+                icon="color-wand-outline"
+                label="Test Onboarding Flow"
+                onPress={() => {
+                  props.navigation.closeDrawer();
+                  router.push('/pages/onboarding');
+                }}
+              />
+              <DrawerRow
+                icon="cart-outline"
+                label="Test Raw Purchase"
+                onPress={async () => {
+                  props.navigation.closeDrawer();
+                  try {
+                    const offerings = await getOfferings();
+                    const packageToBuy = offerings.current?.availablePackages[0];
+                    if (!packageToBuy) {
+                      Alert.alert(
+                        'Missing Data',
+                        'No packages found! Check the RevenueCat dashboard.',
+                      );
+                      return;
+                    }
+                    const customerInfo = await purchasePackage(packageToBuy);
+                    if (typeof customerInfo.entitlements.active['Mosaic Pro'] !== 'undefined') {
+                      Alert.alert(
+                        'Success!',
+                        'The Mosaic Pro entitlement was successfully unlocked.',
+                      );
+                    }
+                  } catch (e: unknown) {
+                    const err = e as { userCancelled?: boolean; message?: string };
+                    if (!err.userCancelled) {
+                      Alert.alert('Purchase Error', err.message ?? 'Unknown error');
+                    }
+                  }
                 }}
               />
               <DrawerRow

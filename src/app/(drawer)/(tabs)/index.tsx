@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { usePostHog } from 'posthog-react-native';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Alert, Button, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
@@ -27,59 +27,12 @@ import { generateDailyObservation } from '@/src/features/check-in/utils/daily-ob
 import { getMoodDisplayInfo } from '@/src/features/check-in/utils/mood-helpers';
 import { getCurrentTimeSlot } from '@/src/features/check-in/utils/time-of-day';
 import { hapticLight } from '@/src/lib/haptics/haptics';
-import { getOfferings, purchasePackage } from '@/src/services/purchases';
 import { useAppStore } from '@/src/store/useApp';
 import { LETTER_SPACING } from '@/src/styles/design-tokens';
 import { enableAndroidLayoutAnimations } from '@/src/utils/animations';
 import { getDayWithSuffix } from '@/src/utils/format-date';
 
 const OBS_GRADIENT = ['rgba(255,255,255,0.04)', 'rgba(255,255,255,0)', 'rgba(0,0,0,0.06)'] as const;
-
-function RawPurchaseTest() {
-  const [loading, setLoading] = useState(false);
-
-  const handleRawPurchase = async () => {
-    setLoading(true);
-    try {
-      const offerings = await getOfferings();
-      const packageToBuy = offerings.current?.availablePackages[0];
-
-      if (!packageToBuy) {
-        Alert.alert('Missing Data', 'No packages found! Check the RevenueCat dashboard.');
-        setLoading(false);
-        return;
-      }
-
-      const customerInfo = await purchasePackage(packageToBuy);
-
-      if (typeof customerInfo.entitlements.active['Mosaic Pro'] !== 'undefined') {
-        Alert.alert('Success!', 'The Mosaic Pro entitlement was successfully unlocked.');
-      }
-    } catch (e: unknown) {
-      const err = e as { userCancelled?: boolean; message?: string };
-      if (!err.userCancelled) {
-        Alert.alert('Purchase Error', err.message ?? 'Unknown error');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <View
-      style={{ marginTop: 50, padding: 20, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 10 }}
-    >
-      <Text style={{ color: 'white', textAlign: 'center', marginBottom: 10 }}>
-        Testing Core SDK
-      </Text>
-      <Button
-        title={loading ? 'Processing...' : 'Buy Monthly Sub (Raw Test)'}
-        onPress={handleRawPurchase}
-        disabled={loading}
-      />
-    </View>
-  );
-}
 
 function DateLabel() {
   const { i18n } = useTranslation();
@@ -223,7 +176,6 @@ export default function CheckInScreen() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <RawPurchaseTest />
         <AppText font="heading" colorVariant="primary" style={styles.greeting}>
           {`How are you feeling\n${t(`dashboard.time_of_day.${currentSlot}`)}?`}
         </AppText>
