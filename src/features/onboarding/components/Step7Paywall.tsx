@@ -266,7 +266,7 @@ export function Step7Paywall({ onClose, onSubscribe, onRestore }: Props) {
                 style={StyleSheet.absoluteFill}
               />
             </View>
-            <Ionicons name="diamond-outline" size={38} color="#E2BC62" />
+            <Ionicons name="diamond-outline" size={28} color="#E2BC62" />
           </View>
           <View style={styles.rule} />
           <AppText font="heading" style={[styles.title, { color: theme.colors.typography }]}>
@@ -323,6 +323,16 @@ export function Step7Paywall({ onClose, onSubscribe, onRestore }: Props) {
 
           <AppText style={styles.cancelText}>{activePlan.cancelNote}</AppText>
 
+          <Pressable
+            onPress={() => {
+              hapticLight();
+              onRestore();
+            }}
+            style={styles.restoreBtn}
+          >
+            <AppText style={styles.restoreText}>Restore Purchases</AppText>
+          </Pressable>
+
           <View style={styles.legalLinks}>
             <Pressable
               onPress={() => {
@@ -330,7 +340,7 @@ export function Step7Paywall({ onClose, onSubscribe, onRestore }: Props) {
                 openTermsOfService();
               }}
             >
-              <AppText style={styles.legalText}>Terms</AppText>
+              <AppText style={styles.legalText}>Terms & Conditions</AppText>
             </Pressable>
             <AppText style={styles.legalDot}>·</AppText>
             <Pressable
@@ -339,16 +349,7 @@ export function Step7Paywall({ onClose, onSubscribe, onRestore }: Props) {
                 openPrivacyPolicy();
               }}
             >
-              <AppText style={styles.legalText}>Privacy</AppText>
-            </Pressable>
-            <AppText style={styles.legalDot}>·</AppText>
-            <Pressable
-              onPress={() => {
-                hapticLight();
-                onRestore();
-              }}
-            >
-              <AppText style={styles.legalText}>Restore</AppText>
+              <AppText style={styles.legalText}>Privacy Policy</AppText>
             </Pressable>
           </View>
         </Animated.View>
@@ -390,9 +391,9 @@ const styles = StyleSheet.create((theme) => ({
   iconWrap: { alignItems: 'center', justifyContent: 'center' },
   iconGlowSquircle: {
     position: 'absolute',
-    width: 100,
-    height: 100,
-    borderRadius: 28,
+    width: 68,
+    height: 68,
+    borderRadius: 18,
     overflow: 'hidden',
   },
   rule: {
@@ -410,7 +411,7 @@ const styles = StyleSheet.create((theme) => ({
   },
 
   // ── Feature list
-  featuresZone: { gap: theme.spacing[3] },
+  featuresZone: { gap: theme.spacing[3], paddingHorizontal: theme.spacing[4] },
   featureRow: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing[3] },
   featureIcon: {
     width: 28,
@@ -422,13 +423,13 @@ const styles = StyleSheet.create((theme) => ({
     justifyContent: 'center',
     flexShrink: 0,
   },
-  featureLabel: { fontSize: theme.fontSize.sm, opacity: 0.72, flex: 1, lineHeight: 20 },
+  featureLabel: { fontSize: theme.fontSize.sm, opacity: 0.72, lineHeight: 20, flex: 1 },
 
   // ── Plans
   plansZone: { gap: theme.spacing[3] },
 
   // ── Footer
-  footerZone: { gap: theme.spacing[3] },
+  footerZone: { gap: theme.spacing[2] },
   ctaBtn: {
     paddingVertical: 18,
     borderRadius: theme.radius.tight,
@@ -448,11 +449,21 @@ const styles = StyleSheet.create((theme) => ({
     lineHeight: 18,
     paddingHorizontal: theme.spacing[4],
   },
+  restoreBtn: {
+    alignItems: 'center',
+    paddingVertical: 6,
+  },
+  restoreText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#C5A059',
+  },
   legalLinks: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
+    marginTop: theme.spacing[2],
   },
   legalText: {
     fontSize: 12,
