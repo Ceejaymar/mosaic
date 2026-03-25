@@ -16,11 +16,12 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { AppText } from '@/src/components/app-text';
 import { hapticLight, hapticMedium } from '@/src/lib/haptics/haptics';
 
-type Props = { onNext: () => void };
+type NotificationPreference = 'surprise' | 'routine' | 'skip';
+
+type Props = { onNext: (preference: NotificationPreference) => void };
 
 export function Step4Notifications({ onNext }: Props) {
   const { theme } = useUnistyles();
-
   const translateY = useSharedValue(0);
 
   useEffect(() => {
@@ -38,21 +39,21 @@ export function Step4Notifications({ onNext }: Props) {
     transform: [{ translateY: translateY.value }],
   }));
 
-  const handleEnable = () => {
+  const handleEnable = (type: 'surprise' | 'routine') => {
     hapticMedium();
-    onNext();
+    // TODO: Await Notifications.requestPermissionsAsync() here
+    onNext(type);
   };
 
   const handleSkip = () => {
     hapticLight();
-    onNext();
+    onNext('skip');
   };
 
   return (
     <View style={styles.container}>
       {/* ── Floating notification mockup ── */}
       <View style={styles.notifZone}>
-        {/* Ambient gold halo behind the card */}
         <LinearGradient
           colors={['rgba(212, 175, 55, 0.24)', 'rgba(197, 160, 89, 0.08)', 'transparent']}
           start={{ x: 0.5, y: 0.5 }}
@@ -61,10 +62,7 @@ export function Step4Notifications({ onNext }: Props) {
         />
 
         <Animated.View style={[styles.notifCard, floatStyle]}>
-          {/* Glassmorphism blur fill */}
           <BlurView intensity={80} tint="dark" style={StyleSheet.absoluteFill} />
-
-          {/* Hair-thin gold shimmer along the top edge */}
           <LinearGradient
             colors={['rgba(212, 175, 55, 0.55)', 'rgba(197, 160, 89, 0.18)', 'transparent']}
             start={{ x: 0, y: 0 }}
@@ -73,7 +71,6 @@ export function Step4Notifications({ onNext }: Props) {
           />
 
           <View style={styles.notifContent}>
-            {/* Header: app icon + name + timestamp */}
             <View style={styles.notifHeader}>
               <View style={styles.notifIconWrap}>
                 <View
@@ -86,7 +83,6 @@ export function Step4Notifications({ onNext }: Props) {
               <AppText style={styles.notifTime}>now</AppText>
             </View>
 
-            {/* Message body */}
             <AppText style={[styles.notifMessage, { color: theme.colors.typography }]}>
               Take a deep breath.{'\n'}How are you feeling right now?
             </AppText>
@@ -100,32 +96,50 @@ export function Step4Notifications({ onNext }: Props) {
           Gentle check-ins.
         </AppText>
         <AppText style={[styles.subtitle, { color: theme.colors.typography }]}>
-          Let Mosaic occasionally remind you to pause and capture authentic moments. No pressure,
-          just a gentle nudge.
+          Choose how you'd like to build your Mosaic. No pressure, just a gentle nudge when you need
+          it.
         </AppText>
       </View>
 
       {/* ── CTAs ── */}
       <View style={styles.ctas}>
+        {/* Option A: Surprise Me — primary gold gradient */}
         <Pressable
-          onPress={handleEnable}
+          onPress={() => handleEnable('surprise')}
           style={({ pressed }) => ({ opacity: pressed ? 0.78 : 1 })}
         >
           <LinearGradient
             colors={['#E2BC62', '#C5A059', '#B8924A']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
-            style={styles.primaryBtn}
+            style={styles.actionBtn}
           >
             <AppText font="mono" style={styles.primaryBtnText}>
-              Enable "Surprise Me"
+              Surprise Me
             </AppText>
+            <AppText style={styles.btnSubtextDark}>1 random check-in per day</AppText>
           </LinearGradient>
         </Pressable>
 
+        {/* Option B: Daily Routine — outlined oat */}
+        <Pressable
+          onPress={() => handleEnable('routine')}
+          style={({ pressed }) => [
+            styles.actionBtn,
+            styles.outlineBtn,
+            { opacity: pressed ? 0.6 : 1 },
+          ]}
+        >
+          <AppText font="mono" style={styles.outlineBtnText}>
+            Daily Routine
+          </AppText>
+          <AppText style={styles.btnSubtextLight}>Defaults to 10 AM, customize in settings</AppText>
+        </Pressable>
+
+        {/* Ghost: skip */}
         <Pressable
           onPress={handleSkip}
-          style={({ pressed }) => [styles.secondaryBtn, { opacity: pressed ? 0.45 : 0.5 }]}
+          style={({ pressed }) => [styles.secondaryBtn, { opacity: pressed ? 0.25 : 1 }]}
         >
           <AppText style={[styles.secondaryBtnText, { color: theme.colors.typography }]}>
             Not right now
@@ -140,17 +154,8 @@ const styles = StyleSheet.create((theme) => ({
   container: { flex: 1, gap: theme.spacing[5] },
 
   // ── Notification zone
-  notifZone: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  notifGlow: {
-    position: 'absolute',
-    width: 340,
-    height: 260,
-    borderRadius: 80,
-  },
+  notifZone: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  notifGlow: { position: 'absolute', width: 300, height: 300, borderRadius: 80 },
   notifCard: {
     width: '100%',
     borderRadius: 20,
@@ -164,17 +169,8 @@ const styles = StyleSheet.create((theme) => ({
     shadowRadius: 32,
     elevation: 12,
   },
-  notifTopEdge: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 1,
-  },
-  notifContent: {
-    padding: theme.spacing[4],
-    gap: theme.spacing[2],
-  },
+  notifTopEdge: { position: 'absolute', top: 0, left: 0, right: 0, height: 1 },
+  notifContent: { padding: theme.spacing[4], gap: theme.spacing[2] },
   notifHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -191,30 +187,15 @@ const styles = StyleSheet.create((theme) => ({
     borderWidth: 1,
     borderColor: 'rgba(197, 160, 89, 0.28)',
   },
-  notifIconDiamond: {
-    width: 8,
-    height: 8,
-    borderRadius: 2,
-    transform: [{ rotate: '45deg' }],
-  },
-  notifAppName: {
-    fontSize: 12,
-    fontWeight: '600',
-    letterSpacing: 0.3,
-    flex: 1,
-    opacity: 0.85,
-  },
+  notifIconDiamond: { width: 8, height: 8, borderRadius: 2, transform: [{ rotate: '45deg' }] },
+  notifAppName: { fontSize: 12, fontWeight: '600', letterSpacing: 0.3, flex: 1, opacity: 0.85 },
   notifTime: {
     fontSize: 11,
     opacity: 0.35,
     color: 'rgba(255,255,255,0.8)',
     fontFamily: 'SpaceMono',
   },
-  notifMessage: {
-    fontSize: 15,
-    lineHeight: 22,
-    opacity: 0.88,
-  },
+  notifMessage: { fontSize: 15, lineHeight: 22, opacity: 0.88 },
 
   // ── Copy
   copy: { gap: theme.spacing[3] },
@@ -222,11 +203,14 @@ const styles = StyleSheet.create((theme) => ({
   subtitle: { fontSize: theme.fontSize.base, opacity: 0.48, lineHeight: 24 },
 
   // ── CTAs
-  ctas: { gap: theme.spacing[2] },
-  primaryBtn: {
-    paddingVertical: 17,
+  ctas: { gap: theme.spacing[3], paddingBottom: theme.spacing[8] },
+
+  // Shared structural styles for both main buttons
+  actionBtn: {
+    paddingVertical: 16,
     borderRadius: theme.radius.tight,
     alignItems: 'center',
+    gap: 4,
   },
   primaryBtnText: {
     fontSize: theme.fontSize.base,
@@ -235,12 +219,35 @@ const styles = StyleSheet.create((theme) => ({
     letterSpacing: 0.6,
     textTransform: 'uppercase',
   },
+  btnSubtextDark: {
+    fontSize: 12,
+    color: 'rgba(26, 18, 8, 0.65)',
+    letterSpacing: 0.2,
+  },
+  outlineBtn: {
+    borderWidth: 1,
+    borderColor: 'rgba(197, 160, 89, 0.3)',
+    backgroundColor: 'rgba(197, 160, 89, 0.05)',
+  },
+  outlineBtnText: {
+    fontSize: theme.fontSize.base,
+    fontWeight: '700',
+    color: '#C5A059',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+  },
+  btnSubtextLight: {
+    fontSize: 12,
+    color: 'rgba(197, 160, 89, 0.55)',
+    letterSpacing: 0.2,
+  },
   secondaryBtn: {
     alignItems: 'center',
-    paddingVertical: theme.spacing[3],
+    paddingVertical: theme.spacing[2],
   },
   secondaryBtnText: {
     fontSize: theme.fontSize.sm,
     letterSpacing: 0.2,
+    opacity: 0.45,
   },
 }));

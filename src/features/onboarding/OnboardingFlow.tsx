@@ -10,6 +10,7 @@ import { Step1Welcome } from './components/Step1Welcome';
 import { Step2Intent } from './components/Step2Intent';
 import { Step3Reassurance } from './components/Step3Reassurance';
 import { Step4Notifications } from './components/Step4Notifications';
+import { Step5Biometrics } from './components/Step5Biometrics';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -54,14 +55,7 @@ export function OnboardingFlow() {
       case 4:
         return <Step4Notifications onNext={() => setCurrentStep(5)} />;
       case 5:
-        return (
-          <View style={{ gap: 20, marginTop: 40 }}>
-            <AppText style={{ color: theme.colors.typography, textAlign: 'center' }}>
-              Step 5 — Face ID (Coming soon)
-            </AppText>
-            <Button title="Continue to Step 6" onPress={() => setCurrentStep(6)} />
-          </View>
-        );
+        return <Step5Biometrics onNext={() => setCurrentStep(6)} />;
       case 6:
         return (
           <View style={{ gap: 20, marginTop: 40 }}>
