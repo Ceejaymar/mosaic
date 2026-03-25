@@ -1,9 +1,7 @@
 import { usePostHog } from 'posthog-react-native';
 import { useState } from 'react';
-import { Button, View } from 'react-native';
+import { View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
-
-import { AppText } from '@/src/components/app-text';
 
 import { ProgressBar } from './components/ProgressBar';
 import { Step1Welcome } from './components/Step1Welcome';
@@ -12,6 +10,7 @@ import { Step3Reassurance } from './components/Step3Reassurance';
 import { Step4Notifications } from './components/Step4Notifications';
 import { Step5Biometrics } from './components/Step5Biometrics';
 import { Step6Analyzing } from './components/Step6Analyzing';
+import { Step7Paywall } from './components/Step7Paywall';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -63,12 +62,11 @@ export function OnboardingFlow() {
         );
       case 7:
         return (
-          <View style={{ gap: 20, marginTop: 40 }}>
-            <AppText style={{ color: theme.colors.typography, textAlign: 'center' }}>
-              Step 7 — The Value Reveal &amp; Paywall (Coming soon)
-            </AppText>
-            <Button title="Finish Onboarding" onPress={() => setCurrentStep(1)} />
-          </View>
+          <Step7Paywall
+            onClose={() => setCurrentStep(6)}
+            onSubscribe={() => setCurrentStep(1)}
+            onRestore={() => setCurrentStep(1)}
+          />
         );
       default:
         return null;
@@ -87,7 +85,13 @@ export function OnboardingFlow() {
       )}
 
       {/* Step content */}
-      <View style={[styles.content, !showProgress && styles.contentNoProgress]}>
+      <View
+        style={[
+          styles.content,
+          !showProgress && styles.contentNoProgress,
+          currentStep === 7 && styles.contentFullBleed,
+        ]}
+      >
         {renderStep()}
       </View>
     </View>
@@ -110,5 +114,9 @@ const styles = StyleSheet.create((theme) => ({
   },
   contentNoProgress: {
     paddingTop: theme.spacing[6],
+  },
+  contentFullBleed: {
+    paddingHorizontal: 0,
+    paddingTop: 0,
   },
 }));
