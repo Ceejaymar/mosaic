@@ -215,7 +215,7 @@ const cardStyles = StyleSheet.create((theme) => ({
 
 type Props = {
   onClose: () => void;
-  onSubscribe: (plan: PlanType) => void;
+  onSubscribe: (plan: PlanType) => Promise<void> | void;
   onRestore: () => void;
 };
 
@@ -234,7 +234,7 @@ export function Step7Paywall({ onClose, onSubscribe, onRestore }: Props) {
 
   const handleSubscribe = useCallback(async () => {
     hapticMedium();
-    onSubscribe(selectedPlan);
+    await onSubscribe(selectedPlan);
     await useAppStore.getState().completeOnboarding();
     router.replace('/');
   }, [onSubscribe, router, selectedPlan]);
@@ -348,7 +348,7 @@ export function Step7Paywall({ onClose, onSubscribe, onRestore }: Props) {
               hapticLight();
               onRestore();
             }}
-            style={styles.restoreBtn}
+            style={({ pressed }) => [styles.restoreBtn, pressed && styles.pressed]}
           >
             <AppText style={styles.restoreText}>Restore Purchases</AppText>
           </Pressable>
@@ -359,6 +359,7 @@ export function Step7Paywall({ onClose, onSubscribe, onRestore }: Props) {
                 hapticLight();
                 openTermsOfService();
               }}
+              style={({ pressed }) => pressed && styles.pressed}
             >
               <AppText style={styles.legalText}>Terms & Conditions</AppText>
             </Pressable>
@@ -368,6 +369,7 @@ export function Step7Paywall({ onClose, onSubscribe, onRestore }: Props) {
                 hapticLight();
                 openPrivacyPolicy();
               }}
+              style={({ pressed }) => pressed && styles.pressed}
             >
               <AppText style={styles.legalText}>Privacy Policy</AppText>
             </Pressable>
@@ -491,4 +493,5 @@ const styles = StyleSheet.create((theme) => ({
     textDecorationLine: 'underline',
   },
   legalDot: { fontSize: 12, color: 'rgba(255, 255, 255, 0.18)' },
+  pressed: { opacity: 0.5 },
 }));

@@ -1,5 +1,6 @@
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Notifications from 'expo-notifications';
 import { useEffect } from 'react';
 import { Pressable, View } from 'react-native';
 import Animated, {
@@ -40,11 +41,14 @@ export function Step4Notifications({ onNext }: Props) {
     transform: [{ translateY: translateY.value }],
   }));
 
-  const handleEnable = (type: 'surprise' | 'routine') => {
+  const handleEnable = async (type: 'surprise' | 'routine') => {
     hapticMedium();
-    // TODO: Await Notifications.requestPermissionsAsync() here
+    try {
+      await Notifications.requestPermissionsAsync();
+    } catch {
+      // Permission request failed — proceed anyway, the user can enable from settings
+    }
 
-    // Clean, direct state update without overriding the store's default times
     useAppStore.setState({
       isNotificationsEnabled: true,
       isSurpriseMeEnabled: type === 'surprise',

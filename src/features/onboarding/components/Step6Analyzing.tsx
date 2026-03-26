@@ -3,6 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useMemo } from 'react';
 import { Pressable, View } from 'react-native';
 import Animated, {
+  cancelAnimation,
   Easing,
   useAnimatedStyle,
   useSharedValue,
@@ -142,6 +143,7 @@ function CalendarCell({ color, index }: { color: string | null; index: number })
       GRID_START + index * GRID_STAGGER,
       withTiming(1, { duration: 380, easing: Easing.out(Easing.ease) }),
     );
+    return () => cancelAnimation(opacity);
   }, [opacity, index]);
 
   const animStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));

@@ -9,11 +9,12 @@ import RevenueCatUI, { PAYWALL_RESULT } from 'react-native-purchases-ui';
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
-// Production: replace with separate appl_... / goog_... keys per platform
-const API_KEY = {
-  ios: 'test_ZmIhebKKHwfsuIWJauMoZIulnPD',
-  android: 'test_ZmIhebKKHwfsuIWJauMoZIulnPD',
-};
+const API_KEY = __DEV__
+  ? { ios: 'test_ZmIhebKKHwfsuIWJauMoZIulnPD', android: 'test_ZmIhebKKHwfsuIWJauMoZIulnPD' }
+  : {
+      ios: 'appl_REPLACE_WITH_PRODUCTION_IOS_KEY',
+      android: 'goog_REPLACE_WITH_PRODUCTION_ANDROID_KEY',
+    };
 
 export const PRO_ENTITLEMENT_ID = 'Mosaic Pro';
 
@@ -42,8 +43,8 @@ export function isProActive(customerInfo: CustomerInfo): boolean {
 }
 
 export function addCustomerInfoListener(listener: (info: CustomerInfo) => void): () => void {
-  const sub = Purchases.addCustomerInfoUpdateListener(listener);
-  return () => sub.remove();
+  Purchases.addCustomerInfoUpdateListener(listener);
+  return () => Purchases.removeCustomerInfoUpdateListener(listener);
 }
 
 // ─── Offerings ────────────────────────────────────────────────────────────────

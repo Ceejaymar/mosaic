@@ -2,7 +2,7 @@ import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as LocalAuthentication from 'expo-local-authentication';
 import { useEffect, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Platform, Pressable, View } from 'react-native';
 import Animated, {
   cancelAnimation,
   Easing,
@@ -32,17 +32,30 @@ export function Step5Biometrics({ onNext }: Props) {
     async function detectBiometrics() {
       const hasHardware = await LocalAuthentication.hasHardwareAsync();
       const isEnrolled = await LocalAuthentication.isEnrolledAsync();
-      if (!hasHardware || !isEnrolled) return;
+      if (!hasHardware || !isEnrolled) {
+        setCanUseBiometrics(false);
+        setCtaLabel('Continue');
+        setCtaSubtext('Biometrics not available or not enrolled');
+        return;
+      }
 
       const types = await LocalAuthentication.supportedAuthenticationTypesAsync();
       setCanUseBiometrics(true);
 
       if (types.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION)) {
-        setCtaLabel('Enable Face ID');
-        setCtaSubtext('Instant access with a glance');
+        setCtaLabel(Platform.OS === 'ios' ? 'Enable Face ID' : 'Enable Face Unlock');
+        setCtaSubtext(
+          Platform.OS === 'ios'
+            ? 'Instant access with a glance'
+            : 'Quick access with face recognition',
+        );
       } else if (types.includes(LocalAuthentication.AuthenticationType.FINGERPRINT)) {
-        setCtaLabel('Enable Touch ID');
-        setCtaSubtext('Quick access with your fingerprint');
+        setCtaLabel(Platform.OS === 'ios' ? 'Enable Touch ID' : 'Enable Fingerprint');
+        setCtaSubtext(
+          Platform.OS === 'ios'
+            ? 'Quick access with your fingerprint'
+            : 'Quick access with your fingerprint',
+        );
       } else {
         setCtaSubtext('Secured by your device');
       }
@@ -79,7 +92,6 @@ export function Step5Biometrics({ onNext }: Props) {
       });
       if (result.success) {
         hapticSuccess();
-        useAppStore.setState({ isAppLockEnabled: true });
         onNext(true);
       } else {
         useAppStore.setState({ isAppLockEnabled: false });

@@ -17,7 +17,7 @@ export function ProgressBar({ currentStep, totalSteps }: Props) {
               colors={['#E8C76A', '#C5A059', '#B8924A']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
-              style={[StyleSheet.absoluteFill, { borderRadius: 3 }]}
+              style={[StyleSheet.absoluteFill, { borderRadius: 4 }]}
             />
           )}
         </View>
@@ -27,11 +27,11 @@ export function ProgressBar({ currentStep, totalSteps }: Props) {
 }
 
 const styles = StyleSheet.create(() => ({
-  row: { flexDirection: 'row', gap: 5, width: '100%' },
+  row: { flexDirection: 'row', gap: 4, width: '100%' },
   segmentEmpty: {
     flex: 1,
-    height: 5,
-    borderRadius: 3,
+    height: 4,
+    borderRadius: 4,
     backgroundColor: 'rgba(255, 255, 255, 0.06)',
   },
 }));

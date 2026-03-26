@@ -15,7 +15,7 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { AppText } from '@/src/components/app-text';
 import { DrawerRow } from '@/src/components/drawer-row';
 import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
-import { getOfferings, purchasePackage } from '@/src/services/purchases';
+import { getOfferings, isProActive, purchasePackage } from '@/src/services/purchases';
 import { useAppStore } from '@/src/store/useApp';
 import {
   openPrivacyPolicy,
@@ -262,7 +262,7 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
                       return;
                     }
                     const customerInfo = await purchasePackage(packageToBuy);
-                    if (typeof customerInfo.entitlements.active['Mosaic Pro'] !== 'undefined') {
+                    if (isProActive(customerInfo)) {
                       Alert.alert(
                         'Success!',
                         'The Mosaic Pro entitlement was successfully unlocked.',

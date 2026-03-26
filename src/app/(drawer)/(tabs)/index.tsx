@@ -1,4 +1,5 @@
 import { DrawerToggleButton } from '@react-navigation/drawer';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { usePostHog } from 'posthog-react-native';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -28,7 +29,6 @@ import { getMoodDisplayInfo } from '@/src/features/check-in/utils/mood-helpers';
 import { getCurrentTimeSlot } from '@/src/features/check-in/utils/time-of-day';
 import { hapticLight } from '@/src/lib/haptics/haptics';
 import { useAppStore } from '@/src/store/useApp';
-import { LETTER_SPACING } from '@/src/styles/design-tokens';
 import { enableAndroidLayoutAnimations } from '@/src/utils/animations';
 import { getDayWithSuffix } from '@/src/utils/format-date';
 
@@ -42,7 +42,7 @@ function DateLabel() {
   const month = now.toLocaleDateString(locale, { month: 'long' }).toUpperCase();
   const day = now.getDate();
   const dayStr = String(day);
-  const suffix = getDayWithSuffix(day).slice(dayStr.length); // just "ST", "ND", "RD", "TH"
+  const suffix = getDayWithSuffix(day).slice(dayStr.length);
 
   return (
     <View style={dateLabelStyles.row}>
@@ -157,15 +157,21 @@ export default function CheckInScreen() {
 
   return (
     <View style={styles.container}>
-      {/* 1. THE TOP FADE — full-width seamless gradient covering the hamburger area */}
-      <TopFade height={insets.top + 80} />
+      {/* Ambient gold gradient — bleeds from top-left, same DNA as the onboarding */}
+      <LinearGradient
+        colors={['rgba(212, 175, 55, 0.11)', 'rgba(197, 160, 89, 0.04)', 'transparent']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0.6, y: 0.52 }}
+        style={StyleSheet.absoluteFill}
+        pointerEvents="none"
+      />
 
-      {/* 2. THE FLOATING HAMBURGER MENU */}
+      {/* Floating top fade + hamburger */}
+      <TopFade height={insets.top + 80} />
       <View style={[styles.floatingMenu, { top: insets.top + 8 }]}>
         <DrawerToggleButton tintColor={theme.colors.typography} />
       </View>
 
-      {/* 3. SCROLL CONTENT */}
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
@@ -185,11 +191,16 @@ export default function CheckInScreen() {
             <DateLabel />
             <DemoBadge />
           </View>
-          {!hideStreaks && currentStreak > 0 && (
-            <AppText font="mono" style={[styles.streakLabel, { color: theme.colors.mosaicGold }]}>
-              {currentStreak} DAY STREAK
-            </AppText>
-          )}
+
+          {/* Streak — gold diamond pill badge */}
+          {!hideStreaks && currentStreak > 0 ? (
+            <View style={styles.streakBadge}>
+              <View style={[styles.streakDiamond, { backgroundColor: theme.colors.mosaicGold }]} />
+              <AppText font="mono" style={[styles.streakLabel, { color: theme.colors.mosaicGold }]}>
+                {currentStreak} DAY STREAK
+              </AppText>
+            </View>
+          ) : null}
         </View>
 
         <View style={styles.mosaicWrapper}>
@@ -218,15 +229,15 @@ export default function CheckInScreen() {
           )}
         </View>
 
-        {atLimit && (
+        {atLimit ? (
           <Surface style={styles.completionBanner}>
             <AppText style={[styles.completionText, { color: theme.colors.mosaicGold }]}>
               {t('completion.all_checkins_complete')}
             </AppText>
           </Surface>
-        )}
+        ) : null}
 
-        {dailyObservation.length > 0 && (
+        {dailyObservation.length > 0 ? (
           <Surface
             variant="card"
             surfaceGradientColors={OBS_GRADIENT}
@@ -241,7 +252,8 @@ export default function CheckInScreen() {
               </View>
             ))}
           </Surface>
-        )}
+        ) : null}
+
         <CheckInHistory entries={todayEntries} onEntryPress={handleEntryPress} />
       </ScrollView>
 
@@ -265,10 +277,10 @@ const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: theme.spacing[5],
   },
   greeting: {
-    fontSize: theme.fontSize.display,
+    fontSize: 38,
     fontWeight: '700',
-    lineHeight: 40,
-    letterSpacing: LETTER_SPACING.tight,
+    lineHeight: 46,
+    letterSpacing: -0.9,
     marginBottom: theme.spacing[2],
   },
   dateLabelRow: {
@@ -282,17 +294,29 @@ const styles = StyleSheet.create((theme) => ({
     alignItems: 'center',
     gap: theme.spacing[2],
   },
-  dateLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    letterSpacing: 1.5,
-    fontStyle: 'italic',
+  // Streak pill badge — echoes the onboarding plan card badge
+  streakBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: theme.spacing[3],
+    paddingVertical: 4,
+    borderRadius: theme.radius.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(197, 160, 89, 0.28)',
+    backgroundColor: 'rgba(197, 160, 89, 0.08)',
+  },
+  streakDiamond: {
+    width: 5,
+    height: 5,
+    borderRadius: 1,
+    transform: [{ rotate: '45deg' }],
+    opacity: 0.85,
   },
   streakLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 1.3,
   },
   mosaicWrapper: { marginBottom: theme.spacing[6] },
   loadingContainer: {
@@ -313,34 +337,43 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius.sheet,
   },
   errorText: { fontSize: 14, textAlign: 'center' },
+  // Observation card — gold glass treatment
   observationCard: {
     marginBottom: theme.spacing[3],
     padding: theme.spacing[4],
     gap: theme.spacing[3],
+    borderWidth: 1,
+    borderColor: 'rgba(197, 160, 89, 0.14)',
   },
   obsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing[2],
   },
+  // Observation bullet — rotated diamond, echoing the brand motif
   obsBullet: {
-    width: 7,
-    height: 7,
-    borderRadius: 2,
+    width: 6,
+    height: 6,
+    borderRadius: 1,
     flexShrink: 0,
-    opacity: 0.8,
+    opacity: 0.75,
+    transform: [{ rotate: '45deg' }],
   },
+  obsText: {
+    flex: 1,
+  },
+  // Completion banner — gold glass border
   completionBanner: {
     alignItems: 'center',
     paddingVertical: theme.spacing[4],
     marginBottom: theme.spacing[3],
+    borderWidth: 1,
+    borderColor: 'rgba(197, 160, 89, 0.22)',
+    backgroundColor: 'rgba(197, 160, 89, 0.06)',
   },
   completionText: {
     fontSize: theme.fontSize.sm,
     fontWeight: '600',
     letterSpacing: 0.3,
-  },
-  obsText: {
-    flex: 1,
   },
 }));

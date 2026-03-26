@@ -145,7 +145,10 @@ function RootLayout() {
     configurePurchases();
     getCustomerInfo()
       .then(setCustomerInfo)
-      .catch(() => usePurchasesStore.getState().setLoading(false));
+      .catch((err) => {
+        Sentry.captureException(err);
+      })
+      .finally(() => usePurchasesStore.getState().setLoading(false));
 
     const unsubscribe = addCustomerInfoListener(setCustomerInfo);
     return unsubscribe;
@@ -229,6 +232,7 @@ function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {
   const hydrateTrialStatus = useAppStore((s) => s.hydrateTrialStatus);
 
   const customerInfo = usePurchasesStore((s) => s.customerInfo);
+  const isPurchasesLoading = usePurchasesStore((s) => s.isLoading);
   const isSubscribed = !!(
     customerInfo?.entitlements?.active && Object.keys(customerInfo.entitlements.active).length > 0
   );
@@ -238,12 +242,12 @@ function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {
     hydrateTrialStatus();
   }, [hydrateTrialStatus]);
 
-  // Bouncer: force expired, unsubscribed users to the paywall
+  // Bouncer: force expired, unsubscribed users to the paywall (skip during initial purchases hydration)
   useEffect(() => {
-    if (hasOnboarded && isTrialExpired && !isSubscribed) {
+    if (!isPurchasesLoading && hasOnboarded && isTrialExpired && !isSubscribed) {
       router.replace({ pathname: '/onboarding/step7', params: { hardPaywall: 'true' } });
     }
-  }, [hasOnboarded, isTrialExpired, isSubscribed, router]);
+  }, [hasOnboarded, isPurchasesLoading, isSubscribed, isTrialExpired, router]);
   const [isLocked, setIsLocked] = useState(startLocked);
   const [isBlurred, setIsBlurred] = useState(false);
   const didMountRef = useRef(false);
@@ -275,12 +279,15 @@ function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {
     }
   }, [startLocked, performUnlock]);
 
-  // Respond to user toggling app lock in settings (skip initial mount)
+  // Respond to user toggling app lock in settings (skip initial mount and onboarding)
   useEffect(() => {
     if (!didMountRef.current) {
       didMountRef.current = true;
       return;
     }
+
+    // Don't trigger re-verification while the user is still in the onboarding flow
+    if (!hasOnboarded) return;
 
     if (isAppLockEnabled) {
       // They just turned it ON. Verify they are actually the owner.
@@ -305,7 +312,7 @@ function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {
       setIsLocked(false);
       setIsBlurred(false);
     }
-  }, [isAppLockEnabled]);
+  }, [isAppLockEnabled, hasOnboarded]);
 
   // Replenish Surprise Me notifications on cold start and each foreground return
   useEffect(() => {

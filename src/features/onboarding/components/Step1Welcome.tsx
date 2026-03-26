@@ -181,7 +181,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   featureText: { fontSize: theme.fontSize.base, opacity: 0.75, flex: 1 },
   btn: {
-    paddingVertical: 17,
+    paddingVertical: 16,
     borderRadius: theme.radius.tight,
     alignItems: 'center',
   },

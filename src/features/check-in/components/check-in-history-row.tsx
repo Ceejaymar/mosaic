@@ -28,7 +28,7 @@ export function CheckInHistoryRow({ occurredAt, label, color, tags, onPress }: P
         accessibilityRole="button"
         accessibilityLabel={`${label} at ${formattedTime}, tap to edit`}
       >
-        <AppText colorVariant="muted" style={styles.time}>
+        <AppText font="mono" colorVariant="muted" style={styles.time}>
           {formattedTime}
         </AppText>
 
@@ -77,6 +77,8 @@ const styles = StyleSheet.create((theme) => ({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: theme.spacing[4],
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.04)',
   },
   leftContent: {
     flexDirection: 'row',
@@ -91,7 +93,8 @@ const styles = StyleSheet.create((theme) => ({
   squircle: {
     width: SQUIRCLE_SIZE,
     height: SQUIRCLE_SIZE,
-    borderRadius: theme.radius.tight,
+    borderRadius: 1,
+    transform: [{ rotate: '45deg' }],
   },
   label: {
     fontSize: 18,

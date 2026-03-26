@@ -5,6 +5,7 @@ import { StyleSheet } from 'react-native-unistyles';
 
 import { ProgressBar } from '@/src/features/onboarding/components/ProgressBar';
 import { Step5Biometrics } from '@/src/features/onboarding/components/Step5Biometrics';
+import { useAppStore } from '@/src/store/useApp';
 
 export default function OnboardingStep5() {
   const insets = useSafeAreaInsets();
@@ -15,7 +16,12 @@ export default function OnboardingStep5() {
         <ProgressBar currentStep={5} totalSteps={7} />
       </View>
       <View style={styles.content}>
-        <Step5Biometrics onNext={() => router.push('/onboarding/step6')} />
+        <Step5Biometrics
+          onNext={(enabled) => {
+            useAppStore.setState({ isAppLockEnabled: enabled });
+            router.push('/onboarding/step6');
+          }}
+        />
       </View>
     </View>
   );

@@ -2,7 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { DrawerActions } from '@react-navigation/native';
 import { type Href, useNavigation, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Linking, Pressable, ScrollView, View } from 'react-native';
+import { Alert, Linking, Platform, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
@@ -50,13 +50,22 @@ export default function SubscriptionScreen() {
     setLoading(true);
     try {
       await presentPaywall();
+    } catch {
+      Alert.alert(
+        'Something went wrong',
+        'Unable to open the subscription page. Please try again.',
+      );
     } finally {
       setLoading(false);
     }
   };
 
   const handleManage = () => {
-    Linking.openURL('https://apps.apple.com/account/subscriptions');
+    const url =
+      Platform.OS === 'android'
+        ? 'https://play.google.com/store/account/subscriptions'
+        : 'https://apps.apple.com/account/subscriptions';
+    Linking.openURL(url);
   };
 
   const handleBack = () => navigation.dispatch(DrawerActions.openDrawer());

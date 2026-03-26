@@ -56,12 +56,18 @@ export const useAppStore = create<State & Actions>()(
       isTrialExpired: false,
 
       completeOnboarding: async () => {
-        set({ hasOnboarded: true });
         const stored = await getSecureItem<number>(TRIAL_KEY);
         if (stored === null) {
           const now = Date.now();
-          await saveSecureItem(TRIAL_KEY, now);
-          set({ trialStartDate: now, isTrialExpired: false });
+          try {
+            await saveSecureItem(TRIAL_KEY, now);
+            set({ hasOnboarded: true, trialStartDate: now, isTrialExpired: false });
+          } catch (err) {
+            // Don't mark onboarded if the trial date couldn't be persisted
+            console.warn('[completeOnboarding] failed to save trial start date', err);
+          }
+        } else {
+          set({ hasOnboarded: true });
         }
       },
 

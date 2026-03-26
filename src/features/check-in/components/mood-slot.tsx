@@ -1,3 +1,4 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, View } from 'react-native';
 import Animated, {
   ReduceMotion,
@@ -5,7 +6,7 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
 import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
@@ -24,7 +25,6 @@ type Props = {
 };
 
 export function MoodSlot({ slot, isCurrentSlot, moodColor, moodLabel, onPress }: Props) {
-  const { theme } = useUnistyles();
   const colors = useAccessibleColors();
   const scale = useSharedValue(1);
   const isFilled = !!moodColor;
@@ -54,21 +54,22 @@ export function MoodSlot({ slot, isCurrentSlot, moodColor, moodLabel, onPress }:
       accessibilityRole="button"
       accessibilityLabel={`${getTimeSlotLabel(slot)}${moodLabel ? `, ${moodLabel}` : ', tap to check in'}`}
     >
-      <View
-        style={[
-          styles.accentStrip,
-          {
-            backgroundColor: isFilled
-              ? moodColor
-              : isCurrentSlot
-                ? theme.colors.mosaicGold
-                : 'transparent',
-          },
-        ]}
+      <LinearGradient
+        colors={
+          isFilled
+            ? [`${moodColor}99`, `${moodColor}22`, 'transparent']
+            : isCurrentSlot
+              ? ['rgba(212,175,55,0.7)', 'rgba(197,160,89,0.2)', 'transparent']
+              : ['rgba(255,255,255,0.06)', 'rgba(255,255,255,0.01)', 'transparent']
+        }
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.accentStrip}
       />
 
       <View style={styles.content}>
         <AppText
+          font="mono"
           style={[styles.slotLabel, { color: colors.textMuted }, isFilled && { color: moodColor }]}
         >
           {getTimeSlotLabel(slot).toUpperCase()}
@@ -111,7 +112,7 @@ const styles = StyleSheet.create((theme) => ({
     shadowRadius: 12,
     elevation: theme.isDark ? 0 : 2,
   },
-  accentStrip: { height: 3, width: '100%' },
+  accentStrip: { height: 1, width: '100%' },
   content: { flex: 1, padding: theme.spacing[4], justifyContent: 'space-between' },
   slotLabel: { fontSize: theme.fontSize.xs, fontWeight: '600', letterSpacing: 1.2 },
   statusArea: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing[2] },
