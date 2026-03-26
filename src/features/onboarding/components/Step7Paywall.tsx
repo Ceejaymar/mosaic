@@ -9,6 +9,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
@@ -218,6 +219,7 @@ type Props = {
 
 export function Step7Paywall({ onClose, onSubscribe, onRestore }: Props) {
   const { theme } = useUnistyles();
+  const insets = useSafeAreaInsets();
   const [selectedPlan, setSelectedPlan] = useState<PlanType>('annual');
 
   const handleSelectPlan = useCallback((id: PlanType) => {
@@ -239,7 +241,7 @@ export function Step7Paywall({ onClose, onSubscribe, onRestore }: Props) {
         colors={['rgba(212, 175, 55, 0.22)', 'rgba(197, 160, 89, 0.07)', 'transparent']}
         start={{ x: 0, y: 0 }}
         end={{ x: 0.85, y: 0.7 }}
-        style={StyleSheet.absoluteFill}
+        style={[StyleSheet.absoluteFill, { top: -insets.top }]}
         pointerEvents="none"
       />
 
@@ -366,7 +368,7 @@ const styles = StyleSheet.create((theme) => ({
   // ── Top bar
   topBar: {
     paddingHorizontal: theme.spacing[5],
-    paddingTop: theme.spacing[4],
+    paddingTop: 0,
     alignItems: 'flex-end',
   },
   closeBtn: {
