@@ -349,6 +349,7 @@ function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {
         <GestureHandlerRootView style={{ flex: 1 }}>
           <Stack>
             <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
+            <Stack.Screen name="onboarding" options={{ headerShown: false }} />
             <Stack.Screen
               name="check-in/[id]"
               options={() => ({

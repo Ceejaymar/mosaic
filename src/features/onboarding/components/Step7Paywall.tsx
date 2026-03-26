@@ -241,12 +241,15 @@ export function Step7Paywall({ onClose, onSubscribe, onRestore }: Props) {
         colors={['rgba(212, 175, 55, 0.22)', 'rgba(197, 160, 89, 0.07)', 'transparent']}
         start={{ x: 0, y: 0 }}
         end={{ x: 0.85, y: 0.7 }}
-        style={[StyleSheet.absoluteFill, { top: -insets.top }]}
+        style={StyleSheet.absoluteFill}
         pointerEvents="none"
       />
 
       {/* ── Close ── */}
-      <Animated.View entering={FadeInUp.delay(150).springify()} style={styles.topBar}>
+      <Animated.View
+        entering={FadeInUp.delay(150).springify()}
+        style={[styles.topBar, { paddingTop: insets.top }]}
+      >
         <Pressable
           onPress={() => {
             hapticLight();
