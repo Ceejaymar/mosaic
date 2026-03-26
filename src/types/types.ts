@@ -3,6 +3,9 @@ export type Theme = 'light' | 'dark' | 'system';
 export type State = {
   theme: Theme;
   hasOnboarded: boolean;
+  intents: string[];
+  trialStartDate: number | null;
+  isTrialExpired: boolean;
   language: Language;
   accessibility: AccessibilitySettings;
   preferences: PreferencesState;
@@ -17,6 +20,9 @@ export type State = {
 export type Actions = {
   setTheme: (theme: Theme) => void;
   setHasOnboarded: (hasOnboarded: boolean) => void;
+  setIntents: (intents: string[]) => void;
+  completeOnboarding: () => Promise<void>;
+  hydrateTrialStatus: () => Promise<void>;
   setLanguage: (language: Language) => void;
   setAccessibilitySetting: (key: keyof AccessibilitySettings, value: boolean) => void;
   setPreference: <K extends keyof PreferencesState>(key: K, value: PreferencesState[K]) => void;

@@ -2,8 +2,8 @@ import { getLocales } from 'expo-localization';
 import { UnistylesRuntime } from 'react-native-unistyles';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
+import { getSecureItem, saveSecureItem } from '@/src/services/secure-storage/secure-storage';
 import { mmkvAdapter } from '@/src/services/storage/mmkv';
-
 import type {
   AccessibilitySettings,
   Actions,
@@ -13,6 +13,9 @@ import type {
   Theme,
 } from '@/src/types/types';
 import i18n from '../i18n';
+
+const TRIAL_KEY = 'mosaic_shadow_trial_start';
+const TRIAL_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
 
 const applyTheme = (_mode: Theme) => {
   // Temporarily force dark mode
@@ -46,6 +49,30 @@ export const useAppStore = create<State & Actions>()(
       hasOnboarded: false,
       setHasOnboarded: (hasOnboarded: boolean) => set({ hasOnboarded }),
 
+      intents: [],
+      setIntents: (intents: string[]) => set({ intents }),
+
+      trialStartDate: null,
+      isTrialExpired: false,
+
+      completeOnboarding: async () => {
+        set({ hasOnboarded: true });
+        const stored = await getSecureItem<number>(TRIAL_KEY);
+        if (stored === null) {
+          const now = Date.now();
+          await saveSecureItem(TRIAL_KEY, now);
+          set({ trialStartDate: now, isTrialExpired: false });
+        }
+      },
+
+      hydrateTrialStatus: async () => {
+        const storedDate = await getSecureItem<number>(TRIAL_KEY);
+        if (storedDate !== null) {
+          const hasExpired = Date.now() - storedDate >= TRIAL_DURATION_MS;
+          set({ trialStartDate: storedDate, isTrialExpired: hasExpired });
+        }
+      },
+
       accessibility: {
         disableLiquidGlass: false,
         isDyslexicFont: false,
@@ -75,7 +102,7 @@ export const useAppStore = create<State & Actions>()(
 
       isNotificationsEnabled: false,
       isSurpriseMeEnabled: false,
-      reminderTimes: ['09:00', '14:00', '20:00'],
+      reminderTimes: ['10:00'],
       toggleNotifications: () =>
         set((s) => ({ isNotificationsEnabled: !s.isNotificationsEnabled })),
       toggleSurpriseMe: () => set((s) => ({ isSurpriseMeEnabled: !s.isSurpriseMeEnabled })),
@@ -105,6 +132,7 @@ export const useAppStore = create<State & Actions>()(
       partialize: (state) => ({
         theme: state.theme,
         hasOnboarded: state.hasOnboarded,
+        intents: state.intents,
         language: state.language,
         accessibility: state.accessibility,
         preferences: state.preferences,

@@ -15,6 +15,7 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
 import { hapticLight, hapticMedium } from '@/src/lib/haptics/haptics';
+import { useAppStore } from '@/src/store/useApp';
 
 type NotificationPreference = 'surprise' | 'routine' | 'skip';
 
@@ -42,11 +43,19 @@ export function Step4Notifications({ onNext }: Props) {
   const handleEnable = (type: 'surprise' | 'routine') => {
     hapticMedium();
     // TODO: Await Notifications.requestPermissionsAsync() here
+
+    // Clean, direct state update without overriding the store's default times
+    useAppStore.setState({
+      isNotificationsEnabled: true,
+      isSurpriseMeEnabled: type === 'surprise',
+    });
+
     onNext(type);
   };
 
   const handleSkip = () => {
     hapticLight();
+    useAppStore.setState({ isNotificationsEnabled: false, isSurpriseMeEnabled: false });
     onNext('skip');
   };
 
