@@ -7,7 +7,13 @@ import { BlurView } from 'expo-blur';
 import * as Device from 'expo-device';
 import { useFonts } from 'expo-font';
 import * as Notifications from 'expo-notifications';
-import { Stack, useGlobalSearchParams, useNavigationContainerRef, usePathname } from 'expo-router';
+import {
+  Stack,
+  useGlobalSearchParams,
+  useNavigationContainerRef,
+  usePathname,
+  useRouter,
+} from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { PostHogProvider } from 'posthog-react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -215,7 +221,29 @@ function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {
   // const isDarkTheme = rt.themeName === 'dark'; // Temporarily commented out
   const isDarkTheme = true; // Temporarily forced to true
 
+  const router = useRouter();
+
   const isAppLockEnabled = useAppStore((s) => s.isAppLockEnabled);
+  const hasOnboarded = useAppStore((s) => s.hasOnboarded);
+  const isTrialExpired = useAppStore((s) => s.isTrialExpired);
+  const hydrateTrialStatus = useAppStore((s) => s.hydrateTrialStatus);
+
+  const customerInfo = usePurchasesStore((s) => s.customerInfo);
+  const isSubscribed = !!(
+    customerInfo?.entitlements?.active && Object.keys(customerInfo.entitlements.active).length > 0
+  );
+
+  // Hydrate shadow trial status from SecureStore on mount
+  useEffect(() => {
+    hydrateTrialStatus();
+  }, [hydrateTrialStatus]);
+
+  // Bouncer: force expired, unsubscribed users to the paywall
+  useEffect(() => {
+    if (hasOnboarded && isTrialExpired && !isSubscribed) {
+      router.replace({ pathname: '/onboarding/step7', params: { hardPaywall: 'true' } });
+    }
+  }, [hasOnboarded, isTrialExpired, isSubscribed, router]);
   const [isLocked, setIsLocked] = useState(startLocked);
   const [isBlurred, setIsBlurred] = useState(false);
   const didMountRef = useRef(false);

@@ -1,5 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { memo, useCallback, useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import Animated, {
@@ -14,6 +15,7 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
 import { hapticLight, hapticMedium, hapticSelection } from '@/src/lib/haptics/haptics';
+import { useAppStore } from '@/src/store/useApp';
 import { openPrivacyPolicy, openTermsOfService } from '@/src/utils/support-links';
 
 // ─── Types & Data ─────────────────────────────────────────────────────────────
@@ -220,6 +222,9 @@ type Props = {
 export function Step7Paywall({ onClose, onSubscribe, onRestore }: Props) {
   const { theme } = useUnistyles();
   const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const { hardPaywall } = useLocalSearchParams();
+  const isHardPaywall = hardPaywall === 'true';
   const [selectedPlan, setSelectedPlan] = useState<PlanType>('annual');
 
   const handleSelectPlan = useCallback((id: PlanType) => {
@@ -227,10 +232,12 @@ export function Step7Paywall({ onClose, onSubscribe, onRestore }: Props) {
     setSelectedPlan(id);
   }, []);
 
-  const handleSubscribe = useCallback(() => {
+  const handleSubscribe = useCallback(async () => {
     hapticMedium();
     onSubscribe(selectedPlan);
-  }, [onSubscribe, selectedPlan]);
+    await useAppStore.getState().completeOnboarding();
+    router.replace('/');
+  }, [onSubscribe, router, selectedPlan]);
 
   const activePlan = PLANS.find((p) => p.id === selectedPlan) ?? PLANS[0];
 
@@ -245,21 +252,27 @@ export function Step7Paywall({ onClose, onSubscribe, onRestore }: Props) {
         pointerEvents="none"
       />
 
-      {/* ── Close ── */}
-      <Animated.View
-        entering={FadeInUp.delay(150).springify()}
-        style={[styles.topBar, { paddingTop: insets.top }]}
-      >
-        <Pressable
-          onPress={() => {
-            hapticLight();
-            onClose();
-          }}
-          style={styles.closeBtn}
+      {/* ── Close — hidden on hard paywall ── */}
+      {!isHardPaywall ? (
+        <Animated.View
+          entering={FadeInUp.delay(150).springify()}
+          style={[styles.topBar, { paddingTop: insets.top }]}
         >
-          <Ionicons name="close" size={20} color={theme.colors.typography} opacity={0.4} />
-        </Pressable>
-      </Animated.View>
+          <Pressable
+            onPress={async () => {
+              hapticLight();
+              onClose();
+              await useAppStore.getState().completeOnboarding();
+              router.replace('/');
+            }}
+            style={styles.closeBtn}
+          >
+            <Ionicons name="close" size={20} color={theme.colors.typography} opacity={0.4} />
+          </Pressable>
+        </Animated.View>
+      ) : (
+        <Animated.View style={[styles.topBar, { paddingTop: insets.top }]} />
+      )}
 
       <View style={styles.content}>
         {/* ── Header ── */}
@@ -326,7 +339,9 @@ export function Step7Paywall({ onClose, onSubscribe, onRestore }: Props) {
             </LinearGradient>
           </Pressable>
 
-          <AppText style={styles.cancelText}>{activePlan.cancelNote}</AppText>
+          {!isHardPaywall ? (
+            <AppText style={styles.cancelText}>{activePlan.cancelNote}</AppText>
+          ) : null}
 
           <Pressable
             onPress={() => {

@@ -16,6 +16,7 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
 import { hapticLight, hapticMedium, hapticSuccess } from '@/src/lib/haptics/haptics';
+import { useAppStore } from '@/src/store/useApp';
 
 type Props = { onNext: (enabled: boolean) => void };
 
@@ -67,7 +68,8 @@ export function Step5Biometrics({ onNext }: Props) {
   const handleEnable = async () => {
     hapticMedium();
     if (!canUseBiometrics) {
-      onNext(true);
+      useAppStore.setState({ isAppLockEnabled: false });
+      onNext(false);
       return;
     }
     try {
@@ -77,15 +79,21 @@ export function Step5Biometrics({ onNext }: Props) {
       });
       if (result.success) {
         hapticSuccess();
+        useAppStore.setState({ isAppLockEnabled: true });
         onNext(true);
+      } else {
+        useAppStore.setState({ isAppLockEnabled: false });
+        onNext(false);
       }
     } catch {
-      onNext(true);
+      useAppStore.setState({ isAppLockEnabled: false });
+      onNext(false);
     }
   };
 
   const handleSkip = () => {
     hapticLight();
+    useAppStore.setState({ isAppLockEnabled: false });
     onNext(false);
   };
 
