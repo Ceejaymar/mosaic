@@ -1,7 +1,7 @@
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as LocalAuthentication from 'expo-local-authentication';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, View } from 'react-native';
 import Animated, {
   cancelAnimation,
@@ -23,6 +23,8 @@ type Props = { onNext: (enabled: boolean) => void };
 export function Step5Biometrics({ onNext }: Props) {
   const { theme } = useUnistyles();
   const scale = useSharedValue(1);
+
+  const didFinish = useRef(false);
 
   const [ctaLabel, setCtaLabel] = useState('Enable Biometrics');
   const [ctaSubtext, setCtaSubtext] = useState('Uses your device authentication');
@@ -79,31 +81,40 @@ export function Step5Biometrics({ onNext }: Props) {
   }));
 
   const handleEnable = async () => {
+    if (didFinish.current) return;
+    didFinish.current = true;
+
     hapticMedium();
-    if (!canUseBiometrics) {
-      useAppStore.setState({ isAppLockEnabled: false });
-      onNext(false);
-      return;
-    }
     try {
+      if (!canUseBiometrics) {
+        useAppStore.setState({ isAppLockEnabled: false });
+        onNext(false);
+        return;
+      }
+      useAppStore.setState({ isAuthenticating: true });
       const result = await LocalAuthentication.authenticateAsync({
         promptMessage: 'Secure your Mosaic journal',
         fallbackLabel: 'Use Passcode',
       });
+      useAppStore.setState({ isAuthenticating: false });
+
       if (result.success) {
         hapticSuccess();
+        useAppStore.setState({ isAppLockEnabled: true, justEnabledBiometrics: true });
         onNext(true);
       } else {
         useAppStore.setState({ isAppLockEnabled: false });
         onNext(false);
       }
     } catch {
-      useAppStore.setState({ isAppLockEnabled: false });
+      useAppStore.setState({ isAuthenticating: false, isAppLockEnabled: false });
       onNext(false);
     }
   };
 
   const handleSkip = () => {
+    if (didFinish.current) return;
+    didFinish.current = true;
     hapticLight();
     useAppStore.setState({ isAppLockEnabled: false });
     onNext(false);

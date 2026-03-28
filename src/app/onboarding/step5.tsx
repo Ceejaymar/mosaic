@@ -19,7 +19,7 @@ export default function OnboardingStep5() {
         <Step5Biometrics
           onNext={(enabled) => {
             useAppStore.setState({ isAppLockEnabled: enabled });
-            router.push('/onboarding/step6');
+            router.replace('/onboarding/step6');
           }}
         />
       </View>

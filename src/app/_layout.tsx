@@ -233,9 +233,7 @@ function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {
 
   const customerInfo = usePurchasesStore((s) => s.customerInfo);
   const isPurchasesLoading = usePurchasesStore((s) => s.isLoading);
-  const isSubscribed = !!(
-    customerInfo?.entitlements?.active && Object.keys(customerInfo.entitlements.active).length > 0
-  );
+  const isSubscribed = usePurchasesStore((s) => s.isPro);
 
   // Hydrate shadow trial status from SecureStore on mount
   useEffect(() => {
@@ -244,10 +242,16 @@ function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {
 
   // Bouncer: force expired, unsubscribed users to the paywall (skip during initial purchases hydration)
   useEffect(() => {
-    if (!isPurchasesLoading && hasOnboarded && isTrialExpired && !isSubscribed) {
+    if (
+      customerInfo !== null &&
+      !isPurchasesLoading &&
+      hasOnboarded &&
+      isTrialExpired &&
+      !isSubscribed
+    ) {
       router.replace({ pathname: '/onboarding/step7', params: { hardPaywall: 'true' } });
     }
-  }, [hasOnboarded, isPurchasesLoading, isSubscribed, isTrialExpired, router]);
+  }, [customerInfo, hasOnboarded, isPurchasesLoading, isSubscribed, isTrialExpired, router]);
   const [isLocked, setIsLocked] = useState(startLocked);
   const [isBlurred, setIsBlurred] = useState(false);
   const didMountRef = useRef(false);
@@ -287,7 +291,13 @@ function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {
     }
 
     // Don't trigger re-verification while the user is still in the onboarding flow
-    if (!hasOnboarded) return;
+    if (!useAppStore.getState().hasOnboarded) return;
+
+    // Skip re-auth once after the user enables biometrics during onboarding
+    if (useAppStore.getState().justEnabledBiometrics) {
+      useAppStore.setState({ justEnabledBiometrics: false });
+      return;
+    }
 
     if (isAppLockEnabled) {
       // They just turned it ON. Verify they are actually the owner.
@@ -312,7 +322,7 @@ function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {
       setIsLocked(false);
       setIsBlurred(false);
     }
-  }, [isAppLockEnabled, hasOnboarded]);
+  }, [isAppLockEnabled]);
 
   // Replenish Surprise Me notifications on cold start and each foreground return
   useEffect(() => {
@@ -334,7 +344,9 @@ function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {
   // Resume lock: blur immediately on background, auth on foreground
   useEffect(() => {
     const sub = AppState.addEventListener('change', (nextState) => {
+      if (!useAppStore.getState().hasOnboarded) return;
       if (nextState === 'background' || nextState === 'inactive') {
+        if (useAppStore.getState().isAuthenticating) return;
         if (pendingAuthTimerRef.current) {
           clearTimeout(pendingAuthTimerRef.current);
           pendingAuthTimerRef.current = null;
@@ -344,8 +356,16 @@ function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {
       }
 
       if (nextState === 'active' && isAppLockEnabled) {
+        if (useAppStore.getState().isAuthenticating) return;
+
         if (justUnlockedRef.current) {
           justUnlockedRef.current = false;
+          return;
+        }
+
+        // Skip re-auth if the foreground event was caused by Face ID during onboarding enrollment
+        if (useAppStore.getState().justEnabledBiometrics) {
+          useAppStore.setState({ justEnabledBiometrics: false });
           return;
         }
 

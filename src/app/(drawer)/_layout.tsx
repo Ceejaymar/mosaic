@@ -9,6 +9,7 @@ import { Drawer } from 'expo-router/drawer';
 import { usePostHog } from 'posthog-react-native';
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Pressable, Text, View } from 'react-native';
+import Purchases from 'react-native-purchases';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
@@ -269,8 +270,8 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
                       );
                     }
                   } catch (e: unknown) {
-                    const err = e as { userCancelled?: boolean; message?: string };
-                    if (!err.userCancelled) {
+                    const err = e as { code?: string; message?: string };
+                    if (err.code !== Purchases.PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR) {
                       Alert.alert('Purchase Error', err.message ?? 'Unknown error');
                     }
                   }

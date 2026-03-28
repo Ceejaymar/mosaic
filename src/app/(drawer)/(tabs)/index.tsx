@@ -352,8 +352,8 @@ const styles = StyleSheet.create((theme) => ({
   },
   // Observation bullet — rotated diamond, echoing the brand motif
   obsBullet: {
-    width: 6,
-    height: 6,
+    width: 8,
+    height: 8,
     borderRadius: 1,
     flexShrink: 0,
     opacity: 0.75,

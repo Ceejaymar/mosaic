@@ -15,13 +15,15 @@ export type State = {
   isSurpriseMeEnabled: boolean;
   reminderTimes: string[];
   isAppLockEnabled: boolean;
+  justEnabledBiometrics: boolean;
+  isAuthenticating: boolean;
 };
 
 export type Actions = {
   setTheme: (theme: Theme) => void;
   setHasOnboarded: (hasOnboarded: boolean) => void;
   setIntents: (intents: string[]) => void;
-  completeOnboarding: () => Promise<void>;
+  completeOnboarding: () => Promise<boolean>;
   hydrateTrialStatus: () => Promise<void>;
   setLanguage: (language: Language) => void;
   setAccessibilitySetting: (key: keyof AccessibilitySettings, value: boolean) => void;

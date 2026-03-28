@@ -6,11 +6,12 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { AppText } from '@/src/components/app-text';
 import { hapticMedium, hapticSelection } from '@/src/lib/haptics/haptics';
 
+// IDs must match IntentId in Step6Analyzing.tsx
 const INTENT_OPTIONS = [
-  { label: 'Spot patterns in my mood', icon: 'color-filter-outline' as const },
-  { label: 'Understand my stress triggers', icon: 'flash-outline' as const },
-  { label: 'Track emotions for therapy', icon: 'medical-outline' as const },
-  { label: 'A private space to vent', icon: 'journal-outline' as const },
+  { id: 'mood_patterns', label: 'Spot patterns in my mood', icon: 'color-filter-outline' as const },
+  { id: 'stress_triggers', label: 'Understand my stress triggers', icon: 'flash-outline' as const },
+  { id: 'therapy_tracking', label: 'Track emotions for therapy', icon: 'medical-outline' as const },
+  { id: 'private_vent', label: 'A private space to vent', icon: 'journal-outline' as const },
 ];
 
 type Props = {
@@ -22,9 +23,9 @@ type Props = {
 export function Step2Intent({ selectedIntents, onToggle, onNext }: Props) {
   const { theme } = useUnistyles();
 
-  const handleToggle = (label: string) => {
+  const handleToggle = (id: string) => {
     hapticSelection();
-    onToggle(label);
+    onToggle(id);
   };
 
   const handleContinue = () => {
@@ -44,12 +45,12 @@ export function Step2Intent({ selectedIntents, onToggle, onNext }: Props) {
       </View>
 
       <View style={styles.options}>
-        {INTENT_OPTIONS.map(({ label, icon }) => {
-          const isSelected = selectedIntents.includes(label);
+        {INTENT_OPTIONS.map(({ id, label, icon }) => {
+          const isSelected = selectedIntents.includes(id);
           return (
             <Pressable
-              key={label}
-              onPress={() => handleToggle(label)}
+              key={id}
+              onPress={() => handleToggle(id)}
               style={({ pressed }) => [styles.optionWrap, { opacity: pressed ? 0.82 : 1 }]}
             >
               {/* Selected state: warm gradient fill */}

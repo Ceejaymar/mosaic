@@ -6,7 +6,7 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-import { StyleSheet } from 'react-native-unistyles';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
 import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
@@ -25,6 +25,7 @@ type Props = {
 };
 
 export function MoodSlot({ slot, isCurrentSlot, moodColor, moodLabel, onPress }: Props) {
+  const { theme } = useUnistyles();
   const colors = useAccessibleColors();
   const scale = useSharedValue(1);
   const isFilled = !!moodColor;
@@ -59,8 +60,8 @@ export function MoodSlot({ slot, isCurrentSlot, moodColor, moodLabel, onPress }:
           isFilled
             ? [`${moodColor}99`, `${moodColor}22`, 'transparent']
             : isCurrentSlot
-              ? ['rgba(212,175,55,0.7)', 'rgba(197,160,89,0.2)', 'transparent']
-              : ['rgba(255,255,255,0.06)', 'rgba(255,255,255,0.01)', 'transparent']
+              ? [`${theme.colors.mosaicGold}B3`, `${theme.colors.mosaicGold}33`, 'transparent']
+              : [theme.colors.overlayLight, 'transparent', 'transparent']
         }
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}

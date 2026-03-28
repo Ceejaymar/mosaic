@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import Animated, {
   cancelAnimation,
@@ -75,24 +75,27 @@ const CELL_ROWS = [
   CELL_CONFIGS.slice(28, 35),
 ];
 
-// Targeted features based on user selection
-const INTENT_FEATURES: Record<string, Feature> = {
-  'Spot patterns in my mood': {
+// Stable intent IDs — must match INTENT_OPTIONS in Step2Intent.tsx
+export type IntentId = 'mood_patterns' | 'stress_triggers' | 'therapy_tracking' | 'private_vent';
+
+// Targeted features keyed by stable ID, not display copy
+const INTENT_FEATURES: Record<IntentId, Feature> = {
+  mood_patterns: {
     title: 'AI Pattern Recognition',
     subtitle: 'Automatically detect invisible mood trends over time.',
     icon: 'analytics-outline',
   },
-  'Understand my stress triggers': {
+  stress_triggers: {
     title: 'Trigger Mapping',
     subtitle: 'Identify exactly what drains or gives you energy.',
     icon: 'flash-outline',
   },
-  'Track emotions for therapy': {
+  therapy_tracking: {
     title: 'Exportable Insights',
     subtitle: 'Generate therapist-ready reports of your emotional history.',
     icon: 'document-text-outline',
   },
-  'A private space to vent': {
+  private_vent: {
     title: '100% Private Vault',
     subtitle: 'Secured by device biometrics. No cloud sharing.',
     icon: 'lock-closed-outline',
@@ -119,13 +122,15 @@ const FEATURE_START = GRID_START + 35 * GRID_STAGGER + 300;
 const FEATURE_STAGGER = 120;
 
 function buildFeatures(selectedIntents: string[]): Feature[] {
-  const dynamicFeatures = selectedIntents.map((i) => INTENT_FEATURES[i]).filter(Boolean);
+  const dynamicFeatures = selectedIntents
+    .map((id) => INTENT_FEATURES[id as IntentId])
+    .filter(Boolean) as Feature[];
 
   if (dynamicFeatures.length === 0) {
     return [
-      INTENT_FEATURES['Spot patterns in my mood'],
-      INTENT_FEATURES['Understand my stress triggers'],
-      INTENT_FEATURES['A private space to vent'],
+      INTENT_FEATURES.mood_patterns,
+      INTENT_FEATURES.stress_triggers,
+      INTENT_FEATURES.private_vent,
       ...CORE_FEATURES,
     ];
   }
@@ -256,6 +261,7 @@ export function Step6Analyzing({ selectedIntents, onNext }: Props) {
   const headerOpacity = useSharedValue(0);
   const headerTranslateY = useSharedValue(10);
   const ctaOpacity = useSharedValue(0);
+  const [ctaEnabled, setCtaEnabled] = useState(false);
 
   useEffect(() => {
     headerOpacity.value = withTiming(1, { duration: 500, easing: Easing.out(Easing.ease) });
@@ -265,6 +271,8 @@ export function Step6Analyzing({ selectedIntents, onNext }: Props) {
   useEffect(() => {
     const ctaDelay = FEATURE_START + features.length * FEATURE_STAGGER + 300;
     ctaOpacity.value = withDelay(ctaDelay, withTiming(1, { duration: 400 }));
+    const timer = setTimeout(() => setCtaEnabled(true), ctaDelay + 400);
+    return () => clearTimeout(timer);
   }, [ctaOpacity, features.length]);
 
   const headerStyle = useAnimatedStyle(() => ({
@@ -305,7 +313,10 @@ export function Step6Analyzing({ selectedIntents, onNext }: Props) {
       </View>
 
       {/* ── CTA ── */}
-      <Animated.View style={[styles.ctaZone, ctaStyle]}>
+      <Animated.View
+        style={[styles.ctaZone, ctaStyle]}
+        pointerEvents={ctaEnabled ? 'auto' : 'none'}
+      >
         <Pressable
           onPress={() => {
             hapticMedium();

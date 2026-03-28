@@ -62,12 +62,14 @@ export const useAppStore = create<State & Actions>()(
           try {
             await saveSecureItem(TRIAL_KEY, now);
             set({ hasOnboarded: true, trialStartDate: now, isTrialExpired: false });
+            return true;
           } catch (err) {
-            // Don't mark onboarded if the trial date couldn't be persisted
             console.warn('[completeOnboarding] failed to save trial start date', err);
+            return false;
           }
         } else {
           set({ hasOnboarded: true });
+          return true;
         }
       },
 
@@ -130,6 +132,8 @@ export const useAppStore = create<State & Actions>()(
         }),
 
       isAppLockEnabled: false,
+      justEnabledBiometrics: false,
+      isAuthenticating: false,
       toggleAppLock: (enabled: boolean) => set({ isAppLockEnabled: enabled }),
     }),
     {

@@ -15,7 +15,7 @@ export default function OnboardingStep4() {
         <ProgressBar currentStep={4} totalSteps={7} />
       </View>
       <View style={styles.content}>
-        <Step4Notifications onNext={() => router.push('/onboarding/step5')} />
+        <Step4Notifications onNext={(_mode) => router.push('/onboarding/step5')} />
       </View>
     </View>
   );

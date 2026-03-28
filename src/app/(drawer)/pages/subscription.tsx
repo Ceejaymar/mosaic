@@ -307,7 +307,7 @@ const styles = StyleSheet.create((theme) => ({
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing[3],
-    paddingVertical: 14,
+    paddingVertical: 16,
   },
   featureRowBorder: {
     borderTopWidth: StyleSheet.hairlineWidth,
@@ -334,7 +334,7 @@ const styles = StyleSheet.create((theme) => ({
 
   secondaryBtn: {
     width: '100%',
-    paddingVertical: 15,
+    paddingVertical: 16,
     borderRadius: theme.radius.tight,
     borderWidth: 1,
     alignItems: 'center',

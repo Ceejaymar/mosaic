@@ -78,7 +78,7 @@ const styles = StyleSheet.create((theme) => ({
     alignItems: 'center',
     paddingVertical: theme.spacing[4],
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.04)',
+    borderBottomColor: theme.colors.divider,
   },
   leftContent: {
     flexDirection: 'row',

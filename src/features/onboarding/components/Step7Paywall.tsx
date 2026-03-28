@@ -235,8 +235,8 @@ export function Step7Paywall({ onClose, onSubscribe, onRestore }: Props) {
   const handleSubscribe = useCallback(async () => {
     hapticMedium();
     await onSubscribe(selectedPlan);
-    await useAppStore.getState().completeOnboarding();
-    router.replace('/');
+    const persisted = await useAppStore.getState().completeOnboarding();
+    if (persisted) router.replace('/');
   }, [onSubscribe, router, selectedPlan]);
 
   const activePlan = PLANS.find((p) => p.id === selectedPlan) ?? PLANS[0];
@@ -262,8 +262,8 @@ export function Step7Paywall({ onClose, onSubscribe, onRestore }: Props) {
             onPress={async () => {
               hapticLight();
               onClose();
-              await useAppStore.getState().completeOnboarding();
-              router.replace('/');
+              const persisted = await useAppStore.getState().completeOnboarding();
+              if (persisted) router.replace('/');
             }}
             style={styles.closeBtn}
           >
