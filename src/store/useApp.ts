@@ -7,6 +7,7 @@ import { mmkvAdapter } from '@/src/services/storage/mmkv';
 import type {
   AccessibilitySettings,
   Actions,
+  IntentId,
   Language,
   PreferencesState,
   State,
@@ -50,7 +51,7 @@ export const useAppStore = create<State & Actions>()(
       setHasOnboarded: (hasOnboarded: boolean) => set({ hasOnboarded }),
 
       intents: [],
-      setIntents: (intents: string[]) => set({ intents }),
+      setIntents: (intents: IntentId[]) => set({ intents }),
 
       trialStartDate: null,
       isTrialExpired: false,

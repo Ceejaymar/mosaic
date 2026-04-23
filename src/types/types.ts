@@ -5,7 +5,7 @@ export type IntentId = 'mood_patterns' | 'stress_triggers' | 'therapy_tracking' 
 export type State = {
   theme: Theme;
   hasOnboarded: boolean;
-  intents: string[];
+  intents: IntentId[];
   trialStartDate: number | null;
   isTrialExpired: boolean;
   language: Language;
@@ -24,7 +24,7 @@ export type State = {
 export type Actions = {
   setTheme: (theme: Theme) => void;
   setHasOnboarded: (hasOnboarded: boolean) => void;
-  setIntents: (intents: string[]) => void;
+  setIntents: (intents: IntentId[]) => void;
   completeOnboarding: () => Promise<boolean>;
   hydrateTrialStatus: () => Promise<void>;
   setLanguage: (language: Language) => void;

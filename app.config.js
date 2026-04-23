@@ -19,7 +19,7 @@ export default {
     },
     ios: {
       supportsTablet: false,
-      bundleIdentifier: IS_DEV ? 'com.marceedigital.mosaic.dev' : 'com.marceedigital.mosaic',
+      bundleIdentifier: 'com.marceedigital.mosaic',
       buildNumber: '1',
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
@@ -33,7 +33,7 @@ export default {
         backgroundColor: '#ffffff',
       },
       edgeToEdgeEnabled: true,
-      package: IS_DEV ? 'com.marceedigital.mosaic.dev' : 'com.marceedigital.mosaic',
+      package: 'com.marceedigital.mosaic',
     },
     web: {
       bundler: 'metro',

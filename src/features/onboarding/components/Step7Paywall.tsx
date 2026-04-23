@@ -3,6 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { memo, useCallback, useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
+import { PACKAGE_TYPE, type PurchasesPackage } from 'react-native-purchases';
 import Animated, {
   FadeInDown,
   FadeInUp,
@@ -15,6 +16,7 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
 import { hapticLight, hapticMedium, hapticSelection } from '@/src/lib/haptics/haptics';
+import { getOfferings } from '@/src/services/purchases';
 import { useAppStore } from '@/src/store/useApp';
 import { openPrivacyPolicy, openTermsOfService } from '@/src/utils/support-links';
 
@@ -33,7 +35,8 @@ type Plan = {
   cancelNote: string;
 };
 
-const PLANS: Plan[] = [
+// Fallback plans just in case RevenueCat fails to load
+const FALLBACK_PLANS: Plan[] = [
   {
     id: 'annual',
     name: 'Annual',
@@ -95,7 +98,6 @@ const PlanCard = memo(function PlanCard({ plan, isSelected, onSelect }: PlanCard
       style={({ pressed }) => [cardStyles.pressable, { opacity: pressed ? 0.88 : 1 }]}
     >
       <View style={[cardStyles.card, isSelected ? cardStyles.cardOn : cardStyles.cardOff]}>
-        {/* Warm fill — fades in on selection */}
         <Animated.View style={[StyleSheet.absoluteFill, fillStyle]} pointerEvents="none">
           <LinearGradient
             colors={['rgba(212, 175, 55, 0.1)', 'rgba(197, 160, 89, 0.04)', 'transparent']}
@@ -105,7 +107,6 @@ const PlanCard = memo(function PlanCard({ plan, isSelected, onSelect }: PlanCard
           />
         </Animated.View>
 
-        {/* Gold shimmer top edge */}
         <Animated.View style={[cardStyles.topEdge, shimmerStyle]} pointerEvents="none">
           <LinearGradient
             colors={['rgba(226, 188, 98, 0.65)', 'rgba(197, 160, 89, 0.2)', 'transparent']}
@@ -115,7 +116,6 @@ const PlanCard = memo(function PlanCard({ plan, isSelected, onSelect }: PlanCard
           />
         </Animated.View>
 
-        {/* Fixed-height badge row — always 24px, no layout shift */}
         <View style={cardStyles.badgeRow}>
           {plan.badge !== null ? (
             <LinearGradient
@@ -131,7 +131,6 @@ const PlanCard = memo(function PlanCard({ plan, isSelected, onSelect }: PlanCard
           ) : null}
         </View>
 
-        {/* Main row: name+subtext left, price+period right */}
         <View style={cardStyles.mainRow}>
           <View style={cardStyles.nameCol}>
             <AppText style={[cardStyles.planName, { color: theme.colors.typography }]}>
@@ -147,7 +146,6 @@ const PlanCard = memo(function PlanCard({ plan, isSelected, onSelect }: PlanCard
           </View>
         </View>
 
-        {/* Selection dot */}
         <View style={[cardStyles.radio, isSelected ? cardStyles.radioOn : cardStyles.radioOff]}>
           {isSelected ? <View style={cardStyles.radioDot} /> : null}
         </View>
@@ -215,7 +213,8 @@ const cardStyles = StyleSheet.create((theme) => ({
 
 type Props = {
   onClose: () => void;
-  onSubscribe: (plan: PlanType) => Promise<void> | void;
+  // Note: Added pkg to safely pass the RevenueCat object up without breaking typescript
+  onSubscribe: (plan: PlanType, pkg?: PurchasesPackage) => Promise<void> | void;
   onRestore: () => void;
 };
 
@@ -225,7 +224,59 @@ export function Step7Paywall({ onClose, onSubscribe, onRestore }: Props) {
   const router = useRouter();
   const { hardPaywall } = useLocalSearchParams();
   const isHardPaywall = hardPaywall === 'true';
+
   const [selectedPlan, setSelectedPlan] = useState<PlanType>('annual');
+  const [plans, setPlans] = useState<Plan[]>(FALLBACK_PLANS);
+  const [rcPackages, setRcPackages] = useState<Record<string, PurchasesPackage>>({});
+
+  // ── Fetch dynamic localized prices from RevenueCat ──
+  useEffect(() => {
+    async function loadOfferings() {
+      try {
+        const offerings = await getOfferings();
+        if (offerings.current && offerings.current.availablePackages.length > 0) {
+          const dynamicPlans: Plan[] = [];
+          const packagesMap: Record<string, PurchasesPackage> = {};
+
+          offerings.current.availablePackages.forEach((pkg) => {
+            if (pkg.packageType === PACKAGE_TYPE.ANNUAL) {
+              dynamicPlans.push({
+                id: 'annual',
+                name: 'Annual',
+                price: pkg.product.priceString, // Dynamically set localized price
+                period: '/ year',
+                subtext: 'Billed annually',
+                badge: 'BEST VALUE',
+                cta: 'Start Free Trial',
+                cancelNote: "Cancel before the trial ends and you won't be charged.",
+              });
+              packagesMap['annual'] = pkg;
+            } else if (pkg.packageType === PACKAGE_TYPE.MONTHLY) {
+              dynamicPlans.push({
+                id: 'monthly',
+                name: 'Monthly',
+                price: pkg.product.priceString, // Dynamically set localized price
+                period: '/ month',
+                subtext: 'Auto-renews monthly until canceled',
+                badge: null,
+                cta: 'Subscribe',
+                cancelNote: 'Cancel anytime.',
+              });
+              packagesMap['monthly'] = pkg;
+            }
+          });
+
+          if (dynamicPlans.length > 0) {
+            setPlans(dynamicPlans);
+            setRcPackages(packagesMap);
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to load RevenueCat offerings, falling back to static plans.', e);
+      }
+    }
+    loadOfferings();
+  }, []);
 
   const handleSelectPlan = useCallback((id: PlanType) => {
     hapticSelection();
@@ -234,16 +285,18 @@ export function Step7Paywall({ onClose, onSubscribe, onRestore }: Props) {
 
   const handleSubscribe = useCallback(async () => {
     hapticMedium();
-    await onSubscribe(selectedPlan);
+    // Pass both the ID and the raw RevenueCat package to your parent screen
+    const pkgToBuy = rcPackages[selectedPlan];
+    await onSubscribe(selectedPlan, pkgToBuy);
+
     const persisted = await useAppStore.getState().completeOnboarding();
     if (persisted) router.replace('/');
-  }, [onSubscribe, router, selectedPlan]);
+  }, [onSubscribe, router, selectedPlan, rcPackages]);
 
-  const activePlan = PLANS.find((p) => p.id === selectedPlan) ?? PLANS[0];
+  const activePlan = plans.find((p) => p.id === selectedPlan) ?? plans[0];
 
   return (
     <View style={styles.container}>
-      {/* ── Full-screen gold gradient from top-left, fades into background naturally ── */}
       <LinearGradient
         colors={['rgba(212, 175, 55, 0.22)', 'rgba(197, 160, 89, 0.07)', 'transparent']}
         start={{ x: 0, y: 0 }}
@@ -252,7 +305,6 @@ export function Step7Paywall({ onClose, onSubscribe, onRestore }: Props) {
         pointerEvents="none"
       />
 
-      {/* ── Close — hidden on hard paywall ── */}
       {!isHardPaywall ? (
         <Animated.View
           entering={FadeInUp.delay(150).springify()}
@@ -275,7 +327,6 @@ export function Step7Paywall({ onClose, onSubscribe, onRestore }: Props) {
       )}
 
       <View style={styles.content}>
-        {/* ── Header ── */}
         <Animated.View entering={FadeInDown.delay(250).springify()} style={styles.header}>
           <View style={styles.iconWrap}>
             <View style={styles.iconGlowSquircle}>
@@ -295,7 +346,6 @@ export function Step7Paywall({ onClose, onSubscribe, onRestore }: Props) {
           </AppText>
         </Animated.View>
 
-        {/* ── Feature list ── */}
         <Animated.View entering={FadeInDown.delay(360).springify()} style={styles.featuresZone}>
           {FEATURES.map((feature) => (
             <View key={feature.label} style={styles.featureRow}>
@@ -309,9 +359,8 @@ export function Step7Paywall({ onClose, onSubscribe, onRestore }: Props) {
           ))}
         </Animated.View>
 
-        {/* ── Plans ── */}
         <Animated.View entering={FadeInDown.delay(470).springify()} style={styles.plansZone}>
-          {PLANS.map((plan) => (
+          {plans.map((plan) => (
             <PlanCard
               key={plan.id}
               plan={plan}
@@ -321,7 +370,6 @@ export function Step7Paywall({ onClose, onSubscribe, onRestore }: Props) {
           ))}
         </Animated.View>
 
-        {/* ── Footer ── */}
         <Animated.View entering={FadeInDown.delay(580).springify()} style={styles.footerZone}>
           <Pressable
             onPress={handleSubscribe}
@@ -334,7 +382,7 @@ export function Step7Paywall({ onClose, onSubscribe, onRestore }: Props) {
               style={styles.ctaBtn}
             >
               <AppText font="mono" style={styles.ctaBtnText}>
-                Start 7-Day Free Trial
+                {activePlan.cta}
               </AppText>
             </LinearGradient>
           </Pressable>
@@ -380,12 +428,8 @@ export function Step7Paywall({ onClose, onSubscribe, onRestore }: Props) {
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
-
 const styles = StyleSheet.create((theme) => ({
   container: { flex: 1 },
-
-  // ── Top bar
   topBar: {
     paddingHorizontal: theme.spacing[5],
     paddingTop: 0,
@@ -399,16 +443,12 @@ const styles = StyleSheet.create((theme) => ({
     justifyContent: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.06)',
   },
-
-  // ── Content shell
   content: {
     flex: 1,
     paddingHorizontal: theme.spacing[5],
     paddingBottom: theme.spacing[8],
     justifyContent: 'space-between',
   },
-
-  // ── Header
   header: { alignItems: 'center', gap: theme.spacing[3] },
   iconWrap: { alignItems: 'center', justifyContent: 'center' },
   iconGlowSquircle: {
@@ -431,8 +471,6 @@ const styles = StyleSheet.create((theme) => ({
     lineHeight: 23,
     paddingHorizontal: theme.spacing[3],
   },
-
-  // ── Feature list
   featuresZone: { gap: theme.spacing[3], paddingHorizontal: theme.spacing[4] },
   featureRow: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing[3] },
   featureIcon: {
@@ -446,11 +484,7 @@ const styles = StyleSheet.create((theme) => ({
     flexShrink: 0,
   },
   featureLabel: { fontSize: theme.fontSize.sm, opacity: 0.72, lineHeight: 20, flex: 1 },
-
-  // ── Plans
   plansZone: { gap: theme.spacing[3] },
-
-  // ── Footer
   footerZone: { gap: theme.spacing[2] },
   ctaBtn: {
     paddingVertical: 18,

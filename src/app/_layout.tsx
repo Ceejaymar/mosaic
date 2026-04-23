@@ -230,6 +230,7 @@ function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {
   const hasOnboarded = useAppStore((s) => s.hasOnboarded);
   const isTrialExpired = useAppStore((s) => s.isTrialExpired);
   const hydrateTrialStatus = useAppStore((s) => s.hydrateTrialStatus);
+  const isDeveloperModeEnabled = useAppStore((s) => s.isDeveloperModeEnabled);
 
   const customerInfo = usePurchasesStore((s) => s.customerInfo);
   const isPurchasesLoading = usePurchasesStore((s) => s.isLoading);
@@ -242,6 +243,7 @@ function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {
 
   // Bouncer: force expired, unsubscribed users to the paywall (skip during initial purchases hydration)
   useEffect(() => {
+    if (isDeveloperModeEnabled) return;
     if (
       customerInfo !== null &&
       !isPurchasesLoading &&
@@ -251,7 +253,15 @@ function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {
     ) {
       router.replace({ pathname: '/onboarding/step7', params: { hardPaywall: 'true' } });
     }
-  }, [customerInfo, hasOnboarded, isPurchasesLoading, isSubscribed, isTrialExpired, router]);
+  }, [
+    customerInfo,
+    hasOnboarded,
+    isDeveloperModeEnabled,
+    isPurchasesLoading,
+    isSubscribed,
+    isTrialExpired,
+    router,
+  ]);
   const [isLocked, setIsLocked] = useState(startLocked);
   const [isBlurred, setIsBlurred] = useState(false);
   const didMountRef = useRef(false);

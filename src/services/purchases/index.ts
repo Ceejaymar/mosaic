@@ -10,10 +10,13 @@ import RevenueCatUI, { PAYWALL_RESULT } from 'react-native-purchases-ui';
 // ─── Config ───────────────────────────────────────────────────────────────────
 
 const API_KEY = __DEV__
-  ? { ios: 'test_ZmIhebKKHwfsuIWJauMoZIulnPD', android: 'test_ZmIhebKKHwfsuIWJauMoZIulnPD' }
+  ? {
+      ios: process.env.EXPO_PUBLIC_RC_IOS_TEST_KEY ?? '',
+      android: process.env.EXPO_PUBLIC_RC_ANDROID_TEST_KEY ?? '',
+    }
   : {
-      ios: 'appl_REPLACE_WITH_PRODUCTION_IOS_KEY',
-      android: 'goog_REPLACE_WITH_PRODUCTION_ANDROID_KEY',
+      ios: process.env.EXPO_PUBLIC_RC_IOS_PROD_KEY ?? '',
+      android: process.env.EXPO_PUBLIC_RC_ANDROID_PROD_KEY ?? '',
     };
 
 export const PRO_ENTITLEMENT_ID = 'Mosaic Pro';
@@ -23,6 +26,14 @@ export const PRO_ENTITLEMENT_ID = 'Mosaic Pro';
 export function configurePurchases(): void {
   if (__DEV__) {
     Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
+  }
+
+  const key = Platform.OS === 'ios' ? API_KEY.ios : API_KEY.android;
+
+  if (!__DEV__ && !key) {
+    console.error(
+      '[Purchases] CRITICAL: RevenueCat production API key is missing. Set EXPO_PUBLIC_RC_IOS_PROD_KEY / EXPO_PUBLIC_RC_ANDROID_PROD_KEY.',
+    );
   }
 
   if (Platform.OS === 'ios') {
