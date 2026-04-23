@@ -1,5 +1,7 @@
 export type Theme = 'light' | 'dark' | 'system';
 
+export type IntentId = 'mood_patterns' | 'stress_triggers' | 'therapy_tracking' | 'private_vent';
+
 export type State = {
   theme: Theme;
   hasOnboarded: boolean;

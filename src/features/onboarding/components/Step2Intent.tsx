@@ -5,25 +5,29 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
 import { hapticMedium, hapticSelection } from '@/src/lib/haptics/haptics';
+import type { IntentId } from '@/src/types/types';
 
-// IDs must match IntentId in Step6Analyzing.tsx
-const INTENT_OPTIONS = [
-  { id: 'mood_patterns', label: 'Spot patterns in my mood', icon: 'color-filter-outline' as const },
-  { id: 'stress_triggers', label: 'Understand my stress triggers', icon: 'flash-outline' as const },
-  { id: 'therapy_tracking', label: 'Track emotions for therapy', icon: 'medical-outline' as const },
-  { id: 'private_vent', label: 'A private space to vent', icon: 'journal-outline' as const },
+const INTENT_OPTIONS: {
+  id: IntentId;
+  label: string;
+  icon: 'color-filter-outline' | 'flash-outline' | 'medical-outline' | 'journal-outline';
+}[] = [
+  { id: 'mood_patterns', label: 'Spot patterns in my mood', icon: 'color-filter-outline' },
+  { id: 'stress_triggers', label: 'Understand my stress triggers', icon: 'flash-outline' },
+  { id: 'therapy_tracking', label: 'Track emotions for therapy', icon: 'medical-outline' },
+  { id: 'private_vent', label: 'A private space to vent', icon: 'journal-outline' },
 ];
 
 type Props = {
-  selectedIntents: string[];
-  onToggle: (intent: string) => void;
+  selectedIntents: IntentId[];
+  onToggle: (intent: IntentId) => void;
   onNext: () => void;
 };
 
 export function Step2Intent({ selectedIntents, onToggle, onNext }: Props) {
   const { theme } = useUnistyles();
 
-  const handleToggle = (id: string) => {
+  const handleToggle = (id: IntentId) => {
     hapticSelection();
     onToggle(id);
   };

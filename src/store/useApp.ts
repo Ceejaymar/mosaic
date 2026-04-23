@@ -78,6 +78,8 @@ export const useAppStore = create<State & Actions>()(
         if (storedDate !== null) {
           const hasExpired = Date.now() - storedDate >= TRIAL_DURATION_MS;
           set({ trialStartDate: storedDate, isTrialExpired: hasExpired });
+        } else {
+          set({ trialStartDate: null, isTrialExpired: false });
         }
       },
 
