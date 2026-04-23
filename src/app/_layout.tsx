@@ -237,7 +237,7 @@ function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {
 
   // Hydrate shadow trial status from SecureStore on mount
   useEffect(() => {
-    hydrateTrialStatus();
+    hydrateTrialStatus().catch((err) => Sentry.captureException(err));
   }, [hydrateTrialStatus]);
 
   // Bouncer: force expired, unsubscribed users to the paywall (skip during initial purchases hydration)
