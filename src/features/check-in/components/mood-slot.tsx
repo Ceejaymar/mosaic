@@ -1,3 +1,4 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, View } from 'react-native';
 import Animated, {
   ReduceMotion,
@@ -54,21 +55,22 @@ export function MoodSlot({ slot, isCurrentSlot, moodColor, moodLabel, onPress }:
       accessibilityRole="button"
       accessibilityLabel={`${getTimeSlotLabel(slot)}${moodLabel ? `, ${moodLabel}` : ', tap to check in'}`}
     >
-      <View
-        style={[
-          styles.accentStrip,
-          {
-            backgroundColor: isFilled
-              ? moodColor
-              : isCurrentSlot
-                ? theme.colors.mosaicGold
-                : 'transparent',
-          },
-        ]}
+      <LinearGradient
+        colors={
+          isFilled
+            ? [`${moodColor}99`, `${moodColor}22`, 'transparent']
+            : isCurrentSlot
+              ? [`${theme.colors.mosaicGold}B3`, `${theme.colors.mosaicGold}33`, 'transparent']
+              : [theme.colors.overlayLight, 'transparent', 'transparent']
+        }
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.accentStrip}
       />
 
       <View style={styles.content}>
         <AppText
+          font="mono"
           style={[styles.slotLabel, { color: colors.textMuted }, isFilled && { color: moodColor }]}
         >
           {getTimeSlotLabel(slot).toUpperCase()}
@@ -111,7 +113,7 @@ const styles = StyleSheet.create((theme) => ({
     shadowRadius: 12,
     elevation: theme.isDark ? 0 : 2,
   },
-  accentStrip: { height: 3, width: '100%' },
+  accentStrip: { height: 1, width: '100%' },
   content: { flex: 1, padding: theme.spacing[4], justifyContent: 'space-between' },
   slotLabel: { fontSize: theme.fontSize.xs, fontWeight: '600', letterSpacing: 1.2 },
   statusArea: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing[2] },

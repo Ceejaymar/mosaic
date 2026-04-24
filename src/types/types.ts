@@ -1,8 +1,13 @@
 export type Theme = 'light' | 'dark' | 'system';
 
+export type IntentId = 'mood_patterns' | 'stress_triggers' | 'therapy_tracking' | 'private_vent';
+
 export type State = {
   theme: Theme;
   hasOnboarded: boolean;
+  intents: IntentId[];
+  trialStartDate: number | null;
+  isTrialExpired: boolean;
   language: Language;
   accessibility: AccessibilitySettings;
   preferences: PreferencesState;
@@ -12,11 +17,16 @@ export type State = {
   isSurpriseMeEnabled: boolean;
   reminderTimes: string[];
   isAppLockEnabled: boolean;
+  justEnabledBiometrics: boolean;
+  isAuthenticating: boolean;
 };
 
 export type Actions = {
   setTheme: (theme: Theme) => void;
   setHasOnboarded: (hasOnboarded: boolean) => void;
+  setIntents: (intents: IntentId[]) => void;
+  completeOnboarding: () => Promise<boolean>;
+  hydrateTrialStatus: () => Promise<void>;
   setLanguage: (language: Language) => void;
   setAccessibilitySetting: (key: keyof AccessibilitySettings, value: boolean) => void;
   setPreference: <K extends keyof PreferencesState>(key: K, value: PreferencesState[K]) => void;

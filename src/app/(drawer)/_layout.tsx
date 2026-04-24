@@ -9,12 +9,14 @@ import { Drawer } from 'expo-router/drawer';
 import { usePostHog } from 'posthog-react-native';
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Pressable, Text, View } from 'react-native';
+import Purchases from 'react-native-purchases';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { AppText } from '@/src/components/app-text';
 import { DrawerRow } from '@/src/components/drawer-row';
 import { useAccessibleColors } from '@/src/hooks/useAccessibleColors';
+import { getOfferings, isProActive, purchasePackage } from '@/src/services/purchases';
 import { useAppStore } from '@/src/store/useApp';
 import {
   openPrivacyPolicy,
@@ -102,7 +104,26 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
 
         {/* 2. SCROLLING LINKS */}
         <DrawerContentScrollView {...props} contentContainerStyle={styles.scrollContent}>
+          {/* Group 0: Account */}
+          <AppText colorVariant="muted" style={styles.sectionTitle}>
+            Account
+          </AppText>
+          <DrawerRow
+            icon="star"
+            label="Mosaic Pro"
+            iconColor="#C5A059"
+            textColor="#C5A059"
+            onPress={() => {
+              props.navigation.closeDrawer();
+              router.push('/pages/subscription');
+            }}
+          />
+          <View style={[styles.divider, { backgroundColor: colors.divider }]} />
+
           {/* Group 1: Preferences */}
+          <AppText colorVariant="muted" style={styles.sectionTitle}>
+            General
+          </AppText>
           <DrawerRow
             icon="options-outline"
             label="Preferences"
@@ -216,6 +237,44 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
                 onPress={() => {
                   props.navigation.closeDrawer();
                   toggleDemoMode();
+                }}
+              />
+              <DrawerRow
+                icon="color-wand-outline"
+                label="Test Onboarding Flow"
+                onPress={() => {
+                  props.navigation.closeDrawer();
+                  router.push('/pages/onboarding');
+                }}
+              />
+              <DrawerRow
+                icon="cart-outline"
+                label="Test Raw Purchase"
+                onPress={async () => {
+                  props.navigation.closeDrawer();
+                  try {
+                    const offerings = await getOfferings();
+                    const packageToBuy = offerings.current?.availablePackages[0];
+                    if (!packageToBuy) {
+                      Alert.alert(
+                        'Missing Data',
+                        'No packages found! Check the RevenueCat dashboard.',
+                      );
+                      return;
+                    }
+                    const customerInfo = await purchasePackage(packageToBuy);
+                    if (isProActive(customerInfo)) {
+                      Alert.alert(
+                        'Success!',
+                        'The Mosaic Pro entitlement was successfully unlocked.',
+                      );
+                    }
+                  } catch (e: unknown) {
+                    const err = e as { code?: string; message?: string };
+                    if (err.code !== Purchases.PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR) {
+                      Alert.alert('Purchase Error', err.message ?? 'Unknown error');
+                    }
+                  }
                 }}
               />
               <DrawerRow

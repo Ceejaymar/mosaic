@@ -7,7 +7,13 @@ import { BlurView } from 'expo-blur';
 import * as Device from 'expo-device';
 import { useFonts } from 'expo-font';
 import * as Notifications from 'expo-notifications';
-import { Stack, useGlobalSearchParams, useNavigationContainerRef, usePathname } from 'expo-router';
+import {
+  Stack,
+  useGlobalSearchParams,
+  useNavigationContainerRef,
+  usePathname,
+  useRouter,
+} from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { PostHogProvider } from 'posthog-react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -20,8 +26,14 @@ import { posthog } from '@/src/config/posthog';
 
 import { db } from '@/src/db/client';
 import { rescheduleAllNotifications } from '@/src/features/notifications/notificationService';
+import {
+  addCustomerInfoListener,
+  configurePurchases,
+  getCustomerInfo,
+} from '@/src/services/purchases';
 import { storage } from '@/src/services/storage/mmkv';
 import { useAppStore } from '@/src/store/useApp';
+import { usePurchasesStore } from '@/src/store/usePurchases';
 import { authenticateUser } from '@/src/utils/auth-helper';
 
 import '@/src/i18n/index';
@@ -126,6 +138,22 @@ function RootLayout() {
     }
   }, [navigationRef]);
 
+  const setCustomerInfo = usePurchasesStore((s) => s.setCustomerInfo);
+
+  // Hydrate subscription state and subscribe to real-time updates from RevenueCat
+  useEffect(() => {
+    configurePurchases();
+    getCustomerInfo()
+      .then(setCustomerInfo)
+      .catch((err) => {
+        Sentry.captureException(err);
+      })
+      .finally(() => usePurchasesStore.getState().setLoading(false));
+
+    const unsubscribe = addCustomerInfoListener(setCustomerInfo);
+    return unsubscribe;
+  }, [setCustomerInfo]);
+
   useEffect(() => {
     const ANON_ID_KEY = 'mosaic-anon-id';
     let persistentId = storage.getString(ANON_ID_KEY);
@@ -196,7 +224,44 @@ function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {
   // const isDarkTheme = rt.themeName === 'dark'; // Temporarily commented out
   const isDarkTheme = true; // Temporarily forced to true
 
+  const router = useRouter();
+
   const isAppLockEnabled = useAppStore((s) => s.isAppLockEnabled);
+  const hasOnboarded = useAppStore((s) => s.hasOnboarded);
+  const isTrialExpired = useAppStore((s) => s.isTrialExpired);
+  const hydrateTrialStatus = useAppStore((s) => s.hydrateTrialStatus);
+  const isDeveloperModeEnabled = useAppStore((s) => s.isDeveloperModeEnabled);
+
+  const customerInfo = usePurchasesStore((s) => s.customerInfo);
+  const isPurchasesLoading = usePurchasesStore((s) => s.isLoading);
+  const isSubscribed = usePurchasesStore((s) => s.isPro);
+
+  // Hydrate shadow trial status from SecureStore on mount
+  useEffect(() => {
+    hydrateTrialStatus().catch((err) => Sentry.captureException(err));
+  }, [hydrateTrialStatus]);
+
+  // Bouncer: force expired, unsubscribed users to the paywall (skip during initial purchases hydration)
+  useEffect(() => {
+    if (isDeveloperModeEnabled) return;
+    if (
+      customerInfo !== null &&
+      !isPurchasesLoading &&
+      hasOnboarded &&
+      isTrialExpired &&
+      !isSubscribed
+    ) {
+      router.replace({ pathname: '/onboarding/step7', params: { hardPaywall: 'true' } });
+    }
+  }, [
+    customerInfo,
+    hasOnboarded,
+    isDeveloperModeEnabled,
+    isPurchasesLoading,
+    isSubscribed,
+    isTrialExpired,
+    router,
+  ]);
   const [isLocked, setIsLocked] = useState(startLocked);
   const [isBlurred, setIsBlurred] = useState(false);
   const didMountRef = useRef(false);
@@ -228,10 +293,19 @@ function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {
     }
   }, [startLocked, performUnlock]);
 
-  // Respond to user toggling app lock in settings (skip initial mount)
+  // Respond to user toggling app lock in settings (skip initial mount and onboarding)
   useEffect(() => {
     if (!didMountRef.current) {
       didMountRef.current = true;
+      return;
+    }
+
+    // Don't trigger re-verification while the user is still in the onboarding flow
+    if (!useAppStore.getState().hasOnboarded) return;
+
+    // Skip re-auth once after the user enables biometrics during onboarding
+    if (useAppStore.getState().justEnabledBiometrics) {
+      useAppStore.setState({ justEnabledBiometrics: false });
       return;
     }
 
@@ -280,7 +354,9 @@ function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {
   // Resume lock: blur immediately on background, auth on foreground
   useEffect(() => {
     const sub = AppState.addEventListener('change', (nextState) => {
+      if (!useAppStore.getState().hasOnboarded) return;
       if (nextState === 'background' || nextState === 'inactive') {
+        if (useAppStore.getState().isAuthenticating) return;
         if (pendingAuthTimerRef.current) {
           clearTimeout(pendingAuthTimerRef.current);
           pendingAuthTimerRef.current = null;
@@ -290,8 +366,16 @@ function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {
       }
 
       if (nextState === 'active' && isAppLockEnabled) {
+        if (useAppStore.getState().isAuthenticating) return;
+
         if (justUnlockedRef.current) {
           justUnlockedRef.current = false;
+          return;
+        }
+
+        // Skip re-auth if the foreground event was caused by Face ID during onboarding enrollment
+        if (useAppStore.getState().justEnabledBiometrics) {
+          useAppStore.setState({ justEnabledBiometrics: false });
           return;
         }
 
@@ -330,6 +414,7 @@ function RootLayoutNav({ startLocked = false }: { startLocked?: boolean }) {
         <GestureHandlerRootView style={{ flex: 1 }}>
           <Stack>
             <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
+            <Stack.Screen name="onboarding" options={{ headerShown: false }} />
             <Stack.Screen
               name="check-in/[id]"
               options={() => ({
